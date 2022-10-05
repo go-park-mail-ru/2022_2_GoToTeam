@@ -42,6 +42,20 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
+func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
+	authorized := false
+	session, err := r.Cookie("session_id")
+	if err == nil && session != nil {
+		_, authorized = api.sessions_[session.Value]
+	}
+
+	if authorized {
+		w.Write([]byte("autrorized"))
+	} else {
+		w.Write([]byte("not autrorized"))
+	}
+}
+
 func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := r.FormValue("email")
@@ -80,6 +94,25 @@ func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(SID))
 
+}
+
+func (api *Api) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+
+	session, err := r.Cookie("session_id")
+	if err == http.ErrNoCookie {
+		http.Error(w, `no sess`, 401)
+		return
+	}
+
+	if _, ok := api.sessions_[session.Value]; !ok {
+		http.Error(w, `no sess`, 401)
+		return
+	}
+
+	delete(api.sessions_, session.Value)
+
+	session.Expires = time.Now().AddDate(0, 0, -1)
+	http.SetCookie(w, session)
 }
 
 func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
