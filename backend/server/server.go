@@ -10,7 +10,7 @@ import (
 func Run(serverAddress string) {
 	r := mux.NewRouter()
 
-	api := api.GetApi(serverAddress)
+	api := api.GetApi()
 	r.HandleFunc("/", api.RootHandler)
 	r.HandleFunc("/api/v1/user/signup", api.SignupUserHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/api/v1/session/create", api.CreateSessionHandler).Methods("POST", "OPTIONS")

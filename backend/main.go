@@ -6,7 +6,7 @@ import (
 
 //const serverAddress = "127.0.0.1:8080"
 
-const serverAddress = "95.163.213.142:3004"
+const serverAddress = ":8080"
 
 func main() {
 	server.Run(serverAddress)

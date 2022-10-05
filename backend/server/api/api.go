@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const serverAddress = "95.163.213.142:8080"
+
 type Api struct {
 	serverAddress string
 	usersStorage  *storage.UsersStorage
@@ -18,7 +20,7 @@ type Api struct {
 	sessions_ map[string]int
 }
 
-func GetApi(serverAddress string) *Api {
+func GetApi() *Api {
 	authApi := &Api{
 		serverAddress: serverAddress,
 		usersStorage:  storage.GetUsersStorage(),
