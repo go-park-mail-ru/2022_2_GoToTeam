@@ -5,24 +5,81 @@ import (
 	"2022_2_GoTo_team/server/storage"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 type Api struct {
 	usersStorage *storage.UsersStorage
 	feedStorage  *storage.FeedStorage
-	sessions     []models.Session
+	//sessions     []models.Session
+	sessions_ map[string]int
 }
 
 func GetApi() *Api {
 	authApi := &Api{
 		usersStorage: storage.GetUsersStorage(),
 		feedStorage:  storage.GetFeedStorage(),
+		sessions_:    map[string]int{},
 	}
 	authApi.usersStorage.PrintUsers()
 	authApi.feedStorage.PrintArticles()
 
 	return authApi
+}
+
+var (
+	letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+)
+
+func RandStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+
+	return string(b)
+}
+
+func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
+
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	log.Println("email", email)
+	log.Println("password ", password)
+
+	//user, ok := api.users[r.FormValue("login")]
+	user, err := api.usersStorage.GetUserByEmail(email)
+	if err != nil {
+		log.Println("Error ", err)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	if user.Password != password {
+		log.Println("Error ", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	log.Println("____________________________________________________________________________________")
+
+	SID := RandStringRunes(32)
+
+	api.sessions_[SID] = user.UserId
+
+	cookie := &http.Cookie{
+		Name:    "session_id",
+		Value:   SID,
+		Expires: time.Now().Add(10 * time.Hour),
+	}
+	http.SetCookie(w, cookie)
+
+	api.printSessions()
+
+	w.Write([]byte(SID))
+
 }
 
 func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +143,7 @@ func (api *Api) CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Println(parsedInput)
 
-		api.sessions = append(api.sessions, *parsedInput)
+		//api.sessions = append(api.sessions, *parsedInput)
 
 		api.printSessions()
 
@@ -141,7 +198,13 @@ func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
 
 func (api *Api) printSessions() {
 	log.Println("Sessions in storage:")
-	for _, v := range api.sessions {
-		log.Printf("%#v ", v)
+	/*
+		for _, v := range api.sessions {
+			log.Printf("%#v ", v)
+		}
+
+	*/
+	for k, v := range api.sessions_ {
+		log.Printf("cook: %#v for user id: %#v", k, v)
 	}
 }
