@@ -5,6 +5,6 @@ type Session struct {
 }
 
 type UserData struct {
-	Login    string `json:"login"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }

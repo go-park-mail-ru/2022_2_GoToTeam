@@ -53,6 +53,8 @@ func (api *Api) IsAuthorized(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Called RootHandler.")
+
 	authorized := false
 	session, err := r.Cookie("session_id")
 	if err == nil && session != nil {
@@ -69,9 +71,12 @@ func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Called LoginHandler.")
 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
+	log.Println("LoginHandler")
+	log.Println("URL", r.URL)
 	log.Println("email", email)
 	log.Println("password ", password)
 
@@ -110,6 +115,7 @@ func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Called LogoutHandler.")
 
 	session, err := r.Cookie("session_id")
 	if err == http.ErrNoCookie {
@@ -129,6 +135,8 @@ func (api *Api) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Called SignupUserHandler.")
+
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
@@ -168,6 +176,8 @@ func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *Api) CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Called CreateSessionHandler.")
+
 	defer r.Body.Close()
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
@@ -191,14 +201,54 @@ func (api *Api) CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 		//api.sessions = append(api.sessions, *parsedInput)
 
+		// ======================================
+
+		email := parsedInput.UserData.Email
+		password := parsedInput.UserData.Password
+		log.Println("URL", r.URL)
+		log.Println("email", email)
+		log.Println("password ", password)
+
+		//user, ok := api.users[r.FormValue("login")]
+		user, err := api.usersStorage.GetUserByEmail(email)
+		if err != nil {
+			log.Println("Error ", err)
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+
+		if user.Password != password {
+			log.Println("Error ", err)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		log.Println("____________________________________________________________________________________")
+
+		SID := RandStringRunes(32)
+
+		api.sessions_[SID] = user.UserId
+
+		cookie := &http.Cookie{
+			Name:    "session_id",
+			Path:    "/",
+			Value:   SID,
+			Expires: time.Now().Add(10 * time.Hour),
+		}
+		http.SetCookie(w, cookie)
+
 		api.printSessions()
 
-		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(SID))
+
+		//w.WriteHeader(http.StatusOK)
 	}
 
 }
 
 func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Called FeedHandler.")
+
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
@@ -214,6 +264,7 @@ func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			articles, err := api.feedStorage.GetArticles()
 			if err != nil {
+				log.Println("Error api.feedStorage.GetArticles", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
