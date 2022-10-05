@@ -42,6 +42,16 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
+func (api *Api) IsAuthorized(w http.ResponseWriter, r *http.Request) bool {
+	authorized := false
+	session, err := r.Cookie("session_id")
+	if err == nil && session != nil {
+		_, authorized = api.sessions_[session.Value]
+	}
+
+	return authorized
+}
+
 func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
 	authorized := false
 	session, err := r.Cookie("session_id")
@@ -51,8 +61,10 @@ func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
 
 	if authorized {
 		w.Write([]byte("autrorized"))
+		w.WriteHeader(http.StatusOK)
 	} else {
 		w.Write([]byte("not autrorized"))
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 }
 
@@ -85,6 +97,7 @@ func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	cookie := &http.Cookie{
 		Name:    "session_id",
+		Path:    "/",
 		Value:   SID,
 		Expires: time.Now().Add(10 * time.Hour),
 	}
@@ -194,37 +207,43 @@ func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Request-Method", "POST")
 		w.WriteHeader(200)
 	} else {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		articles, err := api.feedStorage.GetArticles()
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		feed := models.Feed{}
-		for _, v := range articles {
-			article := models.Article{
-				Id:          v.Id,
-				Title:       v.Title,
-				Description: v.Description,
-				Tags:        v.Tags,
-				Category:    v.Category,
-				Rating:      v.Rating,
-				Authors:     v.Authors,
-				Content:     v.Content,
+		//if api.IsAuthorized(w, r) {
+		if true {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			articles, err := api.feedStorage.GetArticles()
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
 			}
-			feed.Articles = append(feed.Articles, article)
-		}
 
-		log.Println(feed)
+			feed := models.Feed{}
+			for _, v := range articles {
+				article := models.Article{
+					Id:          v.Id,
+					Title:       v.Title,
+					Description: v.Description,
+					Tags:        v.Tags,
+					Category:    v.Category,
+					Rating:      v.Rating,
+					Authors:     v.Authors,
+					Content:     v.Content,
+				}
+				feed.Articles = append(feed.Articles, article)
+			}
 
-		err = json.NewEncoder(w).Encode(&feed)
-		if err != nil {
-			log.Println("Error while encode JSON:", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
+			log.Println(feed)
+
+			err = json.NewEncoder(w).Encode(&feed)
+			if err != nil {
+				log.Println("Error while encode JSON:", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			w.Write([]byte("not autrorized"))
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		}
 	}
 }
