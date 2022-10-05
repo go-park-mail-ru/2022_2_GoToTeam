@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const serverAddress = "95.163.213.142:8080"
+const serverAddress = "95.163.213.142:3004"
 
 type Api struct {
 	serverAddress string
@@ -58,6 +58,7 @@ func (api *Api) IsAuthorized(w http.ResponseWriter, r *http.Request) bool {
 
 func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Called RootHandler.")
+	log.Println(api.serverAddress)
 
 	authorized := false
 	session, err := r.Cookie("session_id")
