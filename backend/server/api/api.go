@@ -62,10 +62,10 @@ func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if authorized {
-		w.Write([]byte("autrorized"))
-		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Authrorized"))
+		//w.WriteHeader(http.StatusOK)
 	} else {
-		w.Write([]byte("not autrorized"))
+		//w.Write([]byte("not autrorized"))
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 }
@@ -157,7 +157,7 @@ func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Println(parsedInput)
+		log.Println("Parsed input:", parsedInput)
 		err = api.usersStorage.AddUser(
 			parsedInput.NewUserData.Username,
 			parsedInput.NewUserData.Email,
