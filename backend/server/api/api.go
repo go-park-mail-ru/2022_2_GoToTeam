@@ -293,7 +293,6 @@ func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			w.Write([]byte("not autrorized"))
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		}
 	}
