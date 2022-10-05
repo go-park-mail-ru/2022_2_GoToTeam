@@ -11,17 +11,19 @@ import (
 )
 
 type Api struct {
-	usersStorage *storage.UsersStorage
-	feedStorage  *storage.FeedStorage
+	serverAddress string
+	usersStorage  *storage.UsersStorage
+	feedStorage   *storage.FeedStorage
 	//sessions     []models.Session
 	sessions_ map[string]int
 }
 
-func GetApi() *Api {
+func GetApi(serverAddress string) *Api {
 	authApi := &Api{
-		usersStorage: storage.GetUsersStorage(),
-		feedStorage:  storage.GetFeedStorage(),
-		sessions_:    map[string]int{},
+		serverAddress: serverAddress,
+		usersStorage:  storage.GetUsersStorage(),
+		feedStorage:   storage.GetFeedStorage(),
+		sessions_:     map[string]int{},
 	}
 	authApi.usersStorage.PrintUsers()
 	authApi.feedStorage.PrintArticles()
@@ -140,13 +142,13 @@ func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Request-Method", "POST")
 		w.WriteHeader(200)
 	} else {
 		defer r.Body.Close()
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		parsedInput := new(models.User)
@@ -182,12 +184,12 @@ func (api *Api) CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Request-Method", "POST")
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		parsedInput := new(models.Session)
 		err := json.NewDecoder(r.Body).Decode(parsedInput)
@@ -252,7 +254,7 @@ func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Request-Method", "POST")
 		w.WriteHeader(200)
@@ -260,7 +262,7 @@ func (api *Api) FeedHandler(w http.ResponseWriter, r *http.Request) {
 		//if api.IsAuthorized(w, r) {
 		if true {
 			w.Header().Set("Content-Type", "application/json")
-			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3004")
+			w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			articles, err := api.feedStorage.GetArticles()
 			if err != nil {
