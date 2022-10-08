@@ -24,8 +24,11 @@ func routing(e *echo.Echo) {
 
 func Run(servAddress string) {
 	e := echo.New()
+	origin := "http://" + servAddress
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowMethods: []string{"POST", "GET", "OPTIONS"},
+		AllowMethods:     []string{"POST", "GET", "OPTIONS"},
+		AllowOrigins:     []string{origin},
+		AllowCredentials: true,
 	}))
 
 	routing(e)
