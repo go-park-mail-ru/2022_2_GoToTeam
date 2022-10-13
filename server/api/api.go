@@ -321,6 +321,10 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 //	}
 //}
 
+func (api *Api) UserHandler(c echo.Context) error {
+	return nil
+}
+
 func (api *Api) FeedHandler(c echo.Context) error {
 	return nil
 }
