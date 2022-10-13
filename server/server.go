@@ -11,23 +11,17 @@ func routing(e *echo.Echo) {
 	e.GET("/", ap.RootHandler)
 	e.POST("/login", ap.LoginHandler)
 	e.POST("/logout", ap.LogoutHandler)
-
 	e.POST("/api/v1/user/signup", ap.SignupUserHandler)
-	e.OPTIONS("/api/v1/user/signup", ap.SignupUserHandler)
-
 	e.POST("/api/v1/session/create", ap.CreateSessionHandler)
-	e.OPTIONS("/api/v1/session/create", ap.CreateSessionHandler)
-
 	e.GET("/api/v1/feed", ap.FeedHandler)
-	e.OPTIONS("/api/v1/feed", ap.FeedHandler)
 }
 
 func Run(servAddress string) {
 	e := echo.New()
-	frontAdrs := ""
+	frontAdrs := "95.163.213.142:3004/"
 	origin := "http://" + frontAdrs
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowMethods:     []string{"POST", "GET", "OPTIONS"},
+		AllowMethods:     []string{"POST", "GET"},
 		AllowOrigins:     []string{origin},
 		AllowCredentials: true,
 	}))
