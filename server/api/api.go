@@ -153,47 +153,6 @@ func (api *Api) LogoutHandler(c echo.Context) error {
 	return nil
 }
 
-//func (api *Api) SignupUserHandler(w http.ResponseWriter, r *http.Request) {
-//	log.Println("Called SignupUserHandler.")
-//
-//	if r.Method == "OPTIONS" {
-//		w.Header().Set("Access-Control-Request-Headers", r.Header.Get("Access-Control-Request-Headers"))
-//		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
-//		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
-//		w.Header().Set("Access-Control-Allow-Credentials", "true")
-//		w.Header().Set("Access-Control-Request-Method", "POST")
-//		w.WriteHeader(200)
-//	} else {
-//		defer r.Body.Close()
-//		w.Header().Set("Access-Control-Allow-Origin", api.serverAddress)
-//		w.Header().Set("Access-Control-Allow-Credentials", "true")
-//
-//		parsedInput := new(models.User)
-//		err := json.NewDecoder(r.Body).Decode(parsedInput)
-//		if err != nil {
-//			log.Println("Error while decode JSON:", err)
-//			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-//			return
-//		}
-//
-//		log.Println("Parsed input:", parsedInput)
-//		err = api.usersStorage.AddUser(
-//			parsedInput.NewUserData.Username,
-//			parsedInput.NewUserData.Email,
-//			parsedInput.NewUserData.Login,
-//			parsedInput.NewUserData.Password,
-//		)
-//
-//		if err != nil {
-//			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		api.usersStorage.PrintUsers()
-//		w.WriteHeader(http.StatusOK)
-//	}
-//}
-
 func (api *Api) SignupUserHandler(c echo.Context) error {
 	newUser := new(models.User)
 	requestData, err := ioutil.ReadAll(c.Request().Body)
