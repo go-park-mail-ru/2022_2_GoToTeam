@@ -2,10 +2,14 @@ package api
 
 import (
 	"2022_2_GoTo_team/server/storage"
+	"2022_2_GoTo_team/server/storage/models"
+	"encoding/json"
 	"github.com/labstack/echo/v4"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 const serverAddress = "95.163.213.142:3004"
@@ -191,7 +195,53 @@ func (api *Api) LogoutHandler(c echo.Context) error {
 //}
 
 func (api *Api) SignupUserHandler(c echo.Context) error {
-	return nil
+	newUser := new(models.User)
+	requestData, err := ioutil.ReadAll(c.Request().Body)
+	defer c.Request().Body.Close()
+	if err != nil {
+		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+	}
+
+	err = json.Unmarshal(requestData, &newUser)
+	if err != nil {
+		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+	}
+
+	// проверка есть ли такой пользователь
+	_, err = api.usersStorage.GetUserByLogin(newUser.Login)
+	if err == nil {
+		return c.JSON(models.ErrUserExist.Status, models.ErrUserExist.Message)
+	}
+
+	cc, _ := c.Cookie("session")
+
+	//если правильно понял про мапу sessions,но это надо будет переписать
+	if _, ok := api.sessions_[cc.Value]; ok {
+		return c.JSON(models.ErrUserAuthorised.Status, models.ErrUserAuthorised.Message)
+	}
+
+	//проверки на валидность
+
+	id := api.usersStorage.AddUser(*newUser)
+	cookie := makeCookie()
+	c.SetCookie(cookie)
+
+	//добавил сессию
+	api.sessions_[cookie.Value] = id
+
+	res := models.SignupData{
+		UserName:   newUser.Username,
+		FirstName:  newUser.FirstName,
+		LastName:   newUser.LastName,
+		MiddleName: newUser.MiddleName,
+		Email:      newUser.Email,
+		Login:      newUser.Login,
+	}
+	response := models.SignupResponse{
+		Data:    res,
+		Message: "You have successfully registered",
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 //func (api *Api) CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
@@ -327,6 +377,16 @@ func (api *Api) UserHandler(c echo.Context) error {
 
 func (api *Api) FeedHandler(c echo.Context) error {
 	return nil
+}
+
+func makeCookie() *http.Cookie {
+	SID := RandStringRunes(32)
+	cookie := new(http.Cookie)
+	cookie.Name = "session_id"
+	cookie.Value = SID
+	cookie.HttpOnly = true
+	cookie.Expires = time.Now().Add(10 * time.Hour)
+	return cookie
 }
 
 func (api *Api) printSessions() {

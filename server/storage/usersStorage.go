@@ -28,26 +28,27 @@ func (o *UsersStorage) PrintUsers() {
 	}
 }
 
-func (o *UsersStorage) AddUser(username string, email string, login string, password string) error {
+func (o *UsersStorage) AddUser(u models.User) int { // user_id
 	log.Println("Storage AddUser called.")
 
 	user := &models.User{
-		Username: username,
-		Email:    email,
-		Login:    login,
-		Password: password,
+		Username: u.Username,
+		Email:    u.Email,
+		Login:    u.Login,
+		Password: u.Password,
 	}
 
 	o.mu.Lock()
 
-	for _, v := range o.users {
-		if v.Login == login {
-			return errors.New("user with the same login exist")
-		}
-		if v.Email == email {
-			return errors.New("user with the same email exist")
-		}
-	}
+	// проверка в хэндлере
+	//for _, v := range o.users {
+	//	if v.Login == u.Login {
+	//		return errors.New("user with the same login exist")
+	//	}
+	//	if v.Email == u.Email {
+	//		return errors.New("user with the same email exist")
+	//	}
+	//}
 
 	user.UserId = o.nextID
 	log.Println("New user id: ", user.UserId)
@@ -56,7 +57,7 @@ func (o *UsersStorage) AddUser(username string, email string, login string, pass
 
 	o.mu.Unlock()
 
-	return nil
+	return user.UserId
 }
 
 func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
