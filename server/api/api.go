@@ -48,9 +48,9 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
-func (api *Api) IsAuthorized(w http.ResponseWriter, r *http.Request) bool {
+func (api *Api) IsAuthorized(c echo.Context) bool {
 	authorized := false
-	session, err := r.Cookie("session_id")
+	session, err := c.Cookie("session_id")
 	if err == nil && session != nil {
 		_, authorized = api.sessions_[session.Value]
 	}
@@ -150,7 +150,15 @@ func (api *Api) LoginHandler(c echo.Context) error {
 //}
 
 func (api *Api) LogoutHandler(c echo.Context) error {
-	return nil
+	if !api.IsAuthorized(c) {
+		return c.JSON(models.ErrAlreadyLogout.Status, models.ErrAlreadyLogout.Message)
+	}
+	cookie, _ := c.Cookie("session_id")
+	delete(api.sessions_, cookie.Value)
+	cookie.Expires = time.Now().Local().Add(-1 * time.Hour)
+	c.SetCookie(cookie)
+
+	return c.JSON(models.LogoutResponse.Status, models.LogoutResponse.Message)
 }
 
 func (api *Api) SignupUserHandler(c echo.Context) error {
@@ -172,10 +180,8 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 		return c.JSON(models.ErrUserExist.Status, models.ErrUserExist.Message)
 	}
 
-	cc, _ := c.Cookie("session")
-
 	//если правильно понял про мапу sessions,но это надо будет переписать
-	if _, ok := api.sessions_[cc.Value]; ok {
+	if api.IsAuthorized(c) {
 		return c.JSON(models.ErrUserAuthorised.Status, models.ErrUserAuthorised.Message)
 	}
 
