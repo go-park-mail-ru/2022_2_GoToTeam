@@ -19,7 +19,7 @@ type Api struct {
 	usersStorage  *storage.UsersStorage
 	feedStorage   *storage.FeedStorage
 	//sessions     []models.Session
-	sessions_ map[string]int
+	sessions_ map[string]string
 }
 
 func GetApi() *Api {
@@ -27,7 +27,7 @@ func GetApi() *Api {
 		serverAddress: serverAddress,
 		usersStorage:  storage.GetUsersStorage(),
 		feedStorage:   storage.GetFeedStorage(),
-		sessions_:     map[string]int{},
+		sessions_:     map[string]string{},
 	}
 	authApi.usersStorage.PrintUsers()
 	authApi.feedStorage.PrintArticles()
@@ -126,7 +126,57 @@ func (api *Api) RootHandler(c echo.Context) error {
 //}
 
 func (api *Api) LoginHandler(c echo.Context) error {
-	return nil
+	cookie, _ := c.Cookie("session_id")
+	if api.IsAuthorized(c) {
+		userLogin, _ := api.sessions_[cookie.Value]
+		user, _ := api.usersStorage.GetUserByLogin(userLogin)
+		data := models.SignupData{
+			UserName:   user.Username,
+			FirstName:  user.FirstName,
+			LastName:   user.LastName,
+			MiddleName: user.MiddleName,
+			Email:      user.Email,
+			Login:      user.Login,
+		}
+		response := models.SignupResponse{
+			Data:    data,
+			Message: "Hello",
+		}
+		return c.JSON(http.StatusOK, response)
+	}
+	userForm := new(models.LoginForm)
+
+	formData, err := ioutil.ReadAll(c.Request().Body)
+	defer c.Request().Body.Close()
+	if err != nil {
+		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+	}
+	err = json.Unmarshal(formData, &userForm)
+	if err != nil {
+		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+	}
+	userFromBD, err := api.usersStorage.GetUserByLogin(userForm.Login)
+	if err != nil {
+		return c.JSON(models.ErrUserNotExist.Status, models.ErrUserNotExist.Message)
+	}
+	if userFromBD.Password != userForm.Password {
+		return c.JSON(models.ErrWrongPassword.Status, models.ErrWrongPassword.Message)
+	}
+	cookie = makeCookie()
+	c.SetCookie(cookie)
+	responseData := models.SignupData{
+		UserName:   userFromBD.Username,
+		FirstName:  userFromBD.FirstName,
+		LastName:   userFromBD.LastName,
+		MiddleName: userFromBD.MiddleName,
+		Email:      userFromBD.Email,
+		Login:      userFromBD.Login,
+	}
+	response := models.SignupResponse{
+		Data:    responseData,
+		Message: "Hello",
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 //func (api *Api) LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -187,12 +237,12 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 
 	//проверки на валидность
 
-	id := api.usersStorage.AddUser(*newUser)
+	_ = api.usersStorage.AddUser(*newUser)
 	cookie := makeCookie()
 	c.SetCookie(cookie)
 
 	//добавил сессию
-	api.sessions_[cookie.Value] = id
+	api.sessions_[cookie.Value] = newUser.Login
 
 	res := models.SignupData{
 		UserName:   newUser.Username,

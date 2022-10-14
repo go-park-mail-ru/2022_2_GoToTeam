@@ -12,6 +12,11 @@ type User struct {
 	MiddleName string
 }
 
+type LoginForm struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
 type SignupData struct {
 	UserName   string `json:"user_name"`
 	FirstName  string

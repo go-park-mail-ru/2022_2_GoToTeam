@@ -28,7 +28,7 @@ func (o *UsersStorage) PrintUsers() {
 	}
 }
 
-func (o *UsersStorage) AddUser(u models.User) int { // user_id
+func (o *UsersStorage) AddUser(u models.User) error { // user_id
 	log.Println("Storage AddUser called.")
 
 	user := &models.User{
@@ -56,8 +56,7 @@ func (o *UsersStorage) AddUser(u models.User) int { // user_id
 	o.users = append(o.users, user)
 
 	o.mu.Unlock()
-
-	return user.UserId
+	return nil
 }
 
 func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
