@@ -17,6 +17,11 @@ var ErrUserExist = Response{
 	Message: "User is already exist",
 }
 
+var ErrUserNotExist = Response{
+	Status:  http.StatusFailedDependency,
+	Message: "User doesn't exist",
+}
+
 var ErrUserAuthorised = Response{
 	Status:  http.StatusFailedDependency,
 	Message: "Already authorised",
@@ -25,6 +30,11 @@ var ErrUserAuthorised = Response{
 var ErrAlreadyLogout = Response{
 	Status:  http.StatusFailedDependency,
 	Message: "Already logout",
+}
+
+var ErrWrongPassword = Response{
+	Status:  http.StatusForbidden,
+	Message: "Incorrect password",
 }
 
 var LogoutResponse = Response{
