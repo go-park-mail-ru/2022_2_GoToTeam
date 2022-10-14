@@ -81,50 +81,6 @@ func (api *Api) RootHandler(c echo.Context) error {
 	return nil
 }
 
-//func (api *Api) LoginHandler(w http.ResponseWriter, r *http.Request) {
-//	log.Println("Called LoginHandler.")
-//
-//	email := r.FormValue("email")
-//	password := r.FormValue("password")
-//	log.Println("LoginHandler")
-//	log.Println("URL", r.URL)
-//	log.Println("email", email)
-//	log.Println("password ", password)
-//
-//	//user, ok := api.users[r.FormValue("login")]
-//	user, err := api.usersStorage.GetUserByEmail(email)
-//	if err != nil {
-//		log.Println("Error ", err)
-//		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-//		return
-//	}
-//
-//	if user.Password != password {
-//		log.Println("Error ", err)
-//		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-//		return
-//	}
-//
-//	log.Println("____________________________________________________________________________________")
-//
-//	SID := RandStringRunes(32)
-//
-//	api.sessions_[SID] = user.UserId
-//
-//	cookie := &http.Cookie{
-//		Name:    "session_id",
-//		Path:    "/",
-//		Value:   SID,
-//		Expires: time.Now().Add(10 * time.Hour),
-//	}
-//	http.SetCookie(w, cookie)
-//
-//	api.printSessions()
-//
-//	w.Write([]byte(SID))
-//
-//}
-
 func (api *Api) LoginHandler(c echo.Context) error {
 	cookie, _ := c.Cookie("session_id")
 	if api.IsAuthorized(c) {
@@ -155,6 +111,8 @@ func (api *Api) LoginHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
 	}
+	// можно добавить проверки на валидность логина и пароля
+
 	userFromBD, err := api.usersStorage.GetUserByLogin(userForm.Login)
 	if err != nil {
 		return c.JSON(models.ErrUserNotExist.Status, models.ErrUserNotExist.Message)
@@ -178,26 +136,6 @@ func (api *Api) LoginHandler(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, response)
 }
-
-//func (api *Api) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-//	log.Println("Called LogoutHandler.")
-//
-//	session, err := r.Cookie("session_id")
-//	if err == http.ErrNoCookie {
-//		http.Error(w, `no sess`, 401)
-//		return
-//	}
-//
-//	if _, ok := api.sessions_[session.Value]; !ok {
-//		http.Error(w, `no sess`, 401)
-//		return
-//	}
-//
-//	delete(api.sessions_, session.Value)
-//
-//	session.Expires = time.Now().AddDate(0, 0, -1)
-//	http.SetCookie(w, session)
-//}
 
 func (api *Api) LogoutHandler(c echo.Context) error {
 	if !api.IsAuthorized(c) {
