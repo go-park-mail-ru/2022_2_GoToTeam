@@ -105,11 +105,12 @@ func (api *Api) LoginHandler(c echo.Context) error {
 	formData, err := ioutil.ReadAll(c.Request().Body)
 	defer c.Request().Body.Close()
 	if err != nil {
-		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message+"1")
 	}
+	//fmt.Println(string(formData))
 	err = json.Unmarshal(formData, &userForm)
 	if err != nil {
-		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message+"2")
 	}
 	// можно добавить проверки на валидность логина и пароля
 
