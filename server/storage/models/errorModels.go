@@ -37,6 +37,11 @@ var ErrAlreadyLogout = Response{
 	Message: "Already logout",
 }
 
+var ErrNoNextFeedId = Response{
+	Status:  http.StatusNotFound,
+	Message: "Can`t found next articles",
+}
+
 var ErrWrongPassword = Response{
 	Status:  http.StatusForbidden,
 	Message: "Incorrect password",

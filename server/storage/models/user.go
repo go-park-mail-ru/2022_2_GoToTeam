@@ -2,14 +2,14 @@ package models
 
 type User struct {
 	UserId   int
-	Username string
-	Email    string
-	Login    string
-	Password string
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
 	//NickName   string `json:"nick_name"`
-	FirstName  string
-	LastName   string
-	MiddleName string
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	MiddleName string `json:"middleName"`
 }
 
 type LoginForm struct {
@@ -18,7 +18,7 @@ type LoginForm struct {
 }
 
 type SignupData struct {
-	UserName   string `json:"user_name"`
+	UserName   string `json:"username"`
 	FirstName  string
 	LastName   string
 	MiddleName string
