@@ -81,6 +81,31 @@ func (api *Api) RootHandler(c echo.Context) error {
 	return nil
 }
 
+func (api *Api) UserHandler(c echo.Context) error {
+	if !api.IsAuthorized(c) {
+		return c.JSON(models.ErrUserNotAuthorised.Status, models.ErrUserNotAuthorised.Message)
+	}
+	cookie, _ := c.Cookie("session_id")
+	userLogin, ok := api.sessions_[cookie.Value]
+	if !ok {
+		return c.JSON(models.ErrUserNotExist.Status, models.ErrUserNotExist.Message)
+	}
+	user, _ := api.usersStorage.GetUserByLogin(userLogin)
+	data := models.SignupData{
+		UserName:   user.Username,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		MiddleName: user.MiddleName,
+		Email:      user.Email,
+		Login:      user.Login,
+	}
+	response := models.SignupResponse{
+		Data:    data,
+		Message: "Hello! Its your profile",
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
 func (api *Api) LoginHandler(c echo.Context) error {
 	cookie, _ := c.Cookie("session_id")
 	if api.IsAuthorized(c) {
@@ -324,10 +349,6 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 //		}
 //	}
 //}
-
-func (api *Api) UserHandler(c echo.Context) error {
-	return nil
-}
 
 func (api *Api) FeedHandler(c echo.Context) error {
 	return nil
