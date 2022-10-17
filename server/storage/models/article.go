@@ -10,3 +10,8 @@ type Article struct {
 	Authors     []string
 	Content     string
 }
+
+type ArticleResponse struct {
+	Data   []*Article
+	Status int
+}

@@ -9,10 +9,12 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 const serverAddress = "95.163.213.142:3004"
+const articleNumber = 3
 
 type Api struct {
 	serverAddress string
@@ -351,7 +353,35 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 //}
 
 func (api *Api) FeedHandler(c echo.Context) error {
-	return nil
+	strId := c.QueryParam("idLastLoaded")
+	if strId == "" {
+		strId = "0"
+	}
+
+	startId, err := strconv.Atoi(strId)
+	if err != nil {
+		return c.JSON(models.ErrNoNextFeedId.Status, models.ErrNoNextFeedId.Message)
+	}
+
+	var ArticlesData []*models.Article
+	AllArticles := storage.GetFeedStorage()
+	testData, _ := AllArticles.GetArticles()
+	if startId >= 0 && startId+articleNumber < len(testData) {
+		ArticlesData = testData[startId : startId+articleNumber]
+	} else {
+		startId = 0
+		if len(testData) > articleNumber {
+			startId = len(testData) - articleNumber
+		}
+		ArticlesData = testData[startId : len(testData)-1]
+
+	}
+
+	response := models.ArticleResponse{
+		Status: http.StatusOK,
+		Data:   ArticlesData,
+	}
+	return c.JSON(response.Status, response.Data)
 }
 
 func makeCookie() *http.Cookie {
