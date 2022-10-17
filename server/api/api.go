@@ -374,7 +374,6 @@ func (api *Api) FeedHandler(c echo.Context) error {
 			startId = len(testData) - articleNumber
 		}
 		ArticlesData = testData[startId : len(testData)-1]
-
 	}
 
 	response := models.ArticleResponse{
