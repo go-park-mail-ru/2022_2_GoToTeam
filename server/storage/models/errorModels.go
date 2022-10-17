@@ -27,6 +27,11 @@ var ErrUserAuthorised = Response{
 	Message: "Already authorised",
 }
 
+var ErrUserNotAuthorised = Response{
+	Status:  http.StatusFailedDependency,
+	Message: "User not authorised",
+}
+
 var ErrAlreadyLogout = Response{
 	Status:  http.StatusFailedDependency,
 	Message: "Already logout",
