@@ -11,7 +11,6 @@ func routing(e *echo.Echo) {
 	ap := api.GetApi()
 	//e.GET("/", ap.RootHandler)
 	e.POST("/login", ap.LoginHandler)
-	e.GET("/login", ap.LoginHandler)
 	e.POST("/logout", ap.LogoutHandler)
 	e.POST("/api/v1/user/signup", ap.SignupUserHandler)
 	e.POST("/api/v1/session/create", ap.CreateSessionHandler)
