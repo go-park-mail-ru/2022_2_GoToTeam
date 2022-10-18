@@ -4,13 +4,14 @@ import (
 	"2022_2_GoTo_team/server/api/models"
 	"2022_2_GoTo_team/server/storage"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
 )
 
-const serverAddress = "95.163.213.142:3004"
+const serverAddress = "http://localhost:8081"
 
 type Api struct {
 	serverAddress string
@@ -62,13 +63,18 @@ func (api *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
 
 	authorized := false
 	session, err := r.Cookie("session_id")
+	fmt.Println(session)
+	var s int
 	if err == nil && session != nil {
-		_, authorized = api.sessions_[session.Value]
+		s, authorized = api.sessions_[session.Value]
 	}
 
 	if authorized {
-		w.Write([]byte("Authrorized"))
-		//w.WriteHeader(http.StatusOK)
+		user, _ := api.usersStorage.GetUserByUid(s)
+		w.Write([]byte("{\"email\": \""))
+		w.Write([]byte(user.Email))
+		w.Write([]byte("\"}"))
+		w.WriteHeader(http.StatusOK)
 	} else {
 		//w.Write([]byte("not autrorized"))
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)

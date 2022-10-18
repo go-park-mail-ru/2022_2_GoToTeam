@@ -74,6 +74,21 @@ func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
 	return nil, errors.New("user with the same login dont exists")
 }
 
+func (o *UsersStorage) GetUserByUid(uid int) (*models.User, error) {
+	log.Println("Storage GetUserByLogin called.")
+
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+
+	for _, v := range o.users {
+		if v.UserId == uid {
+			return v, nil
+		}
+	}
+
+	return nil, errors.New("user with the same login dont exists")
+}
+
 func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
 	log.Println("Storage GetUserByLogin called.")
 
