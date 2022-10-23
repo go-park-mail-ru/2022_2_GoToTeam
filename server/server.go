@@ -8,25 +8,27 @@ import (
 )
 
 func routing(e *echo.Echo) {
-	ap := api.GetApi()
-	//e.GET("/", ap.RootHandler)
-	e.POST("/login", ap.LoginHandler)
-	e.POST("/logout", ap.LogoutHandler)
-	e.POST("/api/v1/user/signup", ap.SignupUserHandler)
-	e.POST("/api/v1/session/create", ap.CreateSessionHandler)
-	e.GET("/user", ap.UserHandler)
-	e.GET("/api/v1/feed", ap.FeedHandler)
+	api := api.GetApi()
+	//e.GET("/", api.RootHandler)
+	e.POST("/login", api.LoginHandler)
+	e.POST("/logout", api.LogoutHandler)
+	e.GET("/user", api.UserHandler)
+
+	e.POST("/api/v1/user/signup", api.SignupUserHandler)
+	e.POST("/api/v1/session/create", api.CreateSessionHandler)
+	e.GET("/api/v1/feed", api.FeedHandler)
 }
 
-func Run(servAddress string) {
+func Run(serverAddress string, allowOriginsAddressesCORS []string) {
 	e := echo.New()
-	origin := "http://localhost:8080"
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowMethods:     []string{http.MethodPost, http.MethodGet},
-		AllowOrigins:     []string{origin},
-		AllowCredentials: true,
-	}))
+	e.Use(middleware.CORSWithConfig(
+		middleware.CORSConfig{
+			AllowMethods:     []string{http.MethodPost, http.MethodGet},
+			AllowOrigins:     allowOriginsAddressesCORS,
+			AllowCredentials: true,
+		},
+	))
 
 	routing(e)
-	e.Logger.Fatal(e.Start(servAddress))
+	e.Logger.Fatal(e.Start(serverAddress))
 }
