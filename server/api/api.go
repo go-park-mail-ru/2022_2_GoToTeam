@@ -13,23 +13,19 @@ import (
 	"time"
 )
 
-const serverAddress = "95.163.213.142:3004"
 const articleNumber = 3
 
 type Api struct {
-	serverAddress string
-	usersStorage  *storage.UsersStorage
-	feedStorage   *storage.FeedStorage
-	//sessions     []models.Session
-	sessions_ map[string]string
+	usersStorage *storage.UsersStorage
+	feedStorage  *storage.FeedStorage
+	sessions_    map[string]string
 }
 
 func GetApi() *Api {
 	authApi := &Api{
-		serverAddress: serverAddress,
-		usersStorage:  storage.GetUsersStorage(),
-		feedStorage:   storage.GetFeedStorage(),
-		sessions_:     map[string]string{},
+		usersStorage: storage.GetUsersStorage(),
+		feedStorage:  storage.GetFeedStorage(),
+		sessions_:    map[string]string{},
 	}
 	authApi.usersStorage.PrintUsers()
 	authApi.feedStorage.PrintArticles()
