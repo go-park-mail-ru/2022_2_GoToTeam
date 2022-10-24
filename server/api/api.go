@@ -39,9 +39,12 @@ func (api *Api) isAuthorized(c echo.Context) bool {
 	return authorized
 }
 
+/*
 func (api *Api) RootHandler(c echo.Context) error {
 	return nil
 }
+
+*/
 
 /*
 func (api *Api) UserHandler(c echo.Context) error {
@@ -221,7 +224,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
-	cookie := api.sessionsStorage.CreateCookieForUser(parsedInput.NewUserData.Email)
+	cookie := api.sessionsStorage.CreateSessionForUser(parsedInput.NewUserData.Email)
 	c.SetCookie(cookie)
 	api.sessionsStorage.PrintSessions()
 
@@ -230,8 +233,6 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 
 func (api *Api) CreateSessionHandler(c echo.Context) error {
 	defer c.Request().Body.Close()
-
-	log.Println("Input request data: ", c.Request().Body)
 
 	parsedInput := new(models.Session)
 	if err := c.Bind(parsedInput); err != nil {
@@ -258,11 +259,31 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	cookie := api.sessionsStorage.CreateCookieForUser(user.Email)
+	cookie := api.sessionsStorage.CreateSessionForUser(user.Email)
 	c.SetCookie(cookie)
 	api.sessionsStorage.PrintSessions()
 
 	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+}
+
+func (api *Api) RemoveSessionHandler(c echo.Context) error {
+	if !api.isAuthorized(c) {
+		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	}
+	cookie, err := c.Cookie("session_id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	}
+
+	api.sessionsStorage.RemoveSession(cookie)
+	api.sessionsStorage.PrintSessions()
+	c.SetCookie(cookie)
+
+	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+}
+
+func (api *Api) SessionInfoHandler(c echo.Context) error {
+	return nil
 }
 
 func (api *Api) FeedHandler(c echo.Context) error {

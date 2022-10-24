@@ -38,7 +38,7 @@ func (o *SessionsStorage) PrintSessions() {
 	}
 }
 
-func (o *SessionsStorage) CreateCookieForUser(email string) *http.Cookie {
+func (o *SessionsStorage) CreateSessionForUser(email string) *http.Cookie {
 	SID := randStringRunes(32)
 
 	o.sessions[SID] = email
@@ -48,11 +48,20 @@ func (o *SessionsStorage) CreateCookieForUser(email string) *http.Cookie {
 		Path:  "/",
 		Value: SID,
 		// HttpOnly: true,
-		Expires: time.Now().Add(24 * time.Hour),
+		Expires: time.Now().Add(23 * time.Hour), // Note! Change value in cookie.Expires function if you change hours
 	}
+}
+
+func (o *SessionsStorage) RemoveSession(cookie *http.Cookie) {
+	delete(o.sessions, cookie.Value)
+	o.ExpireCookie(cookie)
 }
 
 func (o *SessionsStorage) SessionExists(cookie string) bool {
 	_, exists := o.sessions[cookie]
 	return exists
+}
+
+func (o *SessionsStorage) ExpireCookie(cookie *http.Cookie) {
+	cookie.Expires = time.Now().AddDate(0, 0, -1) // Note! Change value in create cookie expires if you change days
 }
