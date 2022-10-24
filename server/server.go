@@ -10,11 +10,11 @@ import (
 func routing(e *echo.Echo) {
 	api := api.GetApi()
 	//e.GET("/", api.RootHandler)
-	e.POST("/login", api.LoginHandler)
-	e.POST("/logout", api.LogoutHandler)
-	e.GET("/user", api.UserHandler)
+	//e.POST("/login", api.LoginHandler)
+	//e.POST("/logout", api.LogoutHandler)
+	//e.GET("/user", api.UserHandler)
 
-	e.POST("/api/v1/user/signup", api.SignupUserHandler)
+	//e.POST("/api/v1/user/signup", api.SignupUserHandler)
 	e.POST("/api/v1/session/create", api.CreateSessionHandler)
 	e.GET("/api/v1/feed", api.FeedHandler)
 }

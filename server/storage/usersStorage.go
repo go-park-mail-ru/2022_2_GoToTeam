@@ -71,7 +71,7 @@ func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
 		}
 	}
 
-	return nil, errors.New("user with the same login dont exists")
+	return nil, errors.New("user with this login dont exists")
 }
 
 func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
@@ -86,5 +86,5 @@ func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
 		}
 	}
 
-	return nil, errors.New("user with the same email dont exists")
+	return nil, errors.New("user with this email dont exists")
 }
