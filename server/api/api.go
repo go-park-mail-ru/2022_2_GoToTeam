@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-const articleNumberInFeed = 2
+const articleNumberInFeed = 10
 
 type Api struct {
 	usersStorage    *storage.UsersStorage
@@ -30,18 +30,14 @@ func GetApi() *Api {
 	return authApi
 }
 
-/*
-func (api *Api) IsAuthorized(c echo.Context) bool {
+func (api *Api) isAuthorized(c echo.Context) bool {
 	authorized := false
-	session, err := c.Cookie("session_id")
-	if err == nil && session != nil {
-		_, authorized = api.sessions_[session.Value]
+	if session, err := c.Cookie("session_id"); err == nil && session != nil {
+		authorized = api.sessionsStorage.SessionExists(session.Value)
 	}
 
 	return authorized
 }
-
-*/
 
 func (api *Api) RootHandler(c echo.Context) error {
 	return nil
@@ -142,6 +138,9 @@ func (api *Api) LogoutHandler(c echo.Context) error {
 	return c.JSON(LogoutResponse.Status, LogoutResponse.Message)
 }
 
+*/
+
+/*
 func (api *Api) SignupUserHandler(c echo.Context) error {
 	newUser := new(models.User)
 	requestData, err := ioutil.ReadAll(c.Request().Body)
@@ -192,11 +191,49 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 
 */
 
+func (api *Api) SignupUserHandler(c echo.Context) error {
+	defer c.Request().Body.Close()
+
+	parsedInput := new(models.User)
+	if err := c.Bind(parsedInput); err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	log.Println("Parsed input user data:", parsedInput)
+
+	// TODO VALIDATOR
+
+	if api.usersStorage.UserIsExistByLogin(parsedInput.NewUserData.Login) || api.usersStorage.UserIsExistByEmail(parsedInput.NewUserData.Email) {
+		c.Logger().Printf("Error: %s", "user with this login or email exist")
+		return c.JSON(http.StatusConflict, http.StatusText(http.StatusConflict))
+	}
+
+	if err := api.usersStorage.AddUser(
+		api.usersStorage.CreateUserInstanceFromData(
+			parsedInput.NewUserData.Username,
+			parsedInput.NewUserData.Email,
+			parsedInput.NewUserData.Login,
+			parsedInput.NewUserData.Password,
+		),
+	); err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+	}
+
+	cookie := api.sessionsStorage.CreateCookieForUser(parsedInput.NewUserData.Email)
+	c.SetCookie(cookie)
+	api.sessionsStorage.PrintSessions()
+
+	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+}
+
 func (api *Api) CreateSessionHandler(c echo.Context) error {
-	parsedInput := new(models.Session)
+	defer c.Request().Body.Close()
 
 	log.Println("Input request data: ", c.Request().Body)
 
+	parsedInput := new(models.Session)
 	if err := c.Bind(parsedInput); err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
 		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
@@ -223,10 +260,9 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 
 	cookie := api.sessionsStorage.CreateCookieForUser(user.Email)
 	c.SetCookie(cookie)
-
 	api.sessionsStorage.PrintSessions()
 
-	return c.JSON(http.StatusOK, "")
+	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
 }
 
 func (api *Api) FeedHandler(c echo.Context) error {

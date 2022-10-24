@@ -51,3 +51,8 @@ func (o *SessionsStorage) CreateCookieForUser(email string) *http.Cookie {
 		Expires: time.Now().Add(24 * time.Hour),
 	}
 }
+
+func (o *SessionsStorage) SessionExists(cookie string) bool {
+	_, exists := o.sessions[cookie]
+	return exists
+}
