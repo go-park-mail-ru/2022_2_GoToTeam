@@ -1,51 +1,36 @@
 package api
 
 import (
+	"2022_2_GoTo_team/server/api/models"
 	"2022_2_GoTo_team/server/storage"
-	"2022_2_GoTo_team/server/storage/models"
-	"encoding/json"
 	"github.com/labstack/echo/v4"
-	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
 )
 
-const articleNumber = 3
+const articleNumberInFeed = 2
 
 type Api struct {
-	usersStorage *storage.UsersStorage
-	feedStorage  *storage.FeedStorage
-	sessions_    map[string]string
+	usersStorage    *storage.UsersStorage
+	sessionsStorage *storage.SessionsStorage
+	feedStorage     *storage.FeedStorage
 }
 
 func GetApi() *Api {
 	authApi := &Api{
-		usersStorage: storage.GetUsersStorage(),
-		feedStorage:  storage.GetFeedStorage(),
-		sessions_:    map[string]string{},
+		usersStorage:    storage.GetUsersStorage(),
+		feedStorage:     storage.GetFeedStorage(),
+		sessionsStorage: storage.GetSessionsStorage(),
 	}
 	authApi.usersStorage.PrintUsers()
 	authApi.feedStorage.PrintArticles()
+	authApi.sessionsStorage.PrintSessions()
 
 	return authApi
 }
 
-var (
-	letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-)
-
-func RandStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-
-	return string(b)
-}
-
+/*
 func (api *Api) IsAuthorized(c echo.Context) bool {
 	authorized := false
 	session, err := c.Cookie("session_id")
@@ -56,18 +41,21 @@ func (api *Api) IsAuthorized(c echo.Context) bool {
 	return authorized
 }
 
+*/
+
 func (api *Api) RootHandler(c echo.Context) error {
 	return nil
 }
 
+/*
 func (api *Api) UserHandler(c echo.Context) error {
 	if !api.IsAuthorized(c) {
-		return c.JSON(models.ErrUserNotAuthorised.Status, models.ErrUserNotAuthorised.Message)
+		return c.JSON(ErrUserNotAuthorised.Status, ErrUserNotAuthorised.Message)
 	}
 	cookie, _ := c.Cookie("session_id")
 	userLogin, ok := api.sessions_[cookie.Value]
 	if !ok {
-		return c.JSON(models.ErrUserNotExist.Status, models.ErrUserNotExist.Message)
+		return c.JSON(ErrUserNotExist.Status, ErrUserNotExist.Message)
 	}
 	user, _ := api.usersStorage.GetUserByLogin(userLogin)
 	data := models.SignupData{
@@ -109,21 +97,21 @@ func (api *Api) LoginHandler(c echo.Context) error {
 	formData, err := ioutil.ReadAll(c.Request().Body)
 	defer c.Request().Body.Close()
 	if err != nil {
-		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message+"1")
+		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message+"1")
 	}
 	//fmt.Println(string(formData))
 	err = json.Unmarshal(formData, &userForm)
 	if err != nil {
-		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message+"2")
+		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message+"2")
 	}
 	// можно добавить проверки на валидность логина и пароля
 
 	userFromBD, err := api.usersStorage.GetUserByLogin(userForm.Login)
 	if err != nil {
-		return c.JSON(models.ErrUserNotExist.Status, models.ErrUserNotExist.Message)
+		return c.JSON(ErrUserNotExist.Status, ErrUserNotExist.Message)
 	}
 	if userFromBD.Password != userForm.Password {
-		return c.JSON(models.ErrWrongPassword.Status, models.ErrWrongPassword.Message)
+		return c.JSON(ErrWrongPassword.Status, ErrWrongPassword.Message)
 	}
 	cookie = makeCookie()
 	c.SetCookie(cookie)
@@ -144,14 +132,14 @@ func (api *Api) LoginHandler(c echo.Context) error {
 
 func (api *Api) LogoutHandler(c echo.Context) error {
 	if !api.IsAuthorized(c) {
-		return c.JSON(models.ErrAlreadyLogout.Status, models.ErrAlreadyLogout.Message)
+		return c.JSON(ErrAlreadyLogout.Status, ErrAlreadyLogout.Message)
 	}
 	cookie, _ := c.Cookie("session_id")
 	delete(api.sessions_, cookie.Value)
 	cookie.Expires = time.Now().Local().Add(-1 * time.Hour)
 	c.SetCookie(cookie)
 
-	return c.JSON(models.LogoutResponse.Status, models.LogoutResponse.Message)
+	return c.JSON(LogoutResponse.Status, LogoutResponse.Message)
 }
 
 func (api *Api) SignupUserHandler(c echo.Context) error {
@@ -159,23 +147,23 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	requestData, err := ioutil.ReadAll(c.Request().Body)
 	defer c.Request().Body.Close()
 	if err != nil {
-		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message)
 	}
 
 	err = json.Unmarshal(requestData, &newUser)
 	if err != nil {
-		return c.JSON(models.ErrUnpackingJSON.Status, models.ErrUnpackingJSON.Message)
+		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message)
 	}
 
 	// проверка есть ли такой пользователь
 	_, err = api.usersStorage.GetUserByLogin(newUser.Login)
 	if err == nil {
-		return c.JSON(models.ErrUserExist.Status, models.ErrUserExist.Message)
+		return c.JSON(ErrUserExist.Status, ErrUserExist.Message)
 	}
 
 	//если правильно понял про мапу sessions,но это надо будет переписать
 	if api.IsAuthorized(c) {
-		return c.JSON(models.ErrUserAuthorised.Status, models.ErrUserAuthorised.Message)
+		return c.JSON(ErrUserAuthorised.Status, ErrUserAuthorised.Message)
 	}
 
 	//проверки на валидность
@@ -202,60 +190,95 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+*/
+
 func (api *Api) CreateSessionHandler(c echo.Context) error {
-	return nil
+	parsedInput := new(models.Session)
+
+	log.Println("Input request data: ", c.Request().Body)
+
+	if err := c.Bind(parsedInput); err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	log.Println("parsedInput = ", parsedInput)
+
+	email := parsedInput.UserData.Email
+	password := parsedInput.UserData.Password
+	log.Println("URL", c.Request().URL)
+	log.Println("email", email)
+	log.Println("password ", password)
+
+	user, err := api.usersStorage.GetUserByEmail(email)
+	if err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	if user.Password != password {
+		c.Logger().Printf("Error: %s", "invalid password.")
+		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	cookie := api.sessionsStorage.CreateCookieForUser(user.Email)
+	c.SetCookie(cookie)
+
+	api.sessionsStorage.PrintSessions()
+
+	return c.JSON(http.StatusOK, "")
 }
 
 func (api *Api) FeedHandler(c echo.Context) error {
-	strId := c.QueryParam("idLastLoaded")
-	if strId == "" {
-		strId = "0"
+	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
+	if startFromArticleOfNumberStr == "" {
+		startFromArticleOfNumberStr = "0"
 	}
 
-	startId, err := strconv.Atoi(strId)
+	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
 	if err != nil {
-		return c.JSON(models.ErrNoNextFeedId.Status, models.ErrNoNextFeedId.Message)
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+	if startFromArticleOfNumber < 0 {
+		c.Logger().Printf("Error: startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)
+		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	var ArticlesData []*models.Article
-	AllArticles := storage.GetFeedStorage()
-	testData, _ := AllArticles.GetArticles()
-	if startId >= 0 && startId+articleNumber < len(testData) {
-		ArticlesData = testData[startId : startId+articleNumber]
+	articles, err := api.feedStorage.GetArticles()
+	if err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+	}
+
+	if startFromArticleOfNumber+articleNumberInFeed <= len(articles) {
+		articles = articles[startFromArticleOfNumber : startFromArticleOfNumber+articleNumberInFeed]
+	} else if startFromArticleOfNumber < len(articles) {
+		articles = articles[startFromArticleOfNumber:]
 	} else {
-		startId = 0
-		if len(testData) > articleNumber {
-			startId = len(testData) - articleNumber
+		var startTmp = len(articles) - articleNumberInFeed
+		if startTmp < 0 {
+			startTmp = 0
 		}
-		ArticlesData = testData[startId : len(testData)-1]
+		articles = articles[startTmp:]
 	}
 
-	response := models.ArticleResponse{
-		Status: http.StatusOK,
-		Data:   ArticlesData,
-	}
-	return c.JSON(response.Status, response.Data)
-}
-
-func makeCookie() *http.Cookie {
-	SID := RandStringRunes(32)
-	cookie := new(http.Cookie)
-	cookie.Name = "session_id"
-	cookie.Value = SID
-	cookie.HttpOnly = true
-	cookie.Expires = time.Now().Add(10 * time.Hour)
-	return cookie
-}
-
-func (api *Api) printSessions() {
-	log.Println("Sessions in storage:")
-	/*
-		for _, v := range api.sessions {
-			log.Printf("%#v ", v)
+	feed := models.Feed{}
+	for _, v := range articles {
+		article := models.Article{
+			Id:          v.Id,
+			Title:       v.Title,
+			Description: v.Description,
+			Tags:        v.Tags,
+			Category:    v.Category,
+			Rating:      v.Rating,
+			Authors:     v.Authors,
+			Content:     v.Content,
 		}
-
-	*/
-	for k, v := range api.sessions_ {
-		log.Printf("cook: %#v for user id: %#v", k, v)
+		feed.Articles = append(feed.Articles, article)
 	}
+
+	log.Println("Formed feed = ", feed)
+
+	return c.JSON(http.StatusOK, feed)
 }
