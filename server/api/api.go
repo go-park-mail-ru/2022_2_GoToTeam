@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-const articleNumberInFeed = 10
+const ARTICLE_NUMBER_IN_FEED = 10
 
 type Api struct {
 	usersStorage    *storage.UsersStorage
@@ -32,7 +32,7 @@ func GetApi() *Api {
 
 func (api *Api) isAuthorized(c echo.Context) bool {
 	authorized := false
-	if session, err := c.Cookie("session_id"); err == nil && session != nil {
+	if session, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName()); err == nil && session != nil {
 		authorized = api.sessionsStorage.SessionExists(session.Value)
 	}
 
@@ -234,7 +234,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 func (api *Api) CreateSessionHandler(c echo.Context) error {
 	defer c.Request().Body.Close()
 
-	parsedInput := new(models.Session)
+	parsedInput := new(models.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
 		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
@@ -268,10 +268,12 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 
 func (api *Api) RemoveSessionHandler(c echo.Context) error {
 	if !api.isAuthorized(c) {
+		c.Logger().Printf("Error: %s", "unauthorized")
 		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 	}
-	cookie, err := c.Cookie("session_id")
+	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
 	if err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
 		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 	}
 
@@ -283,7 +285,25 @@ func (api *Api) RemoveSessionHandler(c echo.Context) error {
 }
 
 func (api *Api) SessionInfoHandler(c echo.Context) error {
-	return nil
+	if !api.isAuthorized(c) {
+		c.Logger().Printf("Error: %s", "unauthorized")
+		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	}
+	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
+	if err != nil {
+		c.Logger().Printf("Error: %s", err.Error())
+		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	}
+
+	email := api.sessionsStorage.GetEmailByCookie(cookie)
+	user, err := api.usersStorage.GetUserByEmail(email)
+
+	sessionInfo := models.SessionInfo{}
+	sessionInfo.Username = user.Username
+
+	log.Println("Formed sessionInfo = ", sessionInfo)
+
+	return c.JSON(http.StatusOK, sessionInfo)
 }
 
 func (api *Api) FeedHandler(c echo.Context) error {
@@ -308,12 +328,12 @@ func (api *Api) FeedHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
-	if startFromArticleOfNumber+articleNumberInFeed <= len(articles) {
-		articles = articles[startFromArticleOfNumber : startFromArticleOfNumber+articleNumberInFeed]
+	if startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED <= len(articles) {
+		articles = articles[startFromArticleOfNumber : startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED]
 	} else if startFromArticleOfNumber < len(articles) {
 		articles = articles[startFromArticleOfNumber:]
 	} else {
-		var startTmp = len(articles) - articleNumberInFeed
+		var startTmp = len(articles) - ARTICLE_NUMBER_IN_FEED
 		if startTmp < 0 {
 			startTmp = 0
 		}

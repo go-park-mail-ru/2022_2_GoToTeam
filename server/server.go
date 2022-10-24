@@ -17,7 +17,7 @@ func routing(e *echo.Echo) {
 	e.POST("/api/v1/user/signup", api.SignupUserHandler)
 	e.POST("/api/v1/session/create", api.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", api.RemoveSessionHandler)
-	//e.GET("/api/v1/session/info", api.SessionInfoHandler)
+	e.GET("/api/v1/session/info", api.SessionInfoHandler)
 	e.GET("/api/v1/feed", api.FeedHandler)
 }
 
