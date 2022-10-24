@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const SESSION_HEADER_NAME = "session_id"
+
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func randStringRunes(n int) string {
@@ -44,12 +46,16 @@ func (o *SessionsStorage) CreateSessionForUser(email string) *http.Cookie {
 	o.sessions[SID] = email
 
 	return &http.Cookie{
-		Name:  "session_id",
+		Name:  SESSION_HEADER_NAME,
 		Path:  "/",
 		Value: SID,
 		// HttpOnly: true,
 		Expires: time.Now().Add(23 * time.Hour), // Note! Change value in cookie.Expires function if you change hours
 	}
+}
+
+func (o *SessionsStorage) GetEmailByCookie(cookie *http.Cookie) string {
+	return o.sessions[cookie.Value]
 }
 
 func (o *SessionsStorage) RemoveSession(cookie *http.Cookie) {
@@ -64,4 +70,8 @@ func (o *SessionsStorage) SessionExists(cookie string) bool {
 
 func (o *SessionsStorage) ExpireCookie(cookie *http.Cookie) {
 	cookie.Expires = time.Now().AddDate(0, 0, -1) // Note! Change value in create cookie expires if you change days
+}
+
+func (o *SessionsStorage) GetSessionHeaderName() string {
+	return SESSION_HEADER_NAME
 }

@@ -1,6 +1,10 @@
 package models
 
-type Session struct {
+type SessionInfo struct {
+	Username string `json:"username"`
+}
+
+type SessionCreate struct {
 	UserData UserData `json:"user_data"`
 }
 
