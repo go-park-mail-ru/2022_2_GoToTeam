@@ -28,35 +28,39 @@ func (o *UsersStorage) PrintUsers() {
 	}
 }
 
-func (o *UsersStorage) AddUser(u models.User) error { // user_id
+func (o *UsersStorage) AddUser(user *models.User) error { // user_id
 	log.Println("Storage AddUser called.")
 
-	user := &models.User{
-		Username: u.Username,
-		Email:    u.Email,
-		Login:    u.Login,
-		Password: u.Password,
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	for _, v := range o.users {
+		if v.Login == user.Login {
+			return errors.New("user with the same login exist")
+		}
+		if v.Email == user.Email {
+			return errors.New("user with the same email exist")
+		}
 	}
 
-	o.mu.Lock()
-
-	// проверка в хэндлере
-	//for _, v := range o.users {
-	//	if v.Login == u.Login {
-	//		return errors.New("user with the same login exist")
-	//	}
-	//	if v.Email == u.Email {
-	//		return errors.New("user with the same email exist")
-	//	}
-	//}
-
-	user.UserId = o.nextID
+	user.UserId = o.getIdForInsert()
 	log.Println("New user id: ", user.UserId)
-	o.nextID++
 	o.users = append(o.users, user)
+	o.PrintUsers()
 
-	o.mu.Unlock()
 	return nil
+}
+
+func (o *UsersStorage) UserIsExistByLogin(login string) bool {
+	user, _ := o.GetUserByLogin(login)
+
+	return user != nil
+}
+
+func (o *UsersStorage) UserIsExistByEmail(email string) bool {
+	user, _ := o.GetUserByEmail(email)
+
+	return user != nil
 }
 
 func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
@@ -75,7 +79,7 @@ func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
 }
 
 func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
-	log.Println("Storage GetUserByLogin called.")
+	log.Println("Storage GetUserByEmail called.")
 
 	o.mu.RLock()
 	defer o.mu.RUnlock()
@@ -87,4 +91,24 @@ func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
 	}
 
 	return nil, errors.New("user with this email dont exists")
+}
+
+func (o *UsersStorage) CreateUserInstanceFromData(username string, email string, login string, password string) *models.User {
+	return &models.User{
+		Username: username,
+		Email:    email,
+		Login:    login,
+		Password: password,
+	}
+}
+
+func (o *UsersStorage) getIdForInsert() (id int) {
+	// Deadlock:
+	// o.mu.Lock()
+	// defer o.mu.Unlock()
+
+	id = o.nextID
+	o.nextID++
+
+	return
 }

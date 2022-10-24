@@ -9,19 +9,13 @@ var usersData = []*models.User{
 		"asd@asd.asd",
 		"asdLogin",
 		"asdPass",
-		"fsfd",
-		"qewqeasd",
-		"dsabvdv",
 	},
 	{
 		2,
 		"qwe",
 		"qwe@qwe.qwe",
-		"login",
-		"password",
-		"1weqe",
-		"vcbzzcx",
-		"bxvzdsqw",
+		"qweLogin",
+		"qwePass",
 	},
 }
 
