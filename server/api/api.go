@@ -6,7 +6,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
+	"net/mail"
 	"strconv"
+	"unicode"
 )
 
 const ARTICLE_NUMBER_IN_FEED = 10
@@ -30,6 +32,59 @@ func GetApi() *Api {
 	return authApi
 }
 
+func emailIsValid(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
+
+func loginIsValid(login string) bool {
+	if len(login) < 8 {
+		return false
+	}
+	for _, sep := range login {
+		if !unicode.IsLetter(sep) || sep != '_' {
+			return false
+		}
+	}
+	return true
+}
+
+// at least 8 symbols
+// at least 1 upper symbol
+// at least 1 special symbol
+func passwordIsValid(password string) (eightOrMore, upper, special bool) {
+	letters := 0
+	for _, c := range password {
+		switch {
+		case unicode.IsUpper(c):
+			upper = true
+			letters++
+		case unicode.IsPunct(c) || unicode.IsSymbol(c):
+			special = true
+		case unicode.IsLetter(c) || c == ' ':
+			letters++
+		default:
+			//return false, false, false
+		}
+	}
+	eightOrMore = letters >= 8
+	return
+}
+
+func usernameIsValid(uname string) bool {
+	if len(uname) == 0 {
+		return false
+	}
+	en := unicode.Is(unicode.Latin, rune(uname[0]))
+
+	for _, sep := range uname {
+		if (en && !unicode.Is(unicode.Latin, sep)) || (!en && unicode.Is(unicode.Latin, sep)) {
+			return false
+		}
+	}
+	return true
+}
+
 func (api *Api) isAuthorized(c echo.Context) bool {
 	authorized := false
 	if session, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName()); err == nil && session != nil {
@@ -38,161 +93,6 @@ func (api *Api) isAuthorized(c echo.Context) bool {
 
 	return authorized
 }
-
-/*
-func (api *Api) RootHandler(c echo.Context) error {
-	return nil
-}
-
-*/
-
-/*
-func (api *Api) UserHandler(c echo.Context) error {
-	if !api.IsAuthorized(c) {
-		return c.JSON(ErrUserNotAuthorised.Status, ErrUserNotAuthorised.Message)
-	}
-	cookie, _ := c.Cookie("session_id")
-	userLogin, ok := api.sessions_[cookie.Value]
-	if !ok {
-		return c.JSON(ErrUserNotExist.Status, ErrUserNotExist.Message)
-	}
-	user, _ := api.usersStorage.GetUserByLogin(userLogin)
-	data := models.SignupData{
-		UserName:   user.Username,
-		FirstName:  user.FirstName,
-		LastName:   user.LastName,
-		MiddleName: user.MiddleName,
-		Email:      user.Email,
-		Login:      user.Login,
-	}
-	response := models.SignupResponse{
-		Data:    data,
-		Message: "Hello! Its your profile",
-	}
-	return c.JSON(http.StatusOK, response)
-}
-
-func (api *Api) LoginHandler(c echo.Context) error {
-	cookie, _ := c.Cookie("session_id")
-	if api.IsAuthorized(c) {
-		userLogin, _ := api.sessions_[cookie.Value]
-		user, _ := api.usersStorage.GetUserByLogin(userLogin)
-		data := models.SignupData{
-			UserName:   user.Username,
-			FirstName:  user.FirstName,
-			LastName:   user.LastName,
-			MiddleName: user.MiddleName,
-			Email:      user.Email,
-			Login:      user.Login,
-		}
-		response := models.SignupResponse{
-			Data:    data,
-			Message: "Hello",
-		}
-		return c.JSON(http.StatusOK, response)
-	}
-	userForm := new(models.LoginForm)
-
-	formData, err := ioutil.ReadAll(c.Request().Body)
-	defer c.Request().Body.Close()
-	if err != nil {
-		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message+"1")
-	}
-	//fmt.Println(string(formData))
-	err = json.Unmarshal(formData, &userForm)
-	if err != nil {
-		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message+"2")
-	}
-	// можно добавить проверки на валидность логина и пароля
-
-	userFromBD, err := api.usersStorage.GetUserByLogin(userForm.Login)
-	if err != nil {
-		return c.JSON(ErrUserNotExist.Status, ErrUserNotExist.Message)
-	}
-	if userFromBD.Password != userForm.Password {
-		return c.JSON(ErrWrongPassword.Status, ErrWrongPassword.Message)
-	}
-	cookie = makeCookie()
-	c.SetCookie(cookie)
-	responseData := models.SignupData{
-		UserName:   userFromBD.Username,
-		FirstName:  userFromBD.FirstName,
-		LastName:   userFromBD.LastName,
-		MiddleName: userFromBD.MiddleName,
-		Email:      userFromBD.Email,
-		Login:      userFromBD.Login,
-	}
-	response := models.SignupResponse{
-		Data:    responseData,
-		Message: "Hello",
-	}
-	return c.JSON(http.StatusOK, response)
-}
-
-func (api *Api) LogoutHandler(c echo.Context) error {
-	if !api.IsAuthorized(c) {
-		return c.JSON(ErrAlreadyLogout.Status, ErrAlreadyLogout.Message)
-	}
-	cookie, _ := c.Cookie("session_id")
-	delete(api.sessions_, cookie.Value)
-	cookie.Expires = time.Now().Local().Add(-1 * time.Hour)
-	c.SetCookie(cookie)
-
-	return c.JSON(LogoutResponse.Status, LogoutResponse.Message)
-}
-
-*/
-
-/*
-func (api *Api) SignupUserHandler(c echo.Context) error {
-	newUser := new(models.User)
-	requestData, err := ioutil.ReadAll(c.Request().Body)
-	defer c.Request().Body.Close()
-	if err != nil {
-		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message)
-	}
-
-	err = json.Unmarshal(requestData, &newUser)
-	if err != nil {
-		return c.JSON(ErrUnpackingJSON.Status, ErrUnpackingJSON.Message)
-	}
-
-	// проверка есть ли такой пользователь
-	_, err = api.usersStorage.GetUserByLogin(newUser.Login)
-	if err == nil {
-		return c.JSON(ErrUserExist.Status, ErrUserExist.Message)
-	}
-
-	//если правильно понял про мапу sessions,но это надо будет переписать
-	if api.IsAuthorized(c) {
-		return c.JSON(ErrUserAuthorised.Status, ErrUserAuthorised.Message)
-	}
-
-	//проверки на валидность
-
-	_ = api.usersStorage.AddUser(*newUser)
-	cookie := makeCookie()
-	c.SetCookie(cookie)
-
-	//добавил сессию
-	api.sessions_[cookie.Value] = newUser.Login
-
-	res := models.SignupData{
-		UserName:   newUser.Username,
-		FirstName:  newUser.FirstName,
-		LastName:   newUser.LastName,
-		MiddleName: newUser.MiddleName,
-		Email:      newUser.Email,
-		Login:      newUser.Login,
-	}
-	response := models.SignupResponse{
-		Data:    res,
-		Message: "You have successfully registered",
-	}
-	return c.JSON(http.StatusOK, response)
-}
-
-*/
 
 func (api *Api) SignupUserHandler(c echo.Context) error {
 	defer c.Request().Body.Close()
@@ -358,4 +258,28 @@ func (api *Api) FeedHandler(c echo.Context) error {
 	log.Println("Formed feed = ", feed)
 
 	return c.JSON(http.StatusOK, feed)
+}
+
+func (api *Api) CreateArticleHandler(c echo.Context) error {
+	return nil
+}
+
+func (api *Api) UpdateArticleHandler(c echo.Context) error {
+	return nil
+}
+
+func (api *Api) UserInfoHandler(c echo.Context) error {
+	return nil
+}
+
+func (api *Api) UserFeedHandler(c echo.Context) error {
+	return nil
+}
+
+func (api *Api) CategoryInfoHandler(c echo.Context) error {
+	return nil
+}
+
+func (api *Api) CategoryFeedHandler(c echo.Context) error {
+	return nil
 }

@@ -9,16 +9,22 @@ import (
 
 func routing(e *echo.Echo) {
 	api := api.GetApi()
-	//e.GET("/", api.RootHandler)
-	//e.POST("/login", api.LoginHandler)
-	//e.POST("/logout", api.LogoutHandler)
-	//e.GET("/user", api.UserHandler)
-
-	e.POST("/api/v1/user/signup", api.SignupUserHandler)
 	e.POST("/api/v1/session/create", api.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", api.RemoveSessionHandler)
 	e.GET("/api/v1/session/info", api.SessionInfoHandler)
+
+	e.POST("/api/v1/new/article/create", api.CreateArticleHandler)
+	e.POST("/api/v1/new/article/update", api.UpdateArticleHandler)
+
+	e.POST("/api/v1/user/signup", api.SignupUserHandler)
+	e.GET("/api/v1/user/info", api.UserInfoHandler)
+	e.GET("/api/v1/user/feed", api.UserFeedHandler)
+
+	e.GET("/api/v1/category/info", api.CategoryInfoHandler)
+	e.GET("/api/v1/category/feed", api.CategoryFeedHandler)
+
 	e.GET("/api/v1/feed", api.FeedHandler)
+
 }
 
 func Run(serverAddress string, allowOriginsAddressesCORS []string) {
