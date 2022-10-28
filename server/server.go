@@ -31,8 +31,8 @@ func Run(serverAddress string, allowOriginsAddressesCORS []string) {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(
 		middleware.CORSConfig{
-			AllowMethods:     []string{http.MethodPost, http.MethodGet},
 			AllowOrigins:     allowOriginsAddressesCORS,
+			AllowMethods:     []string{http.MethodPost, http.MethodGet},
 			AllowCredentials: true,
 		},
 	))
