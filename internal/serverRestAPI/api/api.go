@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"os"
 	"strconv"
 	"unicode"
 )
@@ -35,12 +36,19 @@ func GetApi() *Api {
 	return authApi
 }
 
-func (api *Api) ConfigureLogger(logLVL string) error {
+func (api *Api) ConfigureLogger(logLVL, logPath string) error {
 	level, err := logrus.ParseLevel(logLVL)
 	if err != nil {
 		return err
 	}
 	api.logger.SetLevel(level)
+	if len(logPath) != 0 {
+		logfile, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			return err
+		}
+		api.logger.SetOutput(logfile)
+	}
 	return nil
 }
 
