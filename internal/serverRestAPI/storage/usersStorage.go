@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"2022_2_GoTo_team/server/storage/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/storage/models"
 	"errors"
 	"log"
 	"sync"
