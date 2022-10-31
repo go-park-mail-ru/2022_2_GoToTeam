@@ -4,6 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/api/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/storage"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"net/mail"
@@ -17,6 +18,7 @@ type Api struct {
 	usersStorage    *storage.UsersStorage
 	sessionsStorage *storage.SessionsStorage
 	feedStorage     *storage.FeedStorage
+	logger          *logrus.Logger
 }
 
 func GetApi() *Api {
@@ -24,12 +26,26 @@ func GetApi() *Api {
 		usersStorage:    storage.GetUsersStorage(),
 		feedStorage:     storage.GetFeedStorage(),
 		sessionsStorage: storage.GetSessionsStorage(),
+		logger:          logrus.New(),
 	}
 	authApi.usersStorage.PrintUsers()
 	authApi.feedStorage.PrintArticles()
 	authApi.sessionsStorage.PrintSessions()
 
 	return authApi
+}
+
+func (api *Api) ConfigureLogger(logLVL string) error {
+	level, err := logrus.ParseLevel(logLVL)
+	if err != nil {
+		return err
+	}
+	api.logger.SetLevel(level)
+	return nil
+}
+
+func (api *Api) LogInfo(info string) {
+	api.logger.Info(info)
 }
 
 func emailIsValid(email string) bool {

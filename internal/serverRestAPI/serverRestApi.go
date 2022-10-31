@@ -7,24 +7,29 @@ import (
 	"net/http"
 )
 
-func routing(e *echo.Echo) {
-	api := api.GetApi()
-	e.POST("/api/v1/session/create", api.CreateSessionHandler)
-	e.POST("/api/v1/session/remove", api.RemoveSessionHandler)
-	e.GET("/api/v1/session/info", api.SessionInfoHandler)
+func routing(e *echo.Echo, conf *Config) error {
+	Api := api.GetApi()
+	if err := Api.ConfigureLogger(conf.LogLevel); err != nil {
+		return err
+	}
+	Api.LogInfo("starting server")
 
-	e.POST("/api/v1/new/article/create", api.CreateArticleHandler)
-	e.POST("/api/v1/new/article/update", api.UpdateArticleHandler)
+	e.POST("/api/v1/session/create", Api.CreateSessionHandler)
+	e.POST("/api/v1/session/remove", Api.RemoveSessionHandler)
+	e.GET("/api/v1/session/info", Api.SessionInfoHandler)
 
-	e.POST("/api/v1/user/signup", api.SignupUserHandler)
-	e.GET("/api/v1/user/info", api.UserInfoHandler)
-	e.GET("/api/v1/user/feed", api.UserFeedHandler)
+	e.POST("/api/v1/new/article/create", Api.CreateArticleHandler)
+	e.POST("/api/v1/new/article/update", Api.UpdateArticleHandler)
 
-	e.GET("/api/v1/category/info", api.CategoryInfoHandler)
-	e.GET("/api/v1/category/feed", api.CategoryFeedHandler)
+	e.POST("/api/v1/user/signup", Api.SignupUserHandler)
+	e.GET("/api/v1/user/info", Api.UserInfoHandler)
+	e.GET("/api/v1/user/feed", Api.UserFeedHandler)
 
-	e.GET("/api/v1/feed", api.FeedHandler)
+	e.GET("/api/v1/category/info", Api.CategoryInfoHandler)
+	e.GET("/api/v1/category/feed", Api.CategoryFeedHandler)
 
+	e.GET("/api/v1/feed", Api.FeedHandler)
+	return nil
 }
 
 func Run(conf *Config) {
@@ -37,6 +42,8 @@ func Run(conf *Config) {
 		},
 	))
 
-	routing(e)
+	if err := routing(e, conf); err != nil {
+		e.Logger.Fatal("Cant configure logger")
+	}
 	e.Logger.Fatal(e.Start(conf.BindServerAddress))
 }
