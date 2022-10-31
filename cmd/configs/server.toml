@@ -1,0 +1,2 @@
+serverAddress = "127.0.0.1:8080"
+originsAddressesCORS = ["http://127.0.0.1:8080"]
