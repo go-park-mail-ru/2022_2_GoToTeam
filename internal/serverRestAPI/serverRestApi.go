@@ -1,7 +1,7 @@
-package server
+package serverRestAPI
 
 import (
-	"2022_2_GoTo_team/server/api"
+	"2022_2_GoTo_team/internal/serverRestAPI/api"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"

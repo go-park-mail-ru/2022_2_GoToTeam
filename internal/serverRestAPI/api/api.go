@@ -1,8 +1,8 @@
 package api
 
 import (
-	"2022_2_GoTo_team/server/api/models"
-	"2022_2_GoTo_team/server/storage"
+	"2022_2_GoTo_team/internal/serverRestAPI/api/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/storage"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
