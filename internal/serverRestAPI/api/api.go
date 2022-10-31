@@ -138,9 +138,29 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	log.Println("Parsed input user data:", parsedInput)
 
 	// TODO VALIDATOR
+	if !loginIsValid(parsedInput.NewUserData.Login) {
+		api.logger.Error("Incorrect login")
+		return c.NoContent(http.StatusConflict)
+	}
+
+	if eightOrMore, upper, special := passwordIsValid(parsedInput.NewUserData.Password); !(eightOrMore && upper && special) {
+		api.logger.Error("Password is incorrect")
+		return c.NoContent(http.StatusConflict)
+	}
+
+	if !emailIsValid(parsedInput.NewUserData.Email) {
+		api.logger.Error("Email is incorrect")
+		return c.NoContent(http.StatusConflict)
+	}
+
+	if !usernameIsValid(parsedInput.NewUserData.Username) {
+		api.logger.Error("Username is incorrect")
+		return c.NoContent(http.StatusConflict)
+	}
 
 	if api.usersStorage.UserIsExistByLogin(parsedInput.NewUserData.Login) || api.usersStorage.UserIsExistByEmail(parsedInput.NewUserData.Email) {
-		c.Logger().Printf("Error: %s", "user with this login or email exist")
+		//c.Logger().Printf("Error: %s", "user with this login or email exist")
+		api.logger.Error("User with this login or email exist")
 		return c.NoContent(http.StatusConflict)
 	}
 
@@ -152,7 +172,8 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 			parsedInput.NewUserData.Password,
 		),
 	); err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		//c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -160,6 +181,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	c.SetCookie(cookie)
 	api.sessionsStorage.PrintSessions()
 
+	api.logger.Info("User register successful!")
 	return c.NoContent(http.StatusOK)
 }
 
@@ -168,11 +190,13 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 
 	parsedInput := new(models.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		//c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	log.Println("parsedInput = ", parsedInput)
+	//log.Println("parsedInput = ", parsedInput)
+	api.logger.Info("parsedInput = ", parsedInput)
 
 	email := parsedInput.UserData.Email
 	password := parsedInput.UserData.Password
@@ -182,12 +206,13 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 
 	user, err := api.usersStorage.GetUserByEmail(email)
 	if err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusBadRequest)
 	}
 
 	if user.Password != password {
-		c.Logger().Printf("Error: %s", "invalid password.")
+		//c.Logger().Printf("Error: %s", "invalid password.")
+		api.logger.Error("Invalid password")
 		return c.NoContent(http.StatusBadRequest)
 	}
 
@@ -195,17 +220,20 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 	c.SetCookie(cookie)
 	api.sessionsStorage.PrintSessions()
 
+	api.logger.Info("User auth success!")
 	return c.NoContent(http.StatusOK)
 }
 
 func (api *Api) RemoveSessionHandler(c echo.Context) error {
 	if !api.isAuthorized(c) {
-		c.Logger().Printf("Error: %s", "unauthorized")
+		//c.Logger().Printf("Error: %s", "unauthorized")
+		api.logger.Error("Unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
 	if err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		//c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
@@ -213,28 +241,37 @@ func (api *Api) RemoveSessionHandler(c echo.Context) error {
 	api.sessionsStorage.PrintSessions()
 	c.SetCookie(cookie)
 
+	api.logger.Info("User logout success")
 	return c.NoContent(http.StatusOK)
 }
 
 func (api *Api) SessionInfoHandler(c echo.Context) error {
 	if !api.isAuthorized(c) {
-		c.Logger().Printf("Error: %s", "unauthorized")
+		//c.Logger().Printf("Error: %s", "unauthorized")
+		api.logger.Error("Unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
 	if err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		//c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	email := api.sessionsStorage.GetEmailByCookie(cookie)
 	user, err := api.usersStorage.GetUserByEmail(email)
 
+	if err != nil {
+		api.logger.Error(err.Error())
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	sessionInfo := models.SessionInfo{}
 	sessionInfo.Username = user.Username
 
-	log.Println("Formed sessionInfo = ", sessionInfo)
+	//log.Println("Formed sessionInfo = ", sessionInfo)
 
+	api.logger.Info("Formed sessionInfo = ", sessionInfo)
 	return c.JSON(http.StatusOK, sessionInfo)
 }
 
@@ -246,17 +283,20 @@ func (api *Api) FeedHandler(c echo.Context) error {
 
 	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
 	if err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		//c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusBadRequest)
 	}
 	if startFromArticleOfNumber < 0 {
-		c.Logger().Printf("Error: startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)
+		//c.Logger().Printf("Error: startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)
+		api.logger.Error("startFromArticleOfNumber = ", startFromArticleOfNumber, " < 0")
 		return c.NoContent(http.StatusBadRequest)
 	}
 
 	articles, err := api.feedStorage.GetArticles()
 	if err != nil {
-		c.Logger().Printf("Error: %s", err.Error())
+		//c.Logger().Printf("Error: %s", err.Error())
+		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -287,8 +327,9 @@ func (api *Api) FeedHandler(c echo.Context) error {
 		feed.Articles = append(feed.Articles, article)
 	}
 
-	log.Println("Formed feed = ", feed)
+	//log.Println("Formed feed = ", feed)
 
+	api.logger.Info("Formed feed = ", feed)
 	return c.JSON(http.StatusOK, feed)
 }
 
