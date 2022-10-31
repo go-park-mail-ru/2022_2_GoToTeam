@@ -6,6 +6,7 @@ type Config struct {
 	BindServerAddress             string   `toml:"serverAddress"`
 	BindAllowOriginsAddressesCORS []string `toml:"originsAddressesCORS"`
 	LogLevel                      string   `toml:"logLevel"`
+	LogPath                       string   `toml:"logPath"`
 }
 
 func NewConfig() *Config {
@@ -13,5 +14,6 @@ func NewConfig() *Config {
 		BindServerAddress:             "127.0.0.1:8080",
 		BindAllowOriginsAddressesCORS: []string{"http://127.0.0.1:8080"},
 		LogLevel:                      "debug",
+		LogPath:                       "",
 	}
 }

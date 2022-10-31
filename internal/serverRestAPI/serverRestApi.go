@@ -9,7 +9,7 @@ import (
 
 func routing(e *echo.Echo, conf *Config) error {
 	Api := api.GetApi()
-	if err := Api.ConfigureLogger(conf.LogLevel); err != nil {
+	if err := Api.ConfigureLogger(conf.LogLevel, conf.LogPath); err != nil {
 		return err
 	}
 	Api.LogInfo("starting server")
