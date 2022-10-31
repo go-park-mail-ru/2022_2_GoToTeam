@@ -100,7 +100,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	parsedInput := new(models.User)
 	if err := c.Bind(parsedInput); err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	log.Println("Parsed input user data:", parsedInput)
@@ -109,7 +109,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 
 	if api.usersStorage.UserIsExistByLogin(parsedInput.NewUserData.Login) || api.usersStorage.UserIsExistByEmail(parsedInput.NewUserData.Email) {
 		c.Logger().Printf("Error: %s", "user with this login or email exist")
-		return c.JSON(http.StatusConflict, http.StatusText(http.StatusConflict))
+		return c.NoContent(http.StatusConflict)
 	}
 
 	if err := api.usersStorage.AddUser(
@@ -121,14 +121,14 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 		),
 	); err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	cookie := api.sessionsStorage.CreateSessionForUser(parsedInput.NewUserData.Email)
 	c.SetCookie(cookie)
 	api.sessionsStorage.PrintSessions()
 
-	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+	return c.NoContent(http.StatusOK)
 }
 
 func (api *Api) CreateSessionHandler(c echo.Context) error {
@@ -137,7 +137,7 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 	parsedInput := new(models.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	log.Println("parsedInput = ", parsedInput)
@@ -151,48 +151,48 @@ func (api *Api) CreateSessionHandler(c echo.Context) error {
 	user, err := api.usersStorage.GetUserByEmail(email)
 	if err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	if user.Password != password {
 		c.Logger().Printf("Error: %s", "invalid password.")
-		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	cookie := api.sessionsStorage.CreateSessionForUser(user.Email)
 	c.SetCookie(cookie)
 	api.sessionsStorage.PrintSessions()
 
-	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+	return c.NoContent(http.StatusOK)
 }
 
 func (api *Api) RemoveSessionHandler(c echo.Context) error {
 	if !api.isAuthorized(c) {
 		c.Logger().Printf("Error: %s", "unauthorized")
-		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
 	if err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	api.sessionsStorage.RemoveSession(cookie)
 	api.sessionsStorage.PrintSessions()
 	c.SetCookie(cookie)
 
-	return c.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+	return c.NoContent(http.StatusOK)
 }
 
 func (api *Api) SessionInfoHandler(c echo.Context) error {
 	if !api.isAuthorized(c) {
 		c.Logger().Printf("Error: %s", "unauthorized")
-		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
 	if err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
 	email := api.sessionsStorage.GetEmailByCookie(cookie)
@@ -215,17 +215,17 @@ func (api *Api) FeedHandler(c echo.Context) error {
 	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
 	if err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return c.NoContent(http.StatusBadRequest)
 	}
 	if startFromArticleOfNumber < 0 {
 		c.Logger().Printf("Error: startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)
-		return c.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	articles, err := api.feedStorage.GetArticles()
 	if err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
-		return c.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	if startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED <= len(articles) {
