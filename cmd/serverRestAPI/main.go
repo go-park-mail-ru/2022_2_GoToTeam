@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "config_path", "configs/server.toml", "path to config file")
+	flag.StringVar(&configPath, "config_path", "cmd/configs/server.toml", "path to config file")
 }
 
 func main() {
