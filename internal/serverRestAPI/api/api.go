@@ -5,6 +5,8 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/storage"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	easy "github.com/t-tomalak/logrus-easy-formatter"
+	"io"
 	"log"
 	"net/http"
 	"net/mail"
@@ -47,8 +49,14 @@ func (api *Api) ConfigureLogger(logLVL, logPath string) error {
 		if err != nil {
 			return err
 		}
-		api.logger.SetOutput(logfile)
+		api.logger.SetOutput(io.MultiWriter(logfile, os.Stdout))
+		formatter := &easy.Formatter{
+			TimestampFormat: "2006-01-02 15:04:05",
+			LogFormat:       "[%lvl%]: %time% - %msg%\n",
+		}
+		api.logger.SetFormatter(formatter)
 	}
+
 	return nil
 }
 
