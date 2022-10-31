@@ -27,16 +27,16 @@ func routing(e *echo.Echo) {
 
 }
 
-func Run(serverAddress string, allowOriginsAddressesCORS []string) {
+func Run(conf *Config) {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(
 		middleware.CORSConfig{
-			AllowOrigins:     allowOriginsAddressesCORS,
+			AllowOrigins:     conf.BindAllowOriginsAddressesCORS,
 			AllowMethods:     []string{http.MethodPost, http.MethodGet},
 			AllowCredentials: true,
 		},
 	))
 
 	routing(e)
-	e.Logger.Fatal(e.Start(serverAddress))
+	e.Logger.Fatal(e.Start(conf.BindServerAddress))
 }
