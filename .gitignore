@@ -16,3 +16,6 @@
 
 # IDEA
 .idea
+
+# Logs directory
+.logs

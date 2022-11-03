@@ -1,34 +1,38 @@
-package storage
+package repository
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/storage/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/utils/logger"
 	"errors"
 	"log"
 	"sync"
 )
 
-type UsersStorage struct {
+type usersStorage struct {
 	users  []*models.User
 	mu     sync.RWMutex
 	nextID int
+	logger *logger.Logger
 }
 
-func GetUsersStorage() *UsersStorage {
-	return &UsersStorage{
+func NewUserRepository(logger *logger.Logger) interfaces.UserRepositoryInterface {
+	return &usersStorage{
 		users:  usersData,
 		mu:     sync.RWMutex{},
 		nextID: 3,
+		logger: logger,
 	}
 }
 
-func (o *UsersStorage) PrintUsers() {
+func (o *usersStorage) PrintUsers() {
 	log.Printf("Users in storage:")
 	for _, v := range o.users {
 		log.Printf("%#v ", v)
 	}
 }
 
-func (o *UsersStorage) AddUser(user *models.User) error { // user_id
+func (o *usersStorage) AddUser(user *models.User) error { // user_id
 	log.Println("Storage AddUser called.")
 
 	o.mu.Lock()
@@ -36,9 +40,11 @@ func (o *UsersStorage) AddUser(user *models.User) error { // user_id
 
 	for _, v := range o.users {
 		if v.Login == user.Login {
+			// TODO logger
 			return errors.New("user with the same login exist")
 		}
 		if v.Email == user.Email {
+			// TODO logger
 			return errors.New("user with the same email exist")
 		}
 	}
@@ -51,19 +57,19 @@ func (o *UsersStorage) AddUser(user *models.User) error { // user_id
 	return nil
 }
 
-func (o *UsersStorage) UserIsExistByLogin(login string) bool {
+func (o *usersStorage) UserIsExistByLogin(login string) bool {
 	user, _ := o.GetUserByLogin(login)
 
 	return user != nil
 }
 
-func (o *UsersStorage) UserIsExistByEmail(email string) bool {
+func (o *usersStorage) UserIsExistByEmail(email string) bool {
 	user, _ := o.GetUserByEmail(email)
 
 	return user != nil
 }
 
-func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
+func (o *usersStorage) GetUserByLogin(login string) (*models.User, error) {
 	log.Println("Storage GetUserByLogin called.")
 
 	o.mu.RLock()
@@ -75,10 +81,11 @@ func (o *UsersStorage) GetUserByLogin(login string) (*models.User, error) {
 		}
 	}
 
+	// TODO logger
 	return nil, errors.New("user with this login dont exists")
 }
 
-func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
+func (o *usersStorage) GetUserByEmail(email string) (*models.User, error) {
 	log.Println("Storage GetUserByEmail called.")
 
 	o.mu.RLock()
@@ -90,10 +97,11 @@ func (o *UsersStorage) GetUserByEmail(email string) (*models.User, error) {
 		}
 	}
 
+	// TODO logger
 	return nil, errors.New("user with this email dont exists")
 }
 
-func (o *UsersStorage) CreateUserInstanceFromData(username string, email string, login string, password string) *models.User {
+func (o *usersStorage) CreateUserInstanceFromData(username string, email string, login string, password string) *models.User {
 	return &models.User{
 		Username: username,
 		Email:    email,
@@ -102,7 +110,7 @@ func (o *UsersStorage) CreateUserInstanceFromData(username string, email string,
 	}
 }
 
-func (o *UsersStorage) getIdForInsert() (id int) {
+func (o *usersStorage) getIdForInsert() (id int) {
 	// Deadlock:
 	// o.mu.Lock()
 	// defer o.mu.Unlock()

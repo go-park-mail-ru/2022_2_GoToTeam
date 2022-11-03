@@ -1,16 +1,16 @@
 package api
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/api/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/storage"
+	models3 "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/repository"
+	repository2 "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
+	models4 "2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery/models"
+	repository3 "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	easy "github.com/t-tomalak/logrus-easy-formatter"
-	"io"
 	"log"
 	"net/http"
 	"net/mail"
-	"os"
 	"strconv"
 	"unicode"
 )
@@ -18,17 +18,17 @@ import (
 const ARTICLE_NUMBER_IN_FEED = 10
 
 type Api struct {
-	usersStorage    *storage.UsersStorage
-	sessionsStorage *storage.SessionsStorage
-	feedStorage     *storage.FeedStorage
+	usersStorage    *repository3.UsersStorage
+	sessionsStorage *repository2.SessionsStorage
+	feedStorage     *repository.FeedStorage
 	logger          *logrus.Logger
 }
 
 func GetApi() *Api {
 	authApi := &Api{
-		usersStorage:    storage.GetUsersStorage(),
-		feedStorage:     storage.GetFeedStorage(),
-		sessionsStorage: storage.GetSessionsStorage(),
+		usersStorage:    repository3.GetUsersStorage(),
+		feedStorage:     repository.GetFeedStorage(),
+		sessionsStorage: repository2.NewSessionsRepository(),
 		logger:          logrus.New(),
 	}
 	authApi.usersStorage.PrintUsers()
@@ -36,28 +36,6 @@ func GetApi() *Api {
 	authApi.sessionsStorage.PrintSessions()
 
 	return authApi
-}
-
-func (api *Api) ConfigureLogger(logLVL, logPath string) error {
-	level, err := logrus.ParseLevel(logLVL)
-	if err != nil {
-		return err
-	}
-	api.logger.SetLevel(level)
-	if len(logPath) != 0 {
-		logfile, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			return err
-		}
-		api.logger.SetOutput(io.MultiWriter(logfile, os.Stdout))
-		formatter := &easy.Formatter{
-			TimestampFormat: "2006-01-02 15:04:05",
-			LogFormat:       "[%lvl%]: %time% - %msg%\n",
-		}
-		api.logger.SetFormatter(formatter)
-	}
-
-	return nil
 }
 
 func (api *Api) LogInfo(info string) {
@@ -117,19 +95,10 @@ func usernameIsValid(uname string) bool {
 	return true
 }
 
-func (api *Api) isAuthorized(c echo.Context) bool {
-	authorized := false
-	if session, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName()); err == nil && session != nil {
-		authorized = api.sessionsStorage.SessionExists(session.Value)
-	}
-
-	return authorized
-}
-
 func (api *Api) SignupUserHandler(c echo.Context) error {
 	defer c.Request().Body.Close()
 
-	parsedInput := new(models.User)
+	parsedInput := new(models4.User)
 	if err := c.Bind(parsedInput); err != nil {
 		c.Logger().Printf("Error: %s", err.Error())
 		return c.NoContent(http.StatusBadRequest)
@@ -140,7 +109,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	// TODO VALIDATOR
 	if !loginIsValid(parsedInput.NewUserData.Login) {
 		api.logger.Error("Incorrect login")
-		return c.NoContent(http.StatusConflict)
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	if eightOrMore, upper, special := passwordIsValid(parsedInput.NewUserData.Password); !(eightOrMore && upper && special) {
@@ -159,7 +128,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	}
 
 	if api.usersStorage.UserIsExistByLogin(parsedInput.NewUserData.Login) || api.usersStorage.UserIsExistByEmail(parsedInput.NewUserData.Email) {
-		//c.Logger().Printf("Error: %s", "user with this login or email exist")
+		//c.LogrusLogger().Printf("Error: %s", "user with this login or email exist")
 		api.logger.Error("User with this login or email exist")
 		return c.NoContent(http.StatusConflict)
 	}
@@ -172,7 +141,7 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 			parsedInput.NewUserData.Password,
 		),
 	); err != nil {
-		//c.Logger().Printf("Error: %s", err.Error())
+		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusInternalServerError)
 	}
@@ -185,96 +154,6 @@ func (api *Api) SignupUserHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (api *Api) CreateSessionHandler(c echo.Context) error {
-	defer c.Request().Body.Close()
-
-	parsedInput := new(models.SessionCreate)
-	if err := c.Bind(parsedInput); err != nil {
-		//c.Logger().Printf("Error: %s", err.Error())
-		api.logger.Error(err.Error())
-		return c.NoContent(http.StatusBadRequest)
-	}
-
-	//log.Println("parsedInput = ", parsedInput)
-	api.logger.Info("parsedInput = ", parsedInput)
-
-	email := parsedInput.UserData.Email
-	password := parsedInput.UserData.Password
-	log.Println("URL", c.Request().URL)
-	log.Println("email", email)
-	log.Println("password ", password)
-
-	user, err := api.usersStorage.GetUserByEmail(email)
-	if err != nil {
-		api.logger.Error(err.Error())
-		return c.NoContent(http.StatusBadRequest)
-	}
-
-	if user.Password != password {
-		//c.Logger().Printf("Error: %s", "invalid password.")
-		api.logger.Error("Invalid password")
-		return c.NoContent(http.StatusBadRequest)
-	}
-
-	cookie := api.sessionsStorage.CreateSessionForUser(user.Email)
-	c.SetCookie(cookie)
-	api.sessionsStorage.PrintSessions()
-
-	api.logger.Info("User auth success!")
-	return c.NoContent(http.StatusOK)
-}
-
-func (api *Api) RemoveSessionHandler(c echo.Context) error {
-	if !api.isAuthorized(c) {
-		//c.Logger().Printf("Error: %s", "unauthorized")
-		api.logger.Error("Unauthorized")
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
-	if err != nil {
-		//c.Logger().Printf("Error: %s", err.Error())
-		api.logger.Error(err.Error())
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	api.sessionsStorage.RemoveSession(cookie)
-	api.sessionsStorage.PrintSessions()
-	c.SetCookie(cookie)
-
-	api.logger.Info("User logout success")
-	return c.NoContent(http.StatusOK)
-}
-
-func (api *Api) SessionInfoHandler(c echo.Context) error {
-	if !api.isAuthorized(c) {
-		//c.Logger().Printf("Error: %s", "unauthorized")
-		api.logger.Error("Unauthorized")
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	cookie, err := c.Cookie(api.sessionsStorage.GetSessionHeaderName())
-	if err != nil {
-		//c.Logger().Printf("Error: %s", err.Error())
-		api.logger.Error(err.Error())
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	email := api.sessionsStorage.GetEmailByCookie(cookie)
-	user, err := api.usersStorage.GetUserByEmail(email)
-
-	if err != nil {
-		api.logger.Error(err.Error())
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	sessionInfo := models.SessionInfo{}
-	sessionInfo.Username = user.Username
-
-	//log.Println("Formed sessionInfo = ", sessionInfo)
-
-	api.logger.Info("Formed sessionInfo = ", sessionInfo)
-	return c.JSON(http.StatusOK, sessionInfo)
-}
-
 func (api *Api) FeedHandler(c echo.Context) error {
 	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
 	if startFromArticleOfNumberStr == "" {
@@ -283,19 +162,19 @@ func (api *Api) FeedHandler(c echo.Context) error {
 
 	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
 	if err != nil {
-		//c.Logger().Printf("Error: %s", err.Error())
+		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusBadRequest)
 	}
 	if startFromArticleOfNumber < 0 {
-		//c.Logger().Printf("Error: startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)
+		//c.LogrusLogger().Printf("Error: startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)
 		api.logger.Error("startFromArticleOfNumber = ", startFromArticleOfNumber, " < 0")
 		return c.NoContent(http.StatusBadRequest)
 	}
 
 	articles, err := api.feedStorage.GetArticles()
 	if err != nil {
-		//c.Logger().Printf("Error: %s", err.Error())
+		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		api.logger.Error(err.Error())
 		return c.NoContent(http.StatusInternalServerError)
 	}
@@ -312,9 +191,9 @@ func (api *Api) FeedHandler(c echo.Context) error {
 		articles = articles[startTmp:]
 	}
 
-	feed := models.Feed{}
+	feed := models3.Feed{}
 	for _, v := range articles {
-		article := models.Article{
+		article := models3.Article{
 			Id:          v.Id,
 			Title:       v.Title,
 			Description: v.Description,

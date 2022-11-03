@@ -1,4 +1,4 @@
-package models
+package restApiModels
 
 type SessionInfo struct {
 	Username string `json:"username"`
