@@ -1,4 +1,4 @@
-package models
+package modelsRestApi
 
 type Feed struct {
 	Articles []Article `json:"articles"`

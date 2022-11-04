@@ -1,10 +1,10 @@
 package delivery
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/restApiModels"
-	"2022_2_GoTo_team/internal/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/modelsRestApi"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
@@ -12,41 +12,41 @@ import (
 
 const SESSION_HEADER_NAME = "session_id"
 
-type SessionHandler struct {
-	sessionUsecase interfaces.SessionUsecaseInterface
+type SessionController struct {
+	sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface
 	logger         *logger.Logger
 }
 
-func NewSessionHandler(sessionUsecase interfaces.SessionUsecaseInterface, logger *logger.Logger) *SessionHandler {
-	sessionHandler := &SessionHandler{
+func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface, logger *logger.Logger) *SessionController {
+	sessionController := &SessionController{
 		sessionUsecase: sessionUsecase,
 		logger:         logger,
 	}
 
-	return sessionHandler
+	return sessionController
 }
 
-func (sh *SessionHandler) isAuthorized(c echo.Context) bool {
+func (sc *SessionController) isAuthorized(c echo.Context) bool {
 	authorized := false
 	if cookie, err := c.Cookie(SESSION_HEADER_NAME); err == nil && cookie != nil {
-		authorized = sh.sessionUsecase.IsSessionExists(&models.Session{Cookie: cookie})
+		authorized = sc.sessionUsecase.IsSessionExists(&models.Session{Cookie: cookie})
 	}
 
 	return authorized
 }
 
-func (sh *SessionHandler) CreateSessionHandler(c echo.Context) error {
+func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	defer c.Request().Body.Close()
 
-	parsedInput := new(restApiModels.SessionCreate)
+	parsedInput := new(modelsRestApi.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
-		sh.logger.LogrusLogger.Error(err)
+		sc.logger.LogrusLogger.Error(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
 	//log.Println("parsedInput = ", parsedInput)
-	sh.logger.LogrusLogger.Info("parsedInput = ", parsedInput)
+	sc.logger.LogrusLogger.Info("parsedInput = ", parsedInput)
 
 	email := parsedInput.UserData.Email
 	password := parsedInput.UserData.Password
@@ -54,7 +54,7 @@ func (sh *SessionHandler) CreateSessionHandler(c echo.Context) error {
 	log.Println("email", email)
 	log.Println("password ", password)
 
-	session, err := sh.sessionUsecase.CreateSessionForUser(email, password, SESSION_HEADER_NAME)
+	session, err := sc.sessionUsecase.CreateSessionForUser(email, password, SESSION_HEADER_NAME)
 	if err != nil {
 		// TODO logger
 		log.Println("err in session controller: " + err.Error())
@@ -63,55 +63,55 @@ func (sh *SessionHandler) CreateSessionHandler(c echo.Context) error {
 
 	c.SetCookie(session.Cookie)
 
-	sh.logger.LogrusLogger.Info("User auth success!")
+	sc.logger.LogrusLogger.Info("User auth success!")
 
 	return c.NoContent(http.StatusOK)
 }
 
-func (sh *SessionHandler) RemoveSessionHandler(c echo.Context) error {
-	if !sh.isAuthorized(c) {
+func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
+	if !sc.isAuthorized(c) {
 		//c.LogrusLogger().Printf("Error: %s", "unauthorized")
-		sh.logger.LogrusLogger.Error("unauthorized")
+		sc.logger.LogrusLogger.Error("unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	cookie, err := c.Cookie(SESSION_HEADER_NAME)
 	if err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
-		sh.logger.LogrusLogger.Error(err)
+		sc.logger.LogrusLogger.Error(err)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	sh.sessionUsecase.RemoveSession(&models.Session{Cookie: cookie})
+	sc.sessionUsecase.RemoveSession(&models.Session{Cookie: cookie})
 	c.SetCookie(cookie) // Need to reset new expired cookie
 
-	sh.logger.LogrusLogger.Info("User logout success")
+	sc.logger.LogrusLogger.Info("User logout success")
 	return c.NoContent(http.StatusOK)
 }
 
-func (sh *SessionHandler) SessionInfoHandler(c echo.Context) error {
-	if !sh.isAuthorized(c) {
+func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
+	if !sc.isAuthorized(c) {
 		//c.LogrusLogger().Printf("Error: %s", "unauthorized")
-		sh.logger.LogrusLogger.Error("unauthorized")
+		sc.logger.LogrusLogger.Error("unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	cookie, err := c.Cookie(SESSION_HEADER_NAME)
 	if err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
-		sh.logger.LogrusLogger.Error(err)
+		sc.logger.LogrusLogger.Error(err)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	user, err := sh.sessionUsecase.GetUserBySession(&models.Session{Cookie: cookie})
+	user, err := sc.sessionUsecase.GetUserBySession(&models.Session{Cookie: cookie})
 	if err != nil {
 		// TODO logger
 		//api.logger.Error(err.Error())
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	sessionInfo := restApiModels.SessionInfo{
+	sessionInfo := modelsRestApi.SessionInfo{
 		Username: user.Username,
 	}
-	sh.logger.LogrusLogger.Info("Formed sessionInfo = ", sessionInfo)
+	sc.logger.LogrusLogger.Info("Formed sessionInfo = ", sessionInfo)
 
 	return c.JSON(http.StatusOK, sessionInfo)
 }

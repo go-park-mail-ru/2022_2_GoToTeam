@@ -1,26 +1,28 @@
 package usecase
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"fmt"
 )
 
 type sessionUsecase struct {
-	sessionRepository interfaces.SessionRepositoryInterface
-	userRepository    interfaces.UserRepositoryInterface
+	sessionRepository sessionComponentInterfaces.SessionRepositoryInterface
+	userRepository    userComponentInterfaces.UserRepositoryInterface
 	logger            *logger.Logger
 }
 
-func NewSessionUsecase(sessionRepository interfaces.SessionRepositoryInterface, userRepository interfaces.UserRepositoryInterface, logger *logger.Logger) interfaces.SessionUsecaseInterface {
+func NewSessionUsecase(sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, userRepository userComponentInterfaces.UserRepositoryInterface, logger *logger.Logger) sessionComponentInterfaces.SessionUsecaseInterface {
 	sessionUsecase := &sessionUsecase{
 		sessionRepository: sessionRepository,
 		userRepository:    userRepository,
 		logger:            logger,
 	}
+	// TODO logger
 	sessionUsecase.sessionRepository.PrintSessions()
-	sessionUsecase.userRepository.PrintUsers()
+	//sessionUsecase.userRepository.PrintUsers() // Prints in userUsecase
 
 	return sessionUsecase
 }
