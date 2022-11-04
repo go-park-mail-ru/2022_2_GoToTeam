@@ -1,4 +1,4 @@
-package interfaces
+package sessionComponentInterfaces
 
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"

@@ -1,13 +1,18 @@
 package serverRestAPI
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/api"
-	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery"
-	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
-	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/usecase"
-	repository2 "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
-	"2022_2_GoTo_team/internal/utils/configReader"
-	"2022_2_GoTo_team/internal/utils/logger"
+	feedComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery"
+	feedComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/repository"
+	feedComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/usecase"
+	sessionComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery"
+	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
+	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/usecase"
+	userComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery"
+	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
+	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
+
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
@@ -45,50 +50,77 @@ func Run(configFilePath string) {
 }
 
 func routing(e *echo.Echo, config *configReader.Config) error {
-	Api := api.GetApi()
 
-	sessionComponentDeliveryLogger, err := logger.NewLogger("sessionComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
+	sessionDeliveryLogger, err := logger.NewLogger("sessionComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	sessionComponentUsecaseLogger, err := logger.NewLogger("sessionComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
+	sessionUsecaseLogger, err := logger.NewLogger("sessionComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	sessionComponentRepositoryLogger, err := logger.NewLogger("sessionComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	sessionRepositoryLogger, err := logger.NewLogger("sessionComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	userComponentRepositoryLogger, err := logger.NewLogger("userComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	userDeliveryLogger, err := logger.NewLogger("userComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	sessionHandler := delivery.NewSessionHandler(
-		usecase.NewSessionUsecase(
-			repository.NewSessionRepository(sessionComponentRepositoryLogger),
-			repository2.NewUserRepository(userComponentRepositoryLogger),
-			sessionComponentUsecaseLogger,
+	userUsecaseLogger, err := logger.NewLogger("userComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	userRepositoryLogger, err := logger.NewLogger("userComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	feedComponentDeliveryLogger, err := logger.NewLogger("feedComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	feedComponentUsecaseLogger, err := logger.NewLogger("feedComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	feedComponentRepositoryLogger, err := logger.NewLogger("feedComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+
+	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
+	userRepository := userComponentRepository.NewUserCustomRepository(userRepositoryLogger)
+	feedRepository := feedComponentRepository.NewFeedCustomRepository(feedComponentRepositoryLogger)
+
+	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
+	sessionController := sessionComponentDelivery.NewSessionController(sessionUsecase, sessionDeliveryLogger)
+
+	userUsecase := userComponentUsecase.NewUserUsecase(userRepository, userUsecaseLogger)
+	userController := userComponentDelivery.NewUserController(userUsecase, sessionUsecase, userDeliveryLogger)
+
+	feedController := feedComponentDelivery.NewFeedController(
+		feedComponentUsecase.NewFeedUsecase(
+			feedRepository,
+			feedComponentUsecaseLogger,
 		),
-		sessionComponentDeliveryLogger,
+		feedComponentDeliveryLogger,
 	)
 
-	Api.LogInfo("starting server")
+	e.POST("/api/v1/session/create", sessionController.CreateSessionHandler)
+	e.POST("/api/v1/session/remove", sessionController.RemoveSessionHandler)
+	e.GET("/api/v1/session/info", sessionController.SessionInfoHandler)
 
-	e.POST("/api/v1/session/create", sessionHandler.CreateSessionHandler)
-	e.POST("/api/v1/session/remove", sessionHandler.RemoveSessionHandler)
-	e.GET("/api/v1/session/info", sessionHandler.SessionInfoHandler)
+	//e.POST("/api/v1/article/create", Api.CreateArticleHandler)
+	//e.POST("/api/v1/article/update", Api.UpdateArticleHandler)
 
-	e.POST("/api/v1/article/create", Api.CreateArticleHandler)
-	e.POST("/api/v1/article/update", Api.UpdateArticleHandler)
+	e.POST("/api/v1/user/signup", userController.SignupUserHandler)
+	//e.GET("/api/v1/user/info", Api.UserInfoHandler)
+	//e.GET("/api/v1/user/feed", Api.UserFeedHandler)
 
-	e.POST("/api/v1/user/signup", Api.SignupUserHandler)
-	e.GET("/api/v1/user/info", Api.UserInfoHandler)
-	e.GET("/api/v1/user/feed", Api.UserFeedHandler)
+	//e.GET("/api/v1/category/info", Api.CategoryInfoHandler)
+	//e.GET("/api/v1/category/feed", Api.CategoryFeedHandler)
 
-	e.GET("/api/v1/category/info", Api.CategoryInfoHandler)
-	e.GET("/api/v1/category/feed", Api.CategoryFeedHandler)
-
-	e.GET("/api/v1/feed", Api.FeedHandler)
+	e.GET("/api/v1/feed", feedController.FeedHandler)
 
 	return nil
 }

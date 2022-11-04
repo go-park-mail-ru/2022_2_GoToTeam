@@ -1,6 +1,12 @@
 package repository
 
-import "2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"log"
+	"sync"
+)
 
 var articlesData = []*models.Article{
 	{
@@ -33,4 +39,34 @@ var articlesData = []*models.Article{
 		[]string{"Mac"},
 		"Был у дедушки Степана мёд в горшке. Забрались в горшок муравьи и ели мёд. Дедушка видит, дело плохо. Взял он горшок, привязал веревку и повесил горшок на гвоздь к потолку. А в горшке остался один муравей. Он искал дорогу домой: вылез из горшка на верёвку, потом на потолок. С потолка . га стену, а со стены на пол.\n\nМуравей показал дорогу к горшку другим муравьям. Дедушка Степан снял горшок, а там мёду нет.",
 	},
+}
+
+type FeedStorage struct {
+	articles []*models.Article
+	mu       sync.RWMutex
+	logger   *logger.Logger
+}
+
+func NewFeedCustomRepository(logger *logger.Logger) feedComponentInterfaces.FeedRepositoryInterface {
+	return &FeedStorage{
+		articles: articlesData,
+		mu:       sync.RWMutex{},
+		logger:   logger,
+	}
+}
+
+func (o *FeedStorage) PrintArticles() {
+	log.Println("Articles in storage:")
+	for _, v := range o.articles {
+		log.Printf("%#v ", v)
+	}
+}
+
+func (o *FeedStorage) GetArticles() []*models.Article {
+	log.Println("Storage GetArticles called.")
+
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+
+	return o.articles
 }

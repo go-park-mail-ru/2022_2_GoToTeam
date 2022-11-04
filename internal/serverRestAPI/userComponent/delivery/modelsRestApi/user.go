@@ -1,4 +1,4 @@
-package models
+package modelsRestApi
 
 type User struct {
 	NewUserData NewUserData `json:"new_user_data"`

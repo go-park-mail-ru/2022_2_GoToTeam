@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"log"
 	"math/rand"
 	"net/http"
@@ -28,7 +28,7 @@ type sessionsStorage struct {
 	logger   *logger.Logger
 }
 
-func NewSessionRepository(logger *logger.Logger) interfaces.SessionRepositoryInterface {
+func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterfaces.SessionRepositoryInterface {
 	return &sessionsStorage{
 		sessions: make(map[string]string),
 		mu:       sync.RWMutex{},
