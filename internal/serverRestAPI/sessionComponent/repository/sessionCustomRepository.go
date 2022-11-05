@@ -6,15 +6,15 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"log"
 	"math/rand"
-	"net/http"
 	"sync"
-	"time"
 )
+
+const SESSION_ID_STRING_LENGTH = 32
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func randStringRunes(n int) string {
-	b := make([]rune, n)
+func generateRandomRunesString(length int) string {
+	b := make([]rune, length)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
@@ -29,56 +29,53 @@ type sessionsStorage struct {
 }
 
 func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterfaces.SessionRepositoryInterface {
-	return &sessionsStorage{
+	sessionsStorage := &sessionsStorage{
 		sessions: make(map[string]string),
 		mu:       sync.RWMutex{},
 		logger:   logger,
 	}
+
+	sessionsStorage.logSessions()
+
+	return sessionsStorage
 }
 
-func (ss *sessionsStorage) PrintSessions() {
+func (ss *sessionsStorage) logSessions() {
+	// TODO logger
 	log.Println("Sessions in storage:")
 	for k, v := range ss.sessions {
 		log.Printf("cook: %#v for user email: %#v", k, v)
 	}
 }
 
-func (ss *sessionsStorage) CreateSessionForUser(email string, sessionHeaderName string) *models.Session {
-	SID := randStringRunes(32)
+func (ss *sessionsStorage) CreateSessionForUser(email string) (*models.Session, error) {
+	sessionId := generateRandomRunesString(SESSION_ID_STRING_LENGTH)
 
-	ss.sessions[SID] = email
+	ss.sessions[sessionId] = email
 
 	// TODO logger
-	ss.PrintSessions()
+	ss.logSessions()
 
 	return &models.Session{
-		Cookie: &http.Cookie{
-			Name:  sessionHeaderName,
-			Path:  "/",
-			Value: SID,
-			// HttpOnly: true,
-			Expires: time.Now().Add(23 * time.Hour), // Note! Change value in cookie.Expires function if you change hours
-		},
-	}
+		SessionId: sessionId,
+	}, nil
 }
 
-func (ss *sessionsStorage) GetEmailBySession(session *models.Session) string {
-	return ss.sessions[session.Cookie.Value]
+func (ss *sessionsStorage) GetEmailBySession(session *models.Session) (string, error) {
+	return ss.sessions[session.SessionId], nil
 }
 
-func (ss *sessionsStorage) RemoveSession(session *models.Session) {
-	delete(ss.sessions, session.Cookie.Value)
-	ss.ExpireSession(session)
+func (ss *sessionsStorage) RemoveSession(session *models.Session) error {
+	delete(ss.sessions, session.SessionId)
 
 	// TODO logger
-	ss.PrintSessions()
+	ss.logSessions()
+
+	return nil
 }
 
-func (ss *sessionsStorage) SessionExists(session *models.Session) bool {
-	_, exists := ss.sessions[session.Cookie.Value]
-	return exists
-}
+func (ss *sessionsStorage) SessionExists(session *models.Session) (bool, error) {
+	_, exists := ss.sessions[session.SessionId]
 
-func (ss *sessionsStorage) ExpireSession(session *models.Session) {
-	session.Cookie.Expires = time.Now().AddDate(0, 0, -1) // Note! Change value in create cookie expires if you change days
+	return exists, nil
 }

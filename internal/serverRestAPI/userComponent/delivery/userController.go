@@ -5,14 +5,13 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery/modelsRestApi"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/httpCookieUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
 )
-
-const SESSION_HEADER_NAME = "session_id"
 
 type UserController struct {
 	userUsecase    userComponentInterfaces.UserUsecaseInterface
@@ -61,14 +60,14 @@ func (uc *UserController) SignupUserHandler(c echo.Context) error {
 		}
 	}
 
-	session, err := uc.sessionUsecase.CreateSessionForUser(parsedInput.NewUserData.Email, parsedInput.NewUserData.Password, SESSION_HEADER_NAME)
+	session, err := uc.sessionUsecase.CreateSessionForUser(parsedInput.NewUserData.Email, parsedInput.NewUserData.Password)
 	if err != nil {
 		// TODO logger
 		log.Println("err: " + err.Error())
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	c.SetCookie(session.Cookie)
+	c.SetCookie(httpCookieUtils.MakeHttpCookie(session.SessionId))
 
 	uc.logger.LogrusLogger.Info("User register successful!")
 

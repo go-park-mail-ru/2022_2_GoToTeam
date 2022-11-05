@@ -4,13 +4,12 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/modelsRestApi"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/httpCookieUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
 )
-
-const SESSION_HEADER_NAME = "session_id"
 
 type SessionController struct {
 	sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface
@@ -18,18 +17,18 @@ type SessionController struct {
 }
 
 func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface, logger *logger.Logger) *SessionController {
-	sessionController := &SessionController{
+	return &SessionController{
 		sessionUsecase: sessionUsecase,
 		logger:         logger,
 	}
-
-	return sessionController
 }
 
 func (sc *SessionController) isAuthorized(c echo.Context) bool {
 	authorized := false
-	if cookie, err := c.Cookie(SESSION_HEADER_NAME); err == nil && cookie != nil {
-		authorized = sc.sessionUsecase.IsSessionExists(&models.Session{Cookie: cookie})
+	if cookie, err := c.Cookie(httpCookieUtils.SESSION_HEADER_NAME); err == nil && cookie != nil {
+		if authorized, err = sc.sessionUsecase.SessionExists(&models.Session{SessionId: cookie.Value}); err != nil {
+			return false
+		}
 	}
 
 	return authorized
@@ -54,14 +53,14 @@ func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	log.Println("email", email)
 	log.Println("password ", password)
 
-	session, err := sc.sessionUsecase.CreateSessionForUser(email, password, SESSION_HEADER_NAME)
+	session, err := sc.sessionUsecase.CreateSessionForUser(email, password)
 	if err != nil {
 		// TODO logger
 		log.Println("err in session controller: " + err.Error())
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	c.SetCookie(session.Cookie)
+	c.SetCookie(httpCookieUtils.MakeHttpCookie(session.SessionId))
 
 	sc.logger.LogrusLogger.Info("User auth success!")
 
@@ -74,17 +73,21 @@ func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
 		sc.logger.LogrusLogger.Error("unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	cookie, err := c.Cookie(SESSION_HEADER_NAME)
+	cookie, err := c.Cookie(httpCookieUtils.SESSION_HEADER_NAME)
 	if err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		sc.logger.LogrusLogger.Error(err)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	sc.sessionUsecase.RemoveSession(&models.Session{Cookie: cookie})
+	if err := sc.sessionUsecase.RemoveSession(&models.Session{SessionId: cookie.Value}); err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	httpCookieUtils.ExpireHttpCookie(cookie)
 	c.SetCookie(cookie) // Need to reset new expired cookie
 
 	sc.logger.LogrusLogger.Info("User logout success")
+
 	return c.NoContent(http.StatusOK)
 }
 
@@ -94,14 +97,14 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 		sc.logger.LogrusLogger.Error("unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	cookie, err := c.Cookie(SESSION_HEADER_NAME)
+	cookie, err := c.Cookie(httpCookieUtils.SESSION_HEADER_NAME)
 	if err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		sc.logger.LogrusLogger.Error(err)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	user, err := sc.sessionUsecase.GetUserBySession(&models.Session{Cookie: cookie})
+	user, err := sc.sessionUsecase.GetUserBySession(&models.Session{SessionId: cookie.Value})
 	if err != nil {
 		// TODO logger
 		//api.logger.Error(err.Error())
