@@ -1,9 +1,11 @@
 package serverRestAPI
 
 import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	feedComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery"
 	feedComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/repository"
 	feedComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/usecase"
+	middleware2 "2022_2_GoTo_team/internal/serverRestAPI/middleware"
 	sessionComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery"
 	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
 	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/usecase"
@@ -20,11 +22,7 @@ import (
 	"net/http"
 )
 
-const (
-	LAYER_DELIVERY   = "delivery"
-	LAYER_USECASE    = "usecase"
-	LAYER_REPOSITORY = "repository"
-)
+const ()
 
 func Run(configFilePath string) {
 	config, err := configReader.NewConfig(configFilePath)
@@ -35,6 +33,11 @@ func Run(configFilePath string) {
 	log.Println("Config settings: ")
 	log.Println(config)
 
+	middlewareLogger, err := logger.NewLogger("middlewareComponent", domain.LAYER_MIDDLEWARE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(
 		middleware.CORSConfig{
@@ -44,50 +47,56 @@ func Run(configFilePath string) {
 		},
 	))
 
-	e.Use(middleware.Recover())
+	//e.Use(middleware.Recover())
+	e.Use(middleware2.PanicRestoreMiddleware(middlewareLogger))
+	e.Use(middleware2.AccessLogMiddleware(middlewareLogger))
 
 	if err := configureServer(e, config); err != nil {
+		middlewareLogger.LogrusLogger.Error(errorsUtils.WrapError("error while configuring server", err))
 		e.Logger.Fatal(errorsUtils.WrapError("error while configuring server", err))
 	}
 
-	e.Logger.Fatal(e.Start(config.ServerAddress))
+	if err := e.Start(config.ServerAddress); err != nil {
+		middlewareLogger.LogrusLogger.Error(errorsUtils.WrapError("error while starting server", err))
+		e.Logger.Fatal(errorsUtils.WrapError("error while starting server", err))
+	}
 }
 
 func configureServer(e *echo.Echo, config *configReader.Config) error {
 
-	sessionDeliveryLogger, err := logger.NewLogger("sessionComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
+	sessionDeliveryLogger, err := logger.NewLogger("sessionComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	sessionUsecaseLogger, err := logger.NewLogger("sessionComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
+	sessionUsecaseLogger, err := logger.NewLogger("sessionComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	sessionRepositoryLogger, err := logger.NewLogger("sessionComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	sessionRepositoryLogger, err := logger.NewLogger("sessionComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	userDeliveryLogger, err := logger.NewLogger("userComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
+	userDeliveryLogger, err := logger.NewLogger("userComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	userUsecaseLogger, err := logger.NewLogger("userComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
+	userUsecaseLogger, err := logger.NewLogger("userComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	userRepositoryLogger, err := logger.NewLogger("userComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	userRepositoryLogger, err := logger.NewLogger("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	feedComponentDeliveryLogger, err := logger.NewLogger("feedComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
+	feedComponentDeliveryLogger, err := logger.NewLogger("feedComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	feedComponentUsecaseLogger, err := logger.NewLogger("feedComponent", LAYER_USECASE, config.LogLevel, config.LogFilePath)
+	feedComponentUsecaseLogger, err := logger.NewLogger("feedComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	feedComponentRepositoryLogger, err := logger.NewLogger("feedComponent", LAYER_REPOSITORY, config.LogLevel, config.LogFilePath)
+	feedComponentRepositoryLogger, err := logger.NewLogger("feedComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}

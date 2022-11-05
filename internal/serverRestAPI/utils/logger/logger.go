@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
@@ -58,9 +60,15 @@ func newLogrusLogger(logLevel, logFilePath string) (*logrus.Logger, error) {
 
 	formatter := &easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
-		LogFormat:       "[%lvl%][component: %component%][layer: %layer%][requestId: %requestId%][%time%]: %msg%\n____________________\n\n",
+		LogFormat:       "[%lvl%][component: %component%][layer: %layer%][requestId: %requestId%][%time%]: %msg%\n_________________________________\n\n",
 	}
 	logrusLogger.SetFormatter(formatter)
 
 	return logrusLogger, nil
+}
+
+func (l *Logger) LogrusLoggerWithContext(ctx context.Context) *logrus.Entry {
+	return l.LogrusLogger.WithFields(logrus.Fields{
+		"requestId": ctx.Value(domain.REQUEST_ID_KEY_FOR_CONTEXT),
+	})
 }

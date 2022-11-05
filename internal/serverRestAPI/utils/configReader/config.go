@@ -1,14 +1,8 @@
 package configReader
 
 import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"github.com/BurntSushi/toml"
-)
-
-const (
-	DEFAULT_SERVER_ADDRESS       = "127.0.0.1:8080"
-	DEFAULT_ORIGINS_ADDRESS_CORS = "http://127.0.0.1:8080"
-	DEFAULT_LOG_LEVEL            = "debug"
-	DEFAULT_LOG_FILE_PATH        = "logs/serverRestApi/logs.log"
 )
 
 type Config struct {
@@ -20,10 +14,10 @@ type Config struct {
 
 func NewConfig(configFilePath string) (*Config, error) {
 	config := &Config{
-		ServerAddress:             DEFAULT_SERVER_ADDRESS,
-		AllowOriginsAddressesCORS: []string{DEFAULT_ORIGINS_ADDRESS_CORS},
-		LogLevel:                  DEFAULT_LOG_LEVEL,
-		LogFilePath:               DEFAULT_LOG_FILE_PATH,
+		ServerAddress:             domain.DEFAULT_SERVER_ADDRESS,
+		AllowOriginsAddressesCORS: []string{domain.DEFAULT_ORIGINS_ADDRESS_CORS},
+		LogLevel:                  domain.DEFAULT_LOG_LEVEL,
+		LogFilePath:               domain.DEFAULT_LOG_FILE_PATH,
 	}
 
 	if _, err := toml.DecodeFile(configFilePath, config); err != nil {
