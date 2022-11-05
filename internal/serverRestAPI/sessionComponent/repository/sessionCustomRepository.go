@@ -28,7 +28,7 @@ type sessionsStorage struct {
 	logger   *logger.Logger
 }
 
-func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterfaces.SessionRepositoryInterface {
+func NewSessionCustomRepository(logger *logger.Logger) (sessionComponentInterfaces.SessionRepositoryInterface, error) {
 	sessionsStorage := &sessionsStorage{
 		sessions: make(map[string]string),
 		mu:       sync.RWMutex{},
@@ -37,7 +37,7 @@ func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterface
 
 	sessionsStorage.logSessions()
 
-	return sessionsStorage
+	return sessionsStorage, nil
 }
 
 func (ss *sessionsStorage) logSessions() {

@@ -10,6 +10,7 @@ import (
 	userComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery"
 	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
 	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
@@ -30,7 +31,8 @@ func Run(configFilePath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("config settings: ")
+
+	log.Println("Config settings: ")
 	log.Println(config)
 
 	e := echo.New()
@@ -42,14 +44,16 @@ func Run(configFilePath string) {
 		},
 	))
 
-	if err := routing(e, config); err != nil {
-		e.Logger.Fatal("cant configure logger: " + err.Error())
+	e.Use(middleware.Recover())
+
+	if err := configureServer(e, config); err != nil {
+		e.Logger.Fatal(errorsUtils.WrapError("error while configuring server", err))
 	}
 
 	e.Logger.Fatal(e.Start(config.ServerAddress))
 }
 
-func routing(e *echo.Echo, config *configReader.Config) error {
+func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	sessionDeliveryLogger, err := logger.NewLogger("sessionComponent", LAYER_DELIVERY, config.LogLevel, config.LogFilePath)
 	if err != nil {
@@ -88,7 +92,10 @@ func routing(e *echo.Echo, config *configReader.Config) error {
 		return err
 	}
 
-	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
+	sessionRepository, err := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
+	if err != nil {
+		return err
+	}
 	userRepository := userComponentRepository.NewUserCustomRepository(userRepositoryLogger)
 	feedRepository := feedComponentRepository.NewFeedCustomRepository(feedComponentRepositoryLogger)
 
@@ -98,13 +105,8 @@ func routing(e *echo.Echo, config *configReader.Config) error {
 	userUsecase := userComponentUsecase.NewUserUsecase(userRepository, userUsecaseLogger)
 	userController := userComponentDelivery.NewUserController(userUsecase, sessionUsecase, userDeliveryLogger)
 
-	feedController := feedComponentDelivery.NewFeedController(
-		feedComponentUsecase.NewFeedUsecase(
-			feedRepository,
-			feedComponentUsecaseLogger,
-		),
-		feedComponentDeliveryLogger,
-	)
+	feedUsecase := feedComponentUsecase.NewFeedUsecase(feedRepository, feedComponentUsecaseLogger)
+	feedController := feedComponentDelivery.NewFeedController(feedUsecase, feedComponentDeliveryLogger)
 
 	e.POST("/api/v1/session/create", sessionController.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", sessionController.RemoveSessionHandler)
