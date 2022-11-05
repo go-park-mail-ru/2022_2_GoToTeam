@@ -1,15 +1,14 @@
 package httpCookieUtils
 
 import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"net/http"
 	"time"
 )
 
-const SESSION_HEADER_NAME = "session_id"
-
 func MakeHttpCookie(sessionId string) *http.Cookie {
 	return &http.Cookie{
-		Name:  SESSION_HEADER_NAME,
+		Name:  domain.SESSION_COOKIE_HEADER_NAME,
 		Path:  "/",
 		Value: sessionId,
 		// HttpOnly: true,

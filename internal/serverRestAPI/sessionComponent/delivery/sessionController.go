@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/modelsRestApi"
@@ -25,7 +26,7 @@ func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUseca
 
 func (sc *SessionController) isAuthorized(c echo.Context) bool {
 	authorized := false
-	if cookie, err := c.Cookie(httpCookieUtils.SESSION_HEADER_NAME); err == nil && cookie != nil {
+	if cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME); err == nil && cookie != nil {
 		if authorized, err = sc.sessionUsecase.SessionExists(&models.Session{SessionId: cookie.Value}); err != nil {
 			return false
 		}
@@ -73,7 +74,7 @@ func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
 		sc.logger.LogrusLogger.Error("unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	cookie, err := c.Cookie(httpCookieUtils.SESSION_HEADER_NAME)
+	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		sc.logger.LogrusLogger.Error(err)
@@ -97,7 +98,7 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 		sc.logger.LogrusLogger.Error("unauthorized")
 		return c.NoContent(http.StatusUnauthorized)
 	}
-	cookie, err := c.Cookie(httpCookieUtils.SESSION_HEADER_NAME)
+	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
 		sc.logger.LogrusLogger.Error(err)

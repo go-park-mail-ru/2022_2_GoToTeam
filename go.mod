@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/BurntSushi/toml v1.2.1
+	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.9.0
-	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 )
