@@ -5,17 +5,15 @@ import (
 )
 
 type SessionUsecaseInterface interface {
-	IsSessionExists(session *models.Session) bool
-	CreateSessionForUser(email string, password string, sessionHeaderName string) (*models.Session, error)
-	RemoveSession(session *models.Session)
+	SessionExists(session *models.Session) (bool, error)
+	CreateSessionForUser(email string, password string) (*models.Session, error)
+	RemoveSession(session *models.Session) error
 	GetUserBySession(session *models.Session) (*models.User, error)
 }
 
 type SessionRepositoryInterface interface {
-	PrintSessions()
-	CreateSessionForUser(email string, sessionHeaderName string) *models.Session
-	GetEmailBySession(session *models.Session) string
-	RemoveSession(session *models.Session)
-	SessionExists(session *models.Session) bool
-	ExpireSession(session *models.Session)
+	CreateSessionForUser(email string) (*models.Session, error)
+	GetEmailBySession(session *models.Session) (string, error)
+	RemoveSession(session *models.Session) error
+	SessionExists(session *models.Session) (bool, error)
 }
