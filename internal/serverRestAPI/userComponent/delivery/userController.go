@@ -60,7 +60,7 @@ func (uc *UserController) SignupUserHandler(c echo.Context) error {
 		}
 	}
 
-	session, err := uc.sessionUsecase.CreateSessionForUser(parsedInput.NewUserData.Email, parsedInput.NewUserData.Password)
+	session, err := uc.sessionUsecase.CreateSessionForUser(c.Request().Context(), parsedInput.NewUserData.Email, parsedInput.NewUserData.Password)
 	if err != nil {
 		// TODO logger
 		log.Println("err: " + err.Error())
