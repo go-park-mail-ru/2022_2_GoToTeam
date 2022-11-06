@@ -27,7 +27,7 @@ func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUseca
 func (sc *SessionController) isAuthorized(c echo.Context) bool {
 	authorized := false
 	if cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME); err == nil && cookie != nil {
-		if authorized, err = sc.sessionUsecase.SessionExists(&models.Session{SessionId: cookie.Value}); err != nil {
+		if authorized, err = sc.sessionUsecase.SessionExists(c.Request().Context(), &models.Session{SessionId: cookie.Value}); err != nil {
 			return false
 		}
 	}
@@ -37,7 +37,6 @@ func (sc *SessionController) isAuthorized(c echo.Context) bool {
 
 func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	defer c.Request().Body.Close()
-
 	parsedInput := new(modelsRestApi.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
 		//c.LogrusLogger().Printf("Error: %s", err.Error())
@@ -54,7 +53,7 @@ func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	log.Println("email", email)
 	log.Println("password ", password)
 
-	session, err := sc.sessionUsecase.CreateSessionForUser(email, password)
+	session, err := sc.sessionUsecase.CreateSessionForUser(c.Request().Context(), email, password)
 	if err != nil {
 		// TODO logger
 		log.Println("err in session controller: " + err.Error())
@@ -81,7 +80,7 @@ func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	if err := sc.sessionUsecase.RemoveSession(&models.Session{SessionId: cookie.Value}); err != nil {
+	if err := sc.sessionUsecase.RemoveSession(c.Request().Context(), &models.Session{SessionId: cookie.Value}); err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	httpCookieUtils.ExpireHttpCookie(cookie)
@@ -105,7 +104,7 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	user, err := sc.sessionUsecase.GetUserBySession(&models.Session{SessionId: cookie.Value})
+	user, err := sc.sessionUsecase.GetUserBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
 	if err != nil {
 		// TODO logger
 		//api.logger.Error(err.Error())

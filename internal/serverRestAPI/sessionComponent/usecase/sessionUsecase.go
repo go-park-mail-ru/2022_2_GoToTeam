@@ -6,6 +6,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"context"
 )
 
 type sessionUsecase struct {
@@ -22,10 +23,10 @@ func NewSessionUsecase(sessionRepository sessionComponentInterfaces.SessionRepos
 	}
 }
 
-func (su *sessionUsecase) SessionExists(session *models.Session) (bool, error) {
+func (su *sessionUsecase) SessionExists(ctx context.Context, session *models.Session) (bool, error) {
 	wrappingErrorMessage := "error while checking session exists:"
 
-	exists, err := su.sessionRepository.SessionExists(session)
+	exists, err := su.sessionRepository.SessionExists(ctx, session)
 	if err != nil {
 		return false, errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
@@ -33,7 +34,7 @@ func (su *sessionUsecase) SessionExists(session *models.Session) (bool, error) {
 	return exists, nil
 }
 
-func (su *sessionUsecase) CreateSessionForUser(email string, password string) (*models.Session, error) {
+func (su *sessionUsecase) CreateSessionForUser(ctx context.Context, email string, password string) (*models.Session, error) {
 	wrappingErrorMessage := "error while creating session for user"
 
 	user, err := su.userRepository.GetUserByEmail(email)
@@ -47,7 +48,7 @@ func (su *sessionUsecase) CreateSessionForUser(email string, password string) (*
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
 
-	session, err := su.sessionRepository.CreateSessionForUser(email)
+	session, err := su.sessionRepository.CreateSessionForUser(ctx, email)
 	if err != nil {
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
@@ -55,20 +56,20 @@ func (su *sessionUsecase) CreateSessionForUser(email string, password string) (*
 	return session, nil
 }
 
-func (su *sessionUsecase) RemoveSession(session *models.Session) error {
+func (su *sessionUsecase) RemoveSession(ctx context.Context, session *models.Session) error {
 	wrappingErrorMessage := "error while removing session"
 
-	if err := su.sessionRepository.RemoveSession(session); err != nil {
+	if err := su.sessionRepository.RemoveSession(ctx, session); err != nil {
 		return errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
 
 	return nil
 }
 
-func (su *sessionUsecase) GetUserBySession(session *models.Session) (*models.User, error) {
+func (su *sessionUsecase) GetUserBySession(ctx context.Context, session *models.Session) (*models.User, error) {
 	wrappingErrorMessage := "error while getting user by session"
 
-	email, err := su.sessionRepository.GetEmailBySession(session)
+	email, err := su.sessionRepository.GetEmailBySession(ctx, session)
 	if err != nil {
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
@@ -77,7 +78,7 @@ func (su *sessionUsecase) GetUserBySession(session *models.Session) (*models.Use
 	if err != nil {
 		// TODO logger
 		//api.logger.Error(err.Error())
-		_ = su.RemoveSession(session) // We should try to remove "garbage" session
+		_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
 

@@ -16,6 +16,7 @@ const (
 	REQUEST_ID_KEY_FOR_CONTEXT = stringTypeAlias("requestID")
 
 	SESSION_COOKIE_HEADER_NAME = "session_id" // Cookie header
+	SESSION_ID_STRING_LENGTH   = 32
 )
 
 type stringTypeAlias string

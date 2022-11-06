@@ -1,15 +1,14 @@
 package repository
 
 import (
+	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
-	"log"
+	"context"
 	"math/rand"
 	"sync"
 )
-
-const SESSION_ID_STRING_LENGTH = 32
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -29,52 +28,62 @@ type sessionsStorage struct {
 }
 
 func NewSessionCustomRepository(logger *logger.Logger) (sessionComponentInterfaces.SessionRepositoryInterface, error) {
+	logger.LogrusLogger.Debug("Enter to the NewSessionCustomRepository function.")
+
 	sessionsStorage := &sessionsStorage{
 		sessions: make(map[string]string),
 		mu:       sync.RWMutex{},
 		logger:   logger,
 	}
 
-	sessionsStorage.logSessions()
+	logger.LogrusLogger.Debug("Sessions in storage: " + sessionsStorage.getSessionsInStorageString())
+	logger.LogrusLogger.Info("SessionCustomRepository has created.")
 
 	return sessionsStorage, nil
 }
 
-func (ss *sessionsStorage) logSessions() {
-	// TODO logger
-	log.Println("Sessions in storage:")
+func (ss *sessionsStorage) getSessionsInStorageString() string {
+	sessionsInStorageString := ""
 	for k, v := range ss.sessions {
-		log.Printf("cook: %#v for user email: %#v", k, v)
+		sessionsInStorageString += "session_id: " + k + ", for user email: " + v + "; "
 	}
+
+	return sessionsInStorageString
 }
 
-func (ss *sessionsStorage) CreateSessionForUser(email string) (*models.Session, error) {
-	sessionId := generateRandomRunesString(SESSION_ID_STRING_LENGTH)
+func (ss *sessionsStorage) CreateSessionForUser(ctx context.Context, email string) (*models.Session, error) {
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionForUser function.")
 
+	sessionId := generateRandomRunesString(domain.SESSION_ID_STRING_LENGTH)
 	ss.sessions[sessionId] = email
 
-	// TODO logger
-	ss.logSessions()
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Generated sessionId: ", sessionId, ", for email: ", email, ". Sessions in storage: ", ss.getSessionsInStorageString())
+	ss.logger.LogrusLoggerWithContext(ctx).Info("For the email ", email, " created the session.")
 
 	return &models.Session{
 		SessionId: sessionId,
 	}, nil
 }
 
-func (ss *sessionsStorage) GetEmailBySession(session *models.Session) (string, error) {
+func (ss *sessionsStorage) GetEmailBySession(ctx context.Context, session *models.Session) (string, error) {
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetEmailBySession function.")
+
 	return ss.sessions[session.SessionId], nil
 }
 
-func (ss *sessionsStorage) RemoveSession(session *models.Session) error {
+func (ss *sessionsStorage) RemoveSession(ctx context.Context, session *models.Session) error {
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveSession function.")
+
 	delete(ss.sessions, session.SessionId)
 
-	// TODO logger
-	ss.logSessions()
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Removing the session: ", session, ". Sessions in storage: "+ss.getSessionsInStorageString())
 
 	return nil
 }
 
-func (ss *sessionsStorage) SessionExists(session *models.Session) (bool, error) {
+func (ss *sessionsStorage) SessionExists(ctx context.Context, session *models.Session) (bool, error) {
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SessionExists function.")
+
 	_, exists := ss.sessions[session.SessionId]
 
 	return exists, nil
