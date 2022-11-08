@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type User struct {
 	UserId             int
 	Email              string
@@ -9,9 +7,9 @@ type User struct {
 	Password           string
 	Username           string
 	Sex                string
-	DateOfBirth        time.Time
+	DateOfBirth        string
 	AvatarImgPath      string
-	RegistrationDate   time.Time
+	RegistrationDate   string
 	SubscribersCount   int
 	SubscriptionsCount int
 }

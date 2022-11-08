@@ -7,10 +7,9 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/validators"
 	"context"
 	"errors"
-	"net/mail"
-	"unicode"
 )
 
 type userUsecase struct {
@@ -36,7 +35,7 @@ func (uu *userUsecase) GetUserInfo(ctx context.Context, login string) (*models.U
 
 	wrappingErrorMessage := "error while getting user info"
 
-	if !uu.loginIsValid(ctx, login) {
+	if !validators.LoginIsValidByRegExp(login) {
 		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")})
 	}
@@ -145,88 +144,18 @@ func (uu *userUsecase) userExistsByLogin(ctx context.Context, login string) (boo
 func (uu *userUsecase) validateUserData(ctx context.Context, email string, login string, username string, password string) error {
 	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the validateUserData function.")
 
-	if !uu.emailIsValid(ctx, email) {
+	if !validators.EmailIsValidByCustomValidation(email) {
 		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Email %s is not valid.", email)
 		return &usecaseToDeliveryErrors.EmailIsNotValidError{Err: errors.New("email is not valid")}
 	}
-	if !uu.loginIsValid(ctx, login) {
+	if !validators.LoginIsValidByRegExp(login) {
 		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
 		return &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")}
 	}
-	if !uu.usernameIsValid(ctx, username) {
-		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Username %s is not valid.", username)
-		return &usecaseToDeliveryErrors.UsernameIsNotValidError{Err: errors.New("username is not valid")}
-	}
-	if !uu.passwordIsValid(ctx, password) {
+	if !validators.PasswordIsValidByRegExp(password) {
 		uu.logger.LogrusLoggerWithContext(ctx).Debug("Password is not valid.")
 		return &usecaseToDeliveryErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
 	}
 
 	return nil
-}
-
-func (uu *userUsecase) emailIsValid(ctx context.Context, email string) bool {
-	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the emailIsValid function.")
-
-	_, err := mail.ParseAddress(email)
-
-	return err == nil
-}
-
-func (uu *userUsecase) loginIsValid(ctx context.Context, login string) bool {
-	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the loginIsValid function.")
-
-	if len(login) < 4 {
-		return false
-	}
-	for _, sep := range login {
-		if !unicode.IsLetter(sep) && sep != '_' {
-			return false
-		}
-	}
-
-	return true
-}
-
-// at least 8 symbols
-// at least 1 upper symbol
-// at least 1 special symbol
-func (uu *userUsecase) passwordIsValid(ctx context.Context, password string) bool {
-	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the passwordIsValid function.")
-
-	letters := 0
-	upper := false
-	special := false
-	for _, c := range password {
-		switch {
-		case unicode.IsUpper(c):
-			upper = true
-			letters++
-		case unicode.IsPunct(c) || unicode.IsSymbol(c):
-			special = true
-			letters++
-		case unicode.IsLetter(c) || c == ' ':
-			letters++
-		}
-	}
-	eightOrMore := letters >= 8
-
-	return eightOrMore && upper && special
-}
-
-func (uu *userUsecase) usernameIsValid(ctx context.Context, username string) bool {
-	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the usernameIsValid function.")
-
-	if len(username) == 0 {
-		return false
-	}
-	en := unicode.Is(unicode.Latin, rune(username[0]))
-
-	for _, sep := range username {
-		if (en && !unicode.Is(unicode.Latin, sep)) || (!en && unicode.Is(unicode.Latin, sep)) {
-			return false
-		}
-	}
-
-	return true
 }
