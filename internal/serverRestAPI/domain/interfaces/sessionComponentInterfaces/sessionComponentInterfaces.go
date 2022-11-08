@@ -9,7 +9,7 @@ type SessionUsecaseInterface interface {
 	SessionExists(ctx context.Context, session *models.Session) (bool, error)
 	CreateSessionForUser(ctx context.Context, email string, password string) (*models.Session, error)
 	RemoveSession(ctx context.Context, session *models.Session) error
-	GetUserBySession(ctx context.Context, session *models.Session) (*models.User, error)
+	GetUserInfoBySession(ctx context.Context, session *models.Session) (*models.User, error)
 }
 
 type SessionRepositoryInterface interface {

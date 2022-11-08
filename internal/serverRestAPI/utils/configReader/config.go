@@ -10,6 +10,13 @@ type Config struct {
 	AllowOriginsAddressesCORS []string `toml:"originsAddressesCORS"`
 	LogLevel                  string   `toml:"logLevel"`
 	LogFilePath               string   `toml:"logFilePath"`
+
+	DatabaseUser               string `toml:"databaseUser"`
+	DatabaseName               string `toml:"databaseName"`
+	DatabasePassword           string `toml:"databasePassword"`
+	DatabaseHost               string `toml:"databaseHost"`
+	DatabasePort               string `toml:"databasePort"`
+	DatabaseMaxOpenConnections string `toml:"databaseMaxOpenConnections"`
 }
 
 func NewConfig(configFilePath string) (*Config, error) {

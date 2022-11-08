@@ -1,7 +1,8 @@
 package modelsRestApi
 
 type SessionInfo struct {
-	Username string `json:"username"`
+	Username      string `json:"username"`
+	AvatarImgPath string `json:"avatar_img_path"`
 }
 
 type SessionCreate struct {
