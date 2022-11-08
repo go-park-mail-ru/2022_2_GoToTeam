@@ -13,16 +13,17 @@ import (
 	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
 	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
+	"database/sql"
+	"strconv"
 
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	_ "github.com/jackc/pgx/stdlib"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
 	"net/http"
 )
-
-const ()
 
 func Run(configFilePath string) {
 	config, err := configReader.NewConfig(configFilePath)
@@ -51,7 +52,7 @@ func Run(configFilePath string) {
 	e.Use(middleware2.PanicRestoreMiddleware(middlewareLogger))
 	e.Use(middleware2.AccessLogMiddleware(middlewareLogger))
 
-	if err := configureServer(e, config); err != nil {
+	if err := configureServer(e, config, middlewareLogger); err != nil {
 		middlewareLogger.LogrusLogger.Error(errorsUtils.WrapError("error while configuring server", err))
 		e.Logger.Fatal(errorsUtils.WrapError("error while configuring server", err))
 	}
@@ -62,7 +63,27 @@ func Run(configFilePath string) {
 	}
 }
 
-func configureServer(e *echo.Echo, config *configReader.Config) error {
+func getPostgreSQLConnections(databaseUser string, databaseName string, databasePassword string, databaseHost string, databasePort string, databaseMaxOpenConnections string, middlewareLogger *logger.Logger) *sql.DB {
+	dsn := "user=" + databaseUser + " dbname=" + databaseName + " password=" + databasePassword + " host=" + databaseHost + " port=" + databasePort + " sslmode=disable"
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while opening connection to database", err))
+	}
+	// Test connection
+	if err = db.Ping(); err != nil {
+		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while testing connection to database", err))
+	}
+
+	databaseMaxOpenConnectionsINT, err := strconv.Atoi(databaseMaxOpenConnections)
+	if err != nil {
+		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while parsing databaseMaxOpenConnections to int value", err))
+	}
+	db.SetMaxOpenConns(databaseMaxOpenConnectionsINT)
+
+	return db
+}
+
+func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger *logger.Logger) error {
 
 	sessionDeliveryLogger, err := logger.NewLogger("sessionComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
@@ -101,12 +122,12 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 		return err
 	}
 
-	sessionRepository, err := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
-	if err != nil {
-		return err
-	}
-	userRepository := userComponentRepository.NewUserCustomRepository(userRepositoryLogger)
-	feedRepository := feedComponentRepository.NewFeedCustomRepository(feedComponentRepositoryLogger)
+	// PostgreSQL connections
+	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
+
+	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
+	userRepository := userComponentRepository.NewUserPostgreSQLRepository(postgreSQLConnections, userRepositoryLogger)
+	feedRepository := feedComponentRepository.NewFeedPostgreSQLRepository(postgreSQLConnections, feedComponentRepositoryLogger)
 
 	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
 	sessionController := sessionComponentDelivery.NewSessionController(sessionUsecase, sessionDeliveryLogger)
@@ -125,13 +146,13 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	//e.POST("/api/v1/article/update", Api.UpdateArticleHandler)
 
 	e.POST("/api/v1/user/signup", userController.SignupUserHandler)
-	//e.GET("/api/v1/user/info", Api.UserInfoHandler)
-	//e.GET("/api/v1/user/feed", Api.UserFeedHandler)
+	e.GET("/api/v1/user/info", userController.UserInfoHandler)
 
 	//e.GET("/api/v1/category/info", Api.CategoryInfoHandler)
 	//e.GET("/api/v1/category/feed", Api.CategoryFeedHandler)
 
 	e.GET("/api/v1/feed", feedController.FeedHandler)
+	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)
 
 	return nil
 }

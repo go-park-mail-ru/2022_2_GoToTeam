@@ -1,9 +1,17 @@
 package models
 
+import "time"
+
 type User struct {
-	UserId   int
-	Username string
-	Email    string
-	Login    string
-	Password string
+	UserId             int
+	Email              string
+	Login              string
+	Password           string
+	Username           string
+	Sex                string
+	DateOfBirth        time.Time
+	AvatarImgPath      string
+	RegistrationDate   time.Time
+	SubscribersCount   int
+	SubscriptionsCount int
 }

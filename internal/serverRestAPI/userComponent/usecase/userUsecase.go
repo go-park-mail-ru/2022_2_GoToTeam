@@ -1,12 +1,14 @@
 package usecase
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors/repositoryToUsecaseErrors"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"context"
 	"errors"
-	"fmt"
 	"net/mail"
 	"unicode"
 )
@@ -17,95 +19,168 @@ type userUsecase struct {
 }
 
 func NewUserUsecase(userRepository userComponentInterfaces.UserRepositoryInterface, logger *logger.Logger) userComponentInterfaces.UserUsecaseInterface {
+	logger.LogrusLogger.Debug("Enter to the NewUserUsecase function.")
+
 	userUsecase := &userUsecase{
 		userRepository: userRepository,
 		logger:         logger,
 	}
-	// TODO logger
-	userUsecase.userRepository.PrintUsers()
+
+	logger.LogrusLogger.Info("NewUserUsecase has created.")
 
 	return userUsecase
 }
 
-func (uu *userUsecase) AddNewUser(email string, login string, username string, password string) error {
-	if err := uu.validateUserData(email, login, username, password); err != nil {
-		return fmt.Errorf("can not add user: %w", err)
+func (uu *userUsecase) GetUserInfo(ctx context.Context, login string) (*models.User, error) {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserInfo function.")
+
+	wrappingErrorMessage := "error while getting user info"
+
+	if !uu.loginIsValid(ctx, login) {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")})
 	}
-	if err := uu.checkUserExists(email, login); err != nil {
-		return fmt.Errorf("can not add user: %w", err)
+
+	user, err := uu.userRepository.GetUserInfo(ctx, login)
+	if err != nil {
+		switch err {
+		case repositoryToUsecaseErrors.UserRepositoryLoginDontExistsError:
+			uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDontExistsError{
+				Err: err,
+			})
+		default:
+			uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{
+				Err: err,
+			})
+		}
 	}
-	if err := uu.userRepository.AddUser(uu.createUserInstanceFromData(username, email, login, password)); err != nil {
-		return fmt.Errorf("can not add user: %w", err)
+
+	return user, nil
+}
+
+func (uu *userUsecase) AddNewUser(ctx context.Context, email string, login string, username string, password string) error {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddNewUser function.")
+
+	wrappingErrorMessage := "error while adding the user"
+
+	if err := uu.validateUserData(ctx, email, login, username, password); err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
+	if err := uu.checkUserExists(ctx, email, login); err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
+	if _, err := uu.userRepository.AddUser(ctx, email, login, username, password); err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 	}
 
 	return nil
 }
 
-func (uu *userUsecase) createUserInstanceFromData(username string, email string, login string, password string) *models.User {
+func (uu *userUsecase) createUserInstanceFromData(ctx context.Context, email string, login string, username string, password string) *models.User {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the createUserInstanceFromData function.")
+
 	return &models.User{
-		Username: username,
 		Email:    email,
 		Login:    login,
+		Username: username,
 		Password: password,
 	}
 }
 
-func (uu *userUsecase) checkUserExists(email string, login string) error {
-	if uu.userExistsByEmail(email) {
-		uu.logger.LogrusLogger.Debugf("User with this email %s exists.", email)
-		return &userComponentErrors.EmailExistsError{Err: errors.New("user with this email exists")}
+func (uu *userUsecase) checkUserExists(ctx context.Context, email string, login string) error {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the checkUserExists function.")
+
+	exists, err := uu.userExistsByEmail(ctx, email)
+	if err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return &usecaseToDeliveryErrors.RepositoryError{Err: err}
 	}
-	if uu.userExistsByLogin(login) {
-		uu.logger.LogrusLogger.Debugf("User with this login %s exists.", login)
-		return &userComponentErrors.LoginExistsError{Err: errors.New("user with this login exists")}
+	if exists {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("User with this email %s exists.", email)
+		return &usecaseToDeliveryErrors.EmailExistsError{Err: errors.New("user with this email exists")}
 	}
 
-	return nil
-}
-
-func (uu *userUsecase) userExistsByEmail(email string) bool {
-	return uu.userRepository.UserExistsByEmail(email)
-}
-
-func (uu *userUsecase) userExistsByLogin(login string) bool {
-	return uu.userRepository.UserExistsByLogin(login)
-}
-
-func (uu *userUsecase) validateUserData(email string, login string, username string, password string) error {
-	if !uu.emailIsValid(email) {
-		uu.logger.LogrusLogger.Debugf("Email %s is not valid.", email)
-		return &userComponentErrors.EmailIsNotValidError{Err: errors.New("email is not valid")}
+	exists, err = uu.userExistsByLogin(ctx, login)
+	if err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return &usecaseToDeliveryErrors.RepositoryError{Err: err}
 	}
-	if !uu.loginIsValid(login) {
-		uu.logger.LogrusLogger.Debugf("Login %s is not valid.", login)
-		return &userComponentErrors.LoginIsNotValidError{Err: errors.New("login is not valid")}
-	}
-	if !uu.usernameIsValid(username) {
-		uu.logger.LogrusLogger.Debugf("Username %s is not valid.", username)
-		return &userComponentErrors.UsernameIsNotValidError{Err: errors.New("username is not valid")}
-	}
-	if !uu.passwordIsValid(password) {
-		uu.logger.LogrusLogger.Debug("Password is not valid.")
-		return &userComponentErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
+	if exists {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("User with this login %s exists.", login)
+		return &usecaseToDeliveryErrors.LoginExistsError{Err: errors.New("user with this login exists")}
 	}
 
 	return nil
 }
 
-func (uu *userUsecase) emailIsValid(email string) bool {
+func (uu *userUsecase) userExistsByEmail(ctx context.Context, email string) (bool, error) {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the userExistsByEmail function.")
+
+	exists, err := uu.userRepository.UserExistsByEmail(ctx, email)
+	if err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Debug(err)
+		return true, err
+	}
+
+	return exists, nil
+}
+
+func (uu *userUsecase) userExistsByLogin(ctx context.Context, login string) (bool, error) {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the userExistsByLogin function.")
+
+	exists, err := uu.userRepository.UserExistsByLogin(ctx, login)
+	if err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Debug(err)
+		return true, err
+	}
+
+	return exists, nil
+}
+
+func (uu *userUsecase) validateUserData(ctx context.Context, email string, login string, username string, password string) error {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the validateUserData function.")
+
+	if !uu.emailIsValid(ctx, email) {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Email %s is not valid.", email)
+		return &usecaseToDeliveryErrors.EmailIsNotValidError{Err: errors.New("email is not valid")}
+	}
+	if !uu.loginIsValid(ctx, login) {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
+		return &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")}
+	}
+	if !uu.usernameIsValid(ctx, username) {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Username %s is not valid.", username)
+		return &usecaseToDeliveryErrors.UsernameIsNotValidError{Err: errors.New("username is not valid")}
+	}
+	if !uu.passwordIsValid(ctx, password) {
+		uu.logger.LogrusLoggerWithContext(ctx).Debug("Password is not valid.")
+		return &usecaseToDeliveryErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) emailIsValid(ctx context.Context, email string) bool {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the emailIsValid function.")
+
 	_, err := mail.ParseAddress(email)
 
 	return err == nil
 }
 
-func (uu *userUsecase) loginIsValid(login string) bool {
-	if len(login) < 8 {
-		fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAA")
+func (uu *userUsecase) loginIsValid(ctx context.Context, login string) bool {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the loginIsValid function.")
+
+	if len(login) < 4 {
 		return false
 	}
 	for _, sep := range login {
 		if !unicode.IsLetter(sep) && sep != '_' {
-			fmt.Println("BBBBBBBBBBBBBBBBBBBBBBBB")
 			return false
 		}
 	}
@@ -116,7 +191,9 @@ func (uu *userUsecase) loginIsValid(login string) bool {
 // at least 8 symbols
 // at least 1 upper symbol
 // at least 1 special symbol
-func (uu *userUsecase) passwordIsValid(password string) bool {
+func (uu *userUsecase) passwordIsValid(ctx context.Context, password string) bool {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the passwordIsValid function.")
+
 	letters := 0
 	upper := false
 	special := false
@@ -137,7 +214,9 @@ func (uu *userUsecase) passwordIsValid(password string) bool {
 	return eightOrMore && upper && special
 }
 
-func (uu *userUsecase) usernameIsValid(username string) bool {
+func (uu *userUsecase) usernameIsValid(ctx context.Context, username string) bool {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the usernameIsValid function.")
+
 	if len(username) == 0 {
 		return false
 	}

@@ -1,15 +1,17 @@
 package repository
 
+/*
+
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/modelsOLD"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"errors"
 	"log"
 	"sync"
 )
 
-var usersData = []*models.User{
+var usersData = []*modelsOLD.User{
 	{
 		1,
 		"asd",
@@ -27,7 +29,7 @@ var usersData = []*models.User{
 }
 
 type usersStorage struct {
-	users  []*models.User
+	users  []*modelsOLD.User
 	mu     sync.RWMutex
 	nextID int
 	logger *logger.Logger
@@ -49,7 +51,7 @@ func (us *usersStorage) PrintUsers() {
 	}
 }
 
-func (us *usersStorage) AddUser(user *models.User) error { // user_id
+func (us *usersStorage) AddUser(user *modelsOLD.User) error { // user_id
 	log.Println("Storage AddUser called.")
 
 	us.mu.Lock()
@@ -69,7 +71,6 @@ func (us *usersStorage) AddUser(user *models.User) error { // user_id
 	user.UserId = us.getIdForInsert()
 	log.Println("New user id: ", user.UserId)
 	us.users = append(us.users, user)
-	// TODO logger
 	us.PrintUsers()
 
 	return nil
@@ -87,7 +88,7 @@ func (us *usersStorage) UserExistsByEmail(email string) bool {
 	return user != nil
 }
 
-func (us *usersStorage) GetUserByLogin(login string) (*models.User, error) {
+func (us *usersStorage) GetUserByLogin(login string) (*modelsOLD.User, error) {
 	log.Println("Storage GetUserByLogin called.")
 
 	us.mu.RLock()
@@ -99,11 +100,10 @@ func (us *usersStorage) GetUserByLogin(login string) (*models.User, error) {
 		}
 	}
 
-	// TODO logger
 	return nil, errors.New("user with this login dont exists")
 }
 
-func (us *usersStorage) GetUserByEmail(email string) (*models.User, error) {
+func (us *usersStorage) GetUserByEmail(email string) (*modelsOLD.User, error) {
 	log.Println("Storage GetUserByEmail called.")
 
 	us.mu.RLock()
@@ -115,7 +115,6 @@ func (us *usersStorage) GetUserByEmail(email string) (*models.User, error) {
 		}
 	}
 
-	// TODO logger
 	return nil, errors.New("user with this email dont exists")
 }
 
@@ -129,3 +128,4 @@ func (us *usersStorage) getIdForInsert() (id int) {
 
 	return
 }
+*/

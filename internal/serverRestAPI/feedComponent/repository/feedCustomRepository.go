@@ -1,14 +1,15 @@
 package repository
 
+/*
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/modelsOLD"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"log"
 	"sync"
 )
 
-var articlesData = []*models.Article{
+var articlesData = []*modelsOLD.Article{
 	{
 		1,
 		"Абракодабра",
@@ -42,7 +43,7 @@ var articlesData = []*models.Article{
 }
 
 type FeedStorage struct {
-	articles []*models.Article
+	articles []*modelsOLD.Article
 	mu       sync.RWMutex
 	logger   *logger.Logger
 }
@@ -62,7 +63,7 @@ func (o *FeedStorage) PrintArticles() {
 	}
 }
 
-func (o *FeedStorage) GetArticles() []*models.Article {
+func (o *FeedStorage) GetArticles() []*modelsOLD.Article {
 	log.Println("Storage GetArticles called.")
 
 	o.mu.RLock()
@@ -70,3 +71,6 @@ func (o *FeedStorage) GetArticles() []*models.Article {
 
 	return o.articles
 }
+
+
+*/
