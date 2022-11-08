@@ -107,7 +107,7 @@ func (upsr *userPostgreSQLRepository) GetUserInfo(ctx context.Context, login str
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserInfo function.")
 
 	row := upsr.database.QueryRow(`
-SELECT COALESCE(U.username, U.login), registration_date, subscribers_count
+SELECT COALESCE(U.username, U.login), TO_CHAR(registration_date :: DATE, 'dd-mm-yyyy'), subscribers_count
 FROM users U WHERE U.login = $1;
 `, login)
 
