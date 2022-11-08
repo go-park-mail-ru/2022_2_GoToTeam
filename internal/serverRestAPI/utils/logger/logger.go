@@ -9,6 +9,7 @@ import (
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 	"io"
 	"os"
+	"path"
 )
 
 var globalLogrusLogger *logrus.Logger = nil
@@ -48,6 +49,10 @@ func newLogrusLogger(logLevel, logFilePath string) (*logrus.Logger, error) {
 	logrusLogger.SetLevel(level)
 
 	if len(logFilePath) != 0 {
+		err := os.MkdirAll(path.Dir(logFilePath), 0750)
+		if err != nil && !os.IsExist(err) {
+			return nil, err
+		}
 		logFile, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			return nil, err
