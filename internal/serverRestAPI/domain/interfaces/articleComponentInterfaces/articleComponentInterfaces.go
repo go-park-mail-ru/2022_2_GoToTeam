@@ -11,4 +11,5 @@ type ArticleUsecaseInterface interface {
 
 type ArticleRepositoryInterface interface {
 	GetArticleById(ctx context.Context, id int) (*models.Article, error)
+	GetTagsForArticle(ctx context.Context, articleId int) ([]string, error)
 }

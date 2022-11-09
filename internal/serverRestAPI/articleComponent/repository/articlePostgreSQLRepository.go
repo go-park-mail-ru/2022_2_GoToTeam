@@ -72,7 +72,43 @@ WHERE A.article_id = $1;
 		return nil, repositoryToUsecaseErrors.ArticleRepositoryError
 	}
 
+	tags, err := apsr.GetTagsForArticle(ctx, article.ArticleId)
+	if err != nil {
+		return nil, err
+	}
+	article.Tags = tags
+
 	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got article: %#v", article)
 
 	return article, nil
+}
+
+func (apsr *articlePostgreSQLRepository) GetTagsForArticle(ctx context.Context, articleId int) ([]string, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetTagsForArticle function.")
+
+	tags := make([]string, 0, 10)
+	rows, err := apsr.database.Query(`
+SELECT T.tag_name
+FROM tags T
+         JOIN tags_articles TA ON T.tag_id = TA.tag_id
+         JOIN articles A ON TA.article_id = A.article_id
+WHERE A.article_id = $1;
+`, articleId)
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		tag := ""
+		if err := rows.Scan(&tag); err != nil {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+
+		tags = append(tags, tag)
+	}
+
+	return tags, nil
 }
