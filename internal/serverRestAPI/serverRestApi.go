@@ -30,7 +30,6 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	_ "github.com/jackc/pgx/stdlib"
-	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"log"
 )
@@ -57,6 +56,21 @@ func Run(configFilePath string) {
 			AllowCredentials: true,
 		},
 	))
+
+	Default := middleware.CSRFConfig{
+		Skipper:        middleware.DefaultSkipper,
+		TokenLength:    32,
+		TokenLookup:    "header:X-XSRF-Token",
+		ContextKey:     "csrf",
+		CookieName:     "_csrf",
+		CookieMaxAge:   86400,
+		CookieSameSite: http.SameSiteNoneMode,
+		CookiePath:     "/",
+		CookieHTTPOnly: false,
+		CookieSecure:   false,
+	}
+
+	e.Use(middleware.CSRFWithConfig(Default))
 
 	//e.Use(echoMiddleware.Recover())
 	e.Use(middleware.PanicRestoreMiddleware(middlewareLogger))
