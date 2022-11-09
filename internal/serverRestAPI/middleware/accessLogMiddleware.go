@@ -5,7 +5,6 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"context"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"time"
 )
 
@@ -23,6 +22,9 @@ func AccessLogMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
 			r := ctx.Request()
 			logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("Request method: ", r.Method, ", remote address: ", r.RemoteAddr, ", request URL: ", r.URL.Path, ", request process start time: ", requestProcessStartTime)
 
+			//csrf := r.Header.Get("X-XSRF-Token")
+			//k, _ := r.Cookie("_csrf")
+			//assert.Equal(k, csrf)
 			return next(ctx)
 		}
 	}
