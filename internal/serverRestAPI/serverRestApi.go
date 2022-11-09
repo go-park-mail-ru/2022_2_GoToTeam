@@ -20,7 +20,6 @@ import (
 	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -180,14 +179,9 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, articleUsecaseLogger)
 	articleController := articleComponentDelivery.NewArticleController(articleUsecase, articleDeliveryLogger)
 
-	fmt.Println(articleController)
-
 	e.POST("/api/v1/session/create", sessionController.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", sessionController.RemoveSessionHandler)
 	e.GET("/api/v1/session/info", sessionController.SessionInfoHandler)
-
-	//e.POST("/api/v1/article/create", Api.CreateArticleHandler)
-	//e.POST("/api/v1/article/update", Api.UpdateArticleHandler)
 
 	e.POST("/api/v1/user/signup", userController.SignupUserHandler)
 	e.GET("/api/v1/user/info", userController.UserInfoHandler)
@@ -197,6 +191,8 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	e.GET("/api/v1/feed", feedController.FeedHandler)
 	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)
 	e.GET("/api/v1/feed/category", feedController.FeedCategoryHandler)
+
+	e.GET("/api/v1/article", articleController.ArticleHandler)
 
 	return nil
 }
