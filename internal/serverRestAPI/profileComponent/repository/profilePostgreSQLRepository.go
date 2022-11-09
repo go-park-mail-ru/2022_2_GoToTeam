@@ -65,13 +65,13 @@ func (ppsr *profilePostgreSQLRepository) UpdateProfileByEmail(ctx context.Contex
 		}
 	}
 
-	exists, err := ppsr.UserExistsByLogin(ctx, newProfile.Email)
+	exists, err := ppsr.UserExistsByLogin(ctx, newProfile.Login)
 	if err != nil {
 		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return repositoryToUsecaseErrors.ProfileRepositoryError
 	}
 	if exists {
-		ppsr.logger.LogrusLoggerWithContext(ctx).Warnf("Login %s exists.", newProfile.Email)
+		ppsr.logger.LogrusLoggerWithContext(ctx).Warnf("Login %s exists.", newProfile.Login)
 		return repositoryToUsecaseErrors.ProfileRepositoryLoginExistsError
 	}
 
