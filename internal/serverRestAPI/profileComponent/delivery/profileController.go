@@ -8,6 +8,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/profileComponent/delivery/modelsRestApi"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -60,7 +61,7 @@ func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 
 	profile, err := pc.profileUsecase.GetProfileBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
 	if err != nil {
-		switch err.(type) {
+		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDontFoundError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusUnauthorized)
@@ -108,7 +109,7 @@ func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
 
 	err = pc.profileUsecase.UpdateProfileBySession(c.Request().Context(), &models.Profile{Email: parsedInputProfile.Email, Login: parsedInputProfile.Login, Username: parsedInputProfile.Username, AvatarImgPath: parsedInputProfile.AvatarImgPath}, &models.Session{SessionId: cookie.Value})
 	if err != nil {
-		switch err.(type) {
+		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailExistsError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.JSON(http.StatusConflict, "email exists")
