@@ -78,6 +78,15 @@ func (ss *sessionsStorage) GetEmailBySession(ctx context.Context, session *model
 	return email, nil
 }
 
+func (ss *sessionsStorage) UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) {
+	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateEmailBySession function.")
+	ss.logger.LogrusLoggerWithContext(ctx).Debugf("Before updating email is: %s for the sessionId: %s", ss.sessions[session.SessionId], session.SessionId)
+
+	ss.sessions[session.SessionId] = newEmail
+
+	ss.logger.LogrusLoggerWithContext(ctx).Debugf("After updating email is: %s for the sessionId: %s", ss.sessions[session.SessionId], session.SessionId)
+}
+
 func (ss *sessionsStorage) RemoveSession(ctx context.Context, session *models.Session) error {
 	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveSession function.")
 

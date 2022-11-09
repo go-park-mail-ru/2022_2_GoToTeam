@@ -213,7 +213,8 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 
 	e.GET("/api/v1/article", articleController.ArticleHandler)
 
-	e.GET("/api/v1/profile", profileController.ProfileHandler)
+	e.GET("/api/v1/profile", profileController.GetProfileHandler)
+	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)
 
 	return nil
 }
