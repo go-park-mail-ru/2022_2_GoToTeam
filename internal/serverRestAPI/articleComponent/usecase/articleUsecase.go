@@ -10,6 +10,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"context"
+	"errors"
 )
 
 type articleUsecase struct {
@@ -50,6 +51,25 @@ func (au *articleUsecase) GetArticleById(ctx context.Context, id int) (*models.A
 	}
 
 	return article, nil
+}
+
+func (au *articleUsecase) RemoveArticleById(ctx context.Context, id int) error {
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveArticleById function.")
+
+	wrappingErrorMessage := "error while getting article by id"
+
+	removedRowsCount, err := au.articleRepository.DeleteArticleById(ctx, id)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+
+	}
+	if removedRowsCount <= 0 {
+		au.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDontExistsError{Err: errors.New("article dont exists")})
+	}
+
+	return nil
 }
 
 func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *models.Article, session *models.Session) error {

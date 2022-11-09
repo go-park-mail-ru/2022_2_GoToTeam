@@ -11,7 +11,8 @@ import (
 
 var (
 	needAuthUrls = map[string]struct{}{
-		"/api/v1/article/create": struct{}{},
+		"/api/v1/article/create": {},
+		"/api/v1/article/remove": {},
 	}
 	noNeedSessionUrls = map[string]struct{}{
 		"/": struct{}{},

@@ -27,7 +27,13 @@ func EmailIsValidByCustomValidation(email string) bool {
 }
 
 func LoginIsValidByRegExp(login string) bool {
-	match, err := regexp.MatchString(passwordRegExp, login)
+	match, err := regexp.MatchString(loginRegExp, login)
+
+	return err == nil && match
+}
+
+func PasswordIsValidByRegExp(password string) bool {
+	match, err := regexp.MatchString(passwordRegExp, password)
 
 	return err == nil && match
 }
@@ -43,12 +49,6 @@ func LoginIsValidByCustomValidation(login string) bool {
 	}
 
 	return true
-}
-
-func PasswordIsValidByRegExp(password string) bool {
-	match, err := regexp.MatchString(loginRegExp, password)
-
-	return err == nil && match
 }
 
 // at least 8 symbols
