@@ -82,6 +82,9 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 
 	login := c.QueryParam("login")
 	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed login: %#v", login)
+	if login == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
 
 	user, err := uc.userUsecase.GetUserInfo(c.Request().Context(), login)
 	if err != nil {
@@ -91,7 +94,7 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 			return c.NoContent(http.StatusNotFound)
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
 			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.NoContent(http.StatusNotFound) // TODO
+			return c.NoContent(http.StatusBadRequest) // TODO
 		default:
 			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusInternalServerError)

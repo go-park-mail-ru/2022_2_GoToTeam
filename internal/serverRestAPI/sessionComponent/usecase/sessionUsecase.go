@@ -28,7 +28,7 @@ func NewSessionUsecase(sessionRepository sessionComponentInterfaces.SessionRepos
 		logger:            logger,
 	}
 
-	logger.LogrusLogger.Info("SessionUsecase has created.")
+	logger.LogrusLogger.Info("sessionUsecase has created.")
 
 	return sessionUsecase
 }

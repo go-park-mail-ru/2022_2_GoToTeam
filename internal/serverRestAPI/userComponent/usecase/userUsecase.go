@@ -25,7 +25,7 @@ func NewUserUsecase(userRepository userComponentInterfaces.UserRepositoryInterfa
 		logger:         logger,
 	}
 
-	logger.LogrusLogger.Info("NewUserUsecase has created.")
+	logger.LogrusLogger.Info("userUsecase has created.")
 
 	return userUsecase
 }
