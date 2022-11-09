@@ -3,6 +3,7 @@ package delivery
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/createArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/getArticle"
+	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/removeArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
@@ -88,8 +89,8 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, articleOutput)
 }
 
-func (ac *ArticleController) ArticleCreateHandler(c echo.Context) error {
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the ArticleCreateHandler function.")
+func (ac *ArticleController) CreateArticleHandler(c echo.Context) error {
+	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the CreateArticleHandler function.")
 	defer c.Request().Body.Close()
 
 	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
@@ -106,8 +107,6 @@ func (ac *ArticleController) ArticleCreateHandler(c echo.Context) error {
 
 	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
 
-	fmt.Println(cookie)
-
 	err = ac.articleUsecase.AddArticleBySession(c.Request().Context(), &models.Article{Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, CoverImgPath: parsedInputArticle.CoverImgPath, Content: parsedInputArticle.Content, CoAuthor: models.CoAuthor{Login: parsedInputArticle.CoAuthorLogin}}, &models.Session{SessionId: cookie.Value})
 	if err != nil {
 		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
@@ -115,5 +114,31 @@ func (ac *ArticleController) ArticleCreateHandler(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
 
+func (ac *ArticleController) RemoveArticleHandler(c echo.Context) error {
+	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the RemoveArticleHandler function.")
+	defer c.Request().Body.Close()
+
+	parsedInputArticleId := new(removeArticle.ArticleId)
+	if err := c.Bind(parsedInputArticleId); err != nil {
+		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticleId: %#v", parsedInputArticleId)
+
+	err := ac.articleUsecase.RemoveArticleById(c.Request().Context(), parsedInputArticleId.Id)
+	if err != nil {
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.ArticleDontExistsError:
+			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.NoContent(http.StatusNotFound)
+		default:
+			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
 }

@@ -214,7 +214,8 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	e.GET("/api/v1/feed/category", feedController.FeedCategoryHandler)
 
 	e.GET("/api/v1/article", articleController.ArticleHandler)
-	e.POST("/api/v1/article/create", articleController.ArticleCreateHandler)
+	e.POST("/api/v1/article/create", articleController.CreateArticleHandler)
+	e.POST("/api/v1/article/remove", articleController.RemoveArticleHandler)
 
 	e.GET("/api/v1/profile", profileController.GetProfileHandler)
 	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)

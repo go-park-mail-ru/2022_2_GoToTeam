@@ -133,3 +133,25 @@ INSERT INTO articles (title, description, content, cover_img_path, co_author_id,
 
 	return lastInsertId, nil
 }
+
+func (apsr *articlePostgreSQLRepository) DeleteArticleById(ctx context.Context, articleId int) (int64, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the DeleteArticleById function.")
+
+	result, err := apsr.database.Exec(
+		"DELETE FROM articles WHERE article_id = $1 RETURNING *",
+		articleId,
+	)
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+	apsr.logger.LogrusLoggerWithContext(ctx).Debugf("Removed articles count: %#v", removedRowsCount)
+
+	return removedRowsCount, nil
+}
