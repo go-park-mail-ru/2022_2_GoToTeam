@@ -198,6 +198,8 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, sessionRepository, profileUsecaseLogger)
 	profileController := profileComponentDelivery.NewProfileController(profileUsecase, sessionUsecase, profileDeliveryLogger)
 
+	e.Use(middleware.AuthMiddleware(sessionUsecase, middlewareLogger)) // Auth Middleware
+
 	e.POST("/api/v1/session/create", sessionController.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", sessionController.RemoveSessionHandler)
 	e.GET("/api/v1/session/info", sessionController.SessionInfoHandler)
