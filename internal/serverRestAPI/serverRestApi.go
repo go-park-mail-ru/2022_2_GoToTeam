@@ -11,13 +11,17 @@ import (
 	feedComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery"
 	feedComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/repository"
 	feedComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/usecase"
-	middleware2 "2022_2_GoTo_team/internal/serverRestAPI/middleware"
+	"2022_2_GoTo_team/internal/serverRestAPI/middleware"
 	sessionComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery"
 	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
 	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/usecase"
 	userComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery"
 	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
 	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
+
+	profileComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/delivery"
+	profileComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/repository"
+	profileComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/usecase"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"database/sql"
 	"net/http"
@@ -27,7 +31,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"log"
 )
 
@@ -46,17 +50,17 @@ func Run(configFilePath string) {
 	}
 
 	e := echo.New()
-	e.Use(middleware.CORSWithConfig(
-		middleware.CORSConfig{
+	e.Use(echoMiddleware.CORSWithConfig(
+		echoMiddleware.CORSConfig{
 			AllowOrigins:     config.AllowOriginsAddressesCORS,
 			AllowMethods:     []string{http.MethodPost, http.MethodGet},
 			AllowCredentials: true,
 		},
 	))
 
-	//e.Use(middleware.Recover())
-	e.Use(middleware2.PanicRestoreMiddleware(middlewareLogger))
-	e.Use(middleware2.AccessLogMiddleware(middlewareLogger))
+	//e.Use(echoMiddleware.Recover())
+	e.Use(middleware.PanicRestoreMiddleware(middlewareLogger))
+	e.Use(middleware.AccessLogMiddleware(middlewareLogger))
 
 	if err := configureServer(e, config, middlewareLogger); err != nil {
 		middlewareLogger.LogrusLogger.Error(errorsUtils.WrapError("error while configuring server", err))
@@ -152,6 +156,18 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	if err != nil {
 		return err
 	}
+	profileDeliveryLogger, err := logger.NewLogger("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	profileUsecaseLogger, err := logger.NewLogger("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	profileRepositoryLogger, err := logger.NewLogger("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
 
 	// PostgreSQL connections
 	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
@@ -162,7 +178,7 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	feedRepository := feedComponentRepository.NewFeedPostgreSQLRepository(postgreSQLConnections, feedRepositoryLogger)
 	categoryRepository := categoryComponentRepository.NewCategoryPostgreSQLRepository(postgreSQLConnections, categoryRepositoryLogger)
 	articleRepository := articleComponentRepository.NewArticlePostgreSQLRepository(postgreSQLConnections, articleRepositoryLogger)
-
+	profileRepository := profileComponentRepository.NewProfilePostgreSQLRepository(postgreSQLConnections, profileRepositoryLogger)
 	// Usecases and Deliveries
 	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
 	sessionController := sessionComponentDelivery.NewSessionController(sessionUsecase, sessionDeliveryLogger)
@@ -179,6 +195,9 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, articleUsecaseLogger)
 	articleController := articleComponentDelivery.NewArticleController(articleUsecase, articleDeliveryLogger)
 
+	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, sessionRepository, profileUsecaseLogger)
+	profileController := profileComponentDelivery.NewProfileController(profileUsecase, sessionUsecase, profileDeliveryLogger)
+
 	e.POST("/api/v1/session/create", sessionController.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", sessionController.RemoveSessionHandler)
 	e.GET("/api/v1/session/info", sessionController.SessionInfoHandler)
@@ -193,6 +212,8 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	e.GET("/api/v1/feed/category", feedController.FeedCategoryHandler)
 
 	e.GET("/api/v1/article", articleController.ArticleHandler)
+
+	e.GET("/api/v1/profile", profileController.ProfileHandler)
 
 	return nil
 }
