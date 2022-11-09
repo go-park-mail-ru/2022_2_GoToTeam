@@ -192,7 +192,7 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	categoryUsecase := categoryComponentUsecase.NewCategoryUsecase(categoryRepository, categoryUsecaseLogger)
 	categoryController := categoryComponentDelivery.NewCategoryController(categoryUsecase, categoryDeliveryLogger)
 
-	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, articleUsecaseLogger)
+	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, sessionRepository, articleUsecaseLogger)
 	articleController := articleComponentDelivery.NewArticleController(articleUsecase, articleDeliveryLogger)
 
 	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, sessionRepository, profileUsecaseLogger)
@@ -214,6 +214,7 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	e.GET("/api/v1/feed/category", feedController.FeedCategoryHandler)
 
 	e.GET("/api/v1/article", articleController.ArticleHandler)
+	e.POST("/api/v1/article/create", articleController.ArticleCreateHandler)
 
 	e.GET("/api/v1/profile", profileController.GetProfileHandler)
 	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)
