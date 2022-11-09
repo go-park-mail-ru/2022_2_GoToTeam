@@ -89,7 +89,7 @@ func (upsr *userPostgreSQLRepository) AddUser(ctx context.Context, email string,
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddUser function.")
 
 	row := upsr.database.QueryRow(`
-INSERT INTO users (email, login, username, password) VALUES ($1, $2, $3, $4) RETURNING user_id
+INSERT INTO users (email, login, username, password) VALUES ($1, $2, (CASE WHEN $3 = '' THEN NULL END), $4) RETURNING user_id
 `, email, login, username, password)
 
 	var lastInsertId int
