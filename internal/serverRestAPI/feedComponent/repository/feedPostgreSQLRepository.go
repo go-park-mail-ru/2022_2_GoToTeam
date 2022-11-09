@@ -223,7 +223,7 @@ FROM articles A
 	return articles, nil
 }
 
-// GetFeed TODO OFFSET LIMIT
+// GetFeedForUserByLogin TODO OFFSET LIMIT
 func (fpsr *feedPostgreSQLRepository) GetFeedForUserByLogin(ctx context.Context, login string) ([]*models.Article, error) {
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForUserByLogin function.")
 
@@ -235,7 +235,6 @@ SELECT A.article_id,
        COALESCE(A.description, ''),
        A.rating,
        A.comments_count,
-       A.content,
        COALESCE(A.cover_img_path, ''),
        COALESCE(COALESCE(UC.username, ''), ''),
        COALESCE(UC.login, ''),
@@ -256,7 +255,7 @@ WHERE UP.login = $1;
 
 	for rows.Next() {
 		article := &models.Article{}
-		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.Content, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
+		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
 			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, repositoryToUsecaseErrors.FeedRepositoryError
 		}
@@ -272,4 +271,100 @@ WHERE UP.login = $1;
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got articles: \n" + fpsr.getArticlesString(articles))
 
 	return articles, nil
+}
+
+// GetFeedForCategory TODO OFFSET LIMIT
+func (fpsr *feedPostgreSQLRepository) GetFeedForCategory(ctx context.Context, category string) ([]*models.Article, error) {
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForCategory function.")
+
+	articles := make([]*models.Article, 0, 10)
+
+	rows, err := fpsr.database.Query(`
+SELECT A.article_id,
+       A.title,
+       COALESCE(A.description, ''),
+       A.rating,
+       A.comments_count,
+       COALESCE(A.cover_img_path, ''),
+       COALESCE(COALESCE(UC.username, ''), ''),
+       COALESCE(UC.login, ''),
+       COALESCE(UP.username, ''),
+       UP.login,
+       COALESCE(C.category_name, '')
+FROM articles A
+         LEFT JOIN users UC ON A.co_author_id = UC.user_id
+         JOIN users UP ON A.publisher_id = UP.user_id
+         LEFT JOIN categories C ON A.category_id = C.category_id
+WHERE C.category_name = $1;
+`, category)
+	if err != nil {
+		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.FeedRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		article := &models.Article{}
+		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.FeedRepositoryError
+		}
+		article.Tags, err = fpsr.GetTagsForArticle(ctx, article.ArticleId)
+		if err != nil {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.FeedRepositoryError
+		}
+
+		articles = append(articles, article)
+	}
+
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got articles: \n" + fpsr.getArticlesString(articles))
+
+	return articles, nil
+}
+
+func (fpsr *feedPostgreSQLRepository) UserExistsByLogin(ctx context.Context, login string) (bool, error) {
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByLogin function.")
+
+	row := fpsr.database.QueryRow(`
+SELECT U.login
+FROM users U WHERE U.login = $1;
+`, login)
+
+	loginTmp := ""
+	if err := row.Scan(&loginTmp); err != nil {
+		if err == sql.ErrNoRows {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
+			return false, nil
+		}
+		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return true, repositoryToUsecaseErrors.FeedRepositoryError
+	}
+
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got login: ", loginTmp)
+
+	return true, nil
+}
+
+func (fpsr *feedPostgreSQLRepository) CategoryExists(ctx context.Context, category string) (bool, error) {
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CategoryExists function.")
+
+	row := fpsr.database.QueryRow(`
+SELECT C.category_name
+FROM categories C WHERE C.category_name = $1;
+`, category)
+
+	categoryTmp := ""
+	if err := row.Scan(&categoryTmp); err != nil {
+		if err == sql.ErrNoRows {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
+			return false, nil
+		}
+		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return true, repositoryToUsecaseErrors.FeedRepositoryError
+	}
+
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got login: ", categoryTmp)
+
+	return true, nil
 }

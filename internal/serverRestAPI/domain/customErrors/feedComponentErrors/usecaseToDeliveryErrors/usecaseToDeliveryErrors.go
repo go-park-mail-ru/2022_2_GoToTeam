@@ -15,3 +15,27 @@ type RepositoryError struct {
 func (re *RepositoryError) Error() string {
 	return re.Err.Error()
 }
+
+type LoginIsNotValidError struct {
+	Err error
+}
+
+func (linve *LoginIsNotValidError) Error() string {
+	return linve.Err.Error()
+}
+
+type LoginDontExistsError struct {
+	Err error
+}
+
+func (ldee *LoginDontExistsError) Error() string {
+	return ldee.Err.Error()
+}
+
+type CategoryDontExistsError struct {
+	Err error
+}
+
+func (cdee *CategoryDontExistsError) Error() string {
+	return cdee.Err.Error()
+}

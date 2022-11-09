@@ -1,6 +1,6 @@
-package feedUser
+package modelsRestApi
 
-type FeedUser struct {
+type Feed struct {
 	Articles []Article `json:"articles"`
 }
 
@@ -12,7 +12,6 @@ type Article struct {
 	Category     string    `json:"category"`
 	Rating       int       `json:"rating"`
 	Comments     int       `json:"comments"`
-	Content      string    `json:"content"`
 	CoverImgPath string    `json:"cover_img_path"`
 	CoAuthor     CoAuthor  `json:"co_author"`
 	Publisher    Publisher `json:"publisher"`
