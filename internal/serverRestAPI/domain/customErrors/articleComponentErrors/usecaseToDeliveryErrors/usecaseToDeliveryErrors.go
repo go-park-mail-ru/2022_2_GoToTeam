@@ -15,3 +15,11 @@ type ArticleDontExistsError struct {
 func (adee *ArticleDontExistsError) Error() string {
 	return adee.Err.Error()
 }
+
+type EmailForSessionDontFoundError struct {
+	Err error
+}
+
+func (efsdfe *EmailForSessionDontFoundError) Error() string {
+	return efsdfe.Err.Error()
+}

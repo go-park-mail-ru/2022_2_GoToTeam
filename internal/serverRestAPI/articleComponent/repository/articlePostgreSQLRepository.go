@@ -112,3 +112,24 @@ WHERE A.article_id = $1;
 
 	return tags, nil
 }
+
+func (apsr *articlePostgreSQLRepository) AddArticle(ctx context.Context, article *models.Article) (int, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddArticle function.")
+
+	row := apsr.database.QueryRow(`
+INSERT INTO articles (title, description, content, cover_img_path, co_author_id, publisher_id, category_id)  VALUES ($1, $2, $3, $4, 
+        (SELECT user_id FROM users WHERE login = $5), 
+        (SELECT user_id FROM users WHERE email = $6), 
+        (SELECT categories.category_id FROM categories WHERE category_name = $7)) RETURNING article_id;
+`, article.Title, article.Description, article.Content, article.CoverImgPath, article.CoAuthor.Login, article.Publisher.Email, article.CategoryName)
+
+	var lastInsertId int
+	if err := row.Scan(&lastInsertId); err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got lastInsertId: ", lastInsertId)
+
+	return lastInsertId, nil
+}

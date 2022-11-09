@@ -17,11 +17,13 @@ type Article struct {
 }
 
 type CoAuthor struct {
+	Email    string
 	Username string
 	Login    string
 }
 
 type Publisher struct {
+	Email    string
 	Username string
 	Login    string
 }

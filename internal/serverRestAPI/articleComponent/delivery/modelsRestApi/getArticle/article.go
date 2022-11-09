@@ -1,4 +1,4 @@
-package modelsRestApi
+package getArticle
 
 type Article struct {
 	Id           int       `json:"id"`
