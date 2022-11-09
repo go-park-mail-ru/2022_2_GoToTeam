@@ -24,7 +24,7 @@ func NewFeedUsecase(feedRepository feedComponentInterfaces.FeedRepositoryInterfa
 		logger:         logger,
 	}
 
-	logger.LogrusLogger.Info("FeedUsecase has created.")
+	logger.LogrusLogger.Info("feedUsecase has created.")
 
 	return feedUsecase
 }

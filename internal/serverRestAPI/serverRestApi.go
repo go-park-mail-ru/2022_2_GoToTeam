@@ -1,6 +1,12 @@
 package serverRestAPI
 
 import (
+	articleComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery"
+	articleComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/articleComponent/repository"
+	articleComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/articleComponent/usecase"
+	categoryComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/delivery"
+	categoryComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/repository"
+	categoryComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/usecase"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	feedComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery"
 	feedComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/repository"
@@ -14,6 +20,8 @@ import (
 	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"database/sql"
+	"fmt"
+	"net/http"
 	"strconv"
 
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
@@ -22,7 +30,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
-	"net/http"
 )
 
 func Run(configFilePath string) {
@@ -85,6 +92,7 @@ func getPostgreSQLConnections(databaseUser string, databaseName string, database
 
 func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger *logger.Logger) error {
 
+	// Loggers
 	sessionDeliveryLogger, err := logger.NewLogger("sessionComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
@@ -109,15 +117,39 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	if err != nil {
 		return err
 	}
-	feedComponentDeliveryLogger, err := logger.NewLogger("feedComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	feedDeliveryLogger, err := logger.NewLogger("feedComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	feedComponentUsecaseLogger, err := logger.NewLogger("feedComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	feedUsecaseLogger, err := logger.NewLogger("feedComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
-	feedComponentRepositoryLogger, err := logger.NewLogger("feedComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	feedRepositoryLogger, err := logger.NewLogger("feedComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	categoryDeliveryLogger, err := logger.NewLogger("categoryComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	categoryUsecaseLogger, err := logger.NewLogger("categoryComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	categoryRepositoryLogger, err := logger.NewLogger("categoryComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	articleDeliveryLogger, err := logger.NewLogger("articleComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	articleUsecaseLogger, err := logger.NewLogger("articleComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
+	if err != nil {
+		return err
+	}
+	articleRepositoryLogger, err := logger.NewLogger("articleComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, config.LogLevel, config.LogFilePath)
 	if err != nil {
 		return err
 	}
@@ -125,18 +157,30 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	// PostgreSQL connections
 	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
 
+	// Repositories
 	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
 	userRepository := userComponentRepository.NewUserPostgreSQLRepository(postgreSQLConnections, userRepositoryLogger)
-	feedRepository := feedComponentRepository.NewFeedPostgreSQLRepository(postgreSQLConnections, feedComponentRepositoryLogger)
+	feedRepository := feedComponentRepository.NewFeedPostgreSQLRepository(postgreSQLConnections, feedRepositoryLogger)
+	categoryRepository := categoryComponentRepository.NewCategoryPostgreSQLRepository(postgreSQLConnections, categoryRepositoryLogger)
+	articleRepository := articleComponentRepository.NewArticlePostgreSQLRepository(postgreSQLConnections, articleRepositoryLogger)
 
+	// Usecases and Deliveries
 	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
 	sessionController := sessionComponentDelivery.NewSessionController(sessionUsecase, sessionDeliveryLogger)
 
 	userUsecase := userComponentUsecase.NewUserUsecase(userRepository, userUsecaseLogger)
 	userController := userComponentDelivery.NewUserController(userUsecase, sessionUsecase, userDeliveryLogger)
 
-	feedUsecase := feedComponentUsecase.NewFeedUsecase(feedRepository, feedComponentUsecaseLogger)
-	feedController := feedComponentDelivery.NewFeedController(feedUsecase, feedComponentDeliveryLogger)
+	feedUsecase := feedComponentUsecase.NewFeedUsecase(feedRepository, feedUsecaseLogger)
+	feedController := feedComponentDelivery.NewFeedController(feedUsecase, feedDeliveryLogger)
+
+	categoryUsecase := categoryComponentUsecase.NewCategoryUsecase(categoryRepository, categoryUsecaseLogger)
+	categoryController := categoryComponentDelivery.NewCategoryController(categoryUsecase, categoryDeliveryLogger)
+
+	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, articleUsecaseLogger)
+	articleController := articleComponentDelivery.NewArticleController(articleUsecase, articleDeliveryLogger)
+
+	fmt.Println(articleController)
 
 	e.POST("/api/v1/session/create", sessionController.CreateSessionHandler)
 	e.POST("/api/v1/session/remove", sessionController.RemoveSessionHandler)
@@ -148,8 +192,7 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	e.POST("/api/v1/user/signup", userController.SignupUserHandler)
 	e.GET("/api/v1/user/info", userController.UserInfoHandler)
 
-	//e.GET("/api/v1/category/info", Api.CategoryInfoHandler)
-	//e.GET("/api/v1/category/feed", Api.CategoryFeedHandler)
+	e.GET("/api/v1/category/info", categoryController.CategoryInfoHandler)
 
 	e.GET("/api/v1/feed", feedController.FeedHandler)
 	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)

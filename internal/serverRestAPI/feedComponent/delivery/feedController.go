@@ -102,6 +102,9 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 
 	login := c.QueryParam("login")
 	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed login: %#v", login)
+	if login == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
 	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
 	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed startFromArticleOfNumberStr: %#v", startFromArticleOfNumberStr)
 
@@ -178,6 +181,9 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 
 	category := c.QueryParam("category")
 	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed category: %#v", category)
+	if category == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
 	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
 	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed startFromArticleOfNumberStr: %#v", startFromArticleOfNumberStr)
 
