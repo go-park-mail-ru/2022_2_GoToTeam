@@ -65,7 +65,7 @@ func (ppsr *profilePostgreSQLRepository) UpdateProfileByEmail(ctx context.Contex
 		}
 	}
 
-	exists, err := ppsr.UserExistsByLogin(ctx, newProfile.Login)
+	exists, err := ppsr.UserExistsByLoginWithIgnoringRowsWithEmail(ctx, newProfile.Login, email)
 	if err != nil {
 		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return repositoryToUsecaseErrors.ProfileRepositoryError
@@ -113,13 +113,13 @@ FROM users U WHERE U.email = $1;
 	return true, nil
 }
 
-func (ppsr *profilePostgreSQLRepository) UserExistsByLogin(ctx context.Context, login string) (bool, error) {
-	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByLogin function.")
+func (ppsr *profilePostgreSQLRepository) UserExistsByLoginWithIgnoringRowsWithEmail(ctx context.Context, login string, emailToIgnore string) (bool, error) {
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByLoginWithIgnoringRowsWithEmail function.")
 
 	row := ppsr.database.QueryRow(`
 SELECT U.login
-FROM users U WHERE U.login = $1;
-`, login)
+FROM users U WHERE U.login = $1 AND U.email != $2;
+`, login, emailToIgnore)
 
 	loginTmp := ""
 	if err := row.Scan(&loginTmp); err != nil {
