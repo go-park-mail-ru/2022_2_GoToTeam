@@ -27,11 +27,11 @@ func NewProfilePostgreSQLRepository(database *sql.DB, logger *logger.Logger) pro
 	return profileRepository
 }
 
-func (ppsr profilePostgreSQLRepository) GetProfileByEmail(ctx context.Context, email string) (*models.Profile, error) {
+func (ppsr *profilePostgreSQLRepository) GetProfileByEmail(ctx context.Context, email string) (*models.Profile, error) {
 	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetProfileByEmail function.")
 
 	row := ppsr.database.QueryRow(`
-SELECT email, login, username, avatar_img_path
+SELECT email, login, COALESCE(username, ''), COALESCE(avatar_img_path, '')
 FROM users WHERE email = $1;
 `, email)
 
@@ -48,4 +48,90 @@ FROM users WHERE email = $1;
 	ppsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got user profile: %#v", profile)
 
 	return profile, nil
+}
+
+func (ppsr *profilePostgreSQLRepository) UpdateProfileByEmail(ctx context.Context, newProfile *models.Profile, email string) error {
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateProfileByEmail function.")
+
+	if newProfile.Email != email {
+		exists, err := ppsr.UserExistsByEmail(ctx, newProfile.Email)
+		if err != nil {
+			ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return repositoryToUsecaseErrors.ProfileRepositoryError
+		}
+		if exists {
+			ppsr.logger.LogrusLoggerWithContext(ctx).Warnf("Email %s exists.", newProfile.Email)
+			return repositoryToUsecaseErrors.ProfileRepositoryEmailExistsError
+		}
+	}
+
+	exists, err := ppsr.UserExistsByLogin(ctx, newProfile.Email)
+	if err != nil {
+		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.ProfileRepositoryError
+	}
+	if exists {
+		ppsr.logger.LogrusLoggerWithContext(ctx).Warnf("Login %s exists.", newProfile.Email)
+		return repositoryToUsecaseErrors.ProfileRepositoryLoginExistsError
+	}
+
+	_, err = ppsr.database.Exec(`
+UPDATE users SET email = $1, login = $2, username = $3, avatar_img_path = $4
+WHERE email = $5;
+`, newProfile.Email, newProfile.Login, newProfile.Username, newProfile.AvatarImgPath, email)
+
+	if err != nil {
+		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.ProfileRepositoryError
+	}
+
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Profile has been updated successfully.")
+
+	return nil
+}
+
+func (ppsr *profilePostgreSQLRepository) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByEmail function.")
+
+	row := ppsr.database.QueryRow(`
+SELECT U.email
+FROM users U WHERE U.email = $1;
+`, email)
+
+	emailTmp := ""
+	if err := row.Scan(&emailTmp); err != nil {
+		if err == sql.ErrNoRows {
+			ppsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
+			return false, nil
+		}
+		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return true, repositoryToUsecaseErrors.ProfileRepositoryError
+	}
+
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Got email: ", emailTmp)
+
+	return true, nil
+}
+
+func (ppsr *profilePostgreSQLRepository) UserExistsByLogin(ctx context.Context, login string) (bool, error) {
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByLogin function.")
+
+	row := ppsr.database.QueryRow(`
+SELECT U.login
+FROM users U WHERE U.login = $1;
+`, login)
+
+	loginTmp := ""
+	if err := row.Scan(&loginTmp); err != nil {
+		if err == sql.ErrNoRows {
+			ppsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
+			return false, nil
+		}
+		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return true, repositoryToUsecaseErrors.ProfileRepositoryError
+	}
+
+	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Got login: ", loginTmp)
+
+	return true, nil
 }

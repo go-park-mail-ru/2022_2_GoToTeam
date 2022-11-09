@@ -17,4 +17,5 @@ type SessionRepositoryInterface interface {
 	GetEmailBySession(ctx context.Context, session *models.Session) (string, error)
 	RemoveSession(ctx context.Context, session *models.Session) error
 	SessionExists(ctx context.Context, session *models.Session) (bool, error)
+	UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string)
 }

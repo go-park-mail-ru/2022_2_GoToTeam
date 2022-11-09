@@ -45,8 +45,8 @@ func (pc *ProfileController) isAuthorized(c echo.Context) bool {
 	return authorized
 }
 
-func (pc *ProfileController) ProfileHandler(c echo.Context) error {
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the ProfileHandler function.")
+func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
+	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the GetProfileHandler function.")
 
 	if !pc.isAuthorized(c) {
 		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("Unauthorized!")
@@ -82,4 +82,44 @@ func (pc *ProfileController) ProfileHandler(c echo.Context) error {
 	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed profileInfo = ", profileOutput)
 
 	return c.JSON(http.StatusOK, profileOutput)
+}
+
+func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
+	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UpdateProfileHandler function.")
+	defer c.Request().Body.Close()
+
+	if !pc.isAuthorized(c) {
+		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("Unauthorized!")
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
+	if err != nil {
+		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
+	parsedInputProfile := new(modelsRestApi.Profile)
+	if err := c.Bind(parsedInputProfile); err != nil {
+		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputProfile: %#v", parsedInputProfile)
+
+	err = pc.profileUsecase.UpdateProfileBySession(c.Request().Context(), &models.Profile{Email: parsedInputProfile.Email, Login: parsedInputProfile.Login, Username: parsedInputProfile.Username, AvatarImgPath: parsedInputProfile.AvatarImgPath}, &models.Session{SessionId: cookie.Value})
+	if err != nil {
+		switch err.(type) {
+		case *usecaseToDeliveryErrors.EmailExistsError:
+			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.JSON(http.StatusConflict, "email exists")
+		case *usecaseToDeliveryErrors.LoginExistsError:
+			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.JSON(http.StatusConflict, "login exists")
+		default:
+			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
 }

@@ -63,3 +63,43 @@ func (pu *profileUsecase) GetProfileBySession(ctx context.Context, session *mode
 
 	return profile, nil
 }
+
+func (pu *profileUsecase) UpdateProfileBySession(ctx context.Context, newProfile *models.Profile, session *models.Session) error {
+	pu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateProfileBySession function.")
+
+	wrappingErrorMessage := "error while updating newProfile by session"
+
+	email, err := pu.sessionRepository.GetEmailBySession(ctx, session)
+	if err != nil {
+		switch err {
+		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDontExistsError:
+			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+		default:
+			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		}
+	}
+
+	err = pu.profileRepository.UpdateProfileByEmail(ctx, newProfile, email)
+	if err != nil {
+		switch err {
+		case repositoryToUsecaseErrors.ProfileRepositoryEmailExistsError:
+			pu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailExistsError{Err: err})
+		case repositoryToUsecaseErrors.ProfileRepositoryLoginExistsError:
+			pu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginExistsError{Err: err})
+		default:
+			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		}
+	}
+
+	// We should update sessions storage
+	if newProfile.Email != email {
+		pu.sessionRepository.UpdateEmailBySession(ctx, session, newProfile.Email)
+	}
+
+	return nil
+}

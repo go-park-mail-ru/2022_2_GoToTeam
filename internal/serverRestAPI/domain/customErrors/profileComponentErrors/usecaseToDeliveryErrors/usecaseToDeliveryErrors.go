@@ -23,3 +23,19 @@ type UserForSessionDontFoundError struct {
 func (ufsdfe *UserForSessionDontFoundError) Error() string {
 	return ufsdfe.Err.Error()
 }
+
+type EmailExistsError struct {
+	Err error
+}
+
+func (eee *EmailExistsError) Error() string {
+	return eee.Err.Error()
+}
+
+type LoginExistsError struct {
+	Err error
+}
+
+func (lee *LoginExistsError) Error() string {
+	return lee.Err.Error()
+}
