@@ -9,6 +9,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/validators"
 	"context"
 	"errors"
 )
@@ -51,6 +52,11 @@ func (su *sessionUsecase) CreateSessionForUser(ctx context.Context, email string
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionForUser function.")
 
 	wrappingErrorMessage := "error while creating session for user"
+
+	if err := su.validateUserData(ctx, email, password); err != nil {
+		su.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
 
 	exists, err := su.userRepository.CheckUserEmailAndPassword(ctx, email, password)
 	if err != nil {
@@ -135,4 +141,19 @@ func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *mo
 	}
 
 	return email, nil
+}
+
+func (su *sessionUsecase) validateUserData(ctx context.Context, email string, password string) error {
+	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the validateUserData function.")
+
+	if !validators.EmailIsValidByCustomValidation(email) {
+		su.logger.LogrusLoggerWithContext(ctx).Debugf("Email %s is not valid.", email)
+		return &usecaseToDeliveryErrors.EmailIsNotValidError{Err: errors.New("email is not valid")}
+	}
+	if !validators.PasswordIsValidByRegExp(password) {
+		su.logger.LogrusLoggerWithContext(ctx).Debug("Password is not valid.")
+		return &usecaseToDeliveryErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
+	}
+
+	return nil
 }

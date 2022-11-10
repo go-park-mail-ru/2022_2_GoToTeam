@@ -64,7 +64,7 @@ func (uu *userUsecase) AddNewUser(ctx context.Context, email string, login strin
 
 	wrappingErrorMessage := "error while adding the user"
 
-	if err := uu.validateUserData(ctx, email, login, username, password); err != nil {
+	if err := uu.validateUserData(ctx, email, login, password); err != nil {
 		uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
@@ -141,7 +141,7 @@ func (uu *userUsecase) userExistsByLogin(ctx context.Context, login string) (boo
 	return exists, nil
 }
 
-func (uu *userUsecase) validateUserData(ctx context.Context, email string, login string, username string, password string) error {
+func (uu *userUsecase) validateUserData(ctx context.Context, email string, login string, password string) error {
 	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the validateUserData function.")
 
 	if !validators.EmailIsValidByCustomValidation(email) {

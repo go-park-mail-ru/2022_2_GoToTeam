@@ -77,6 +77,7 @@ func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 	profileOutput := modelsRestApi.Profile{
 		Email:         profile.Email,
 		Login:         profile.Login,
+		Password:      profile.Password,
 		Username:      profile.Username,
 		AvatarImgPath: profile.AvatarImgPath,
 	}
@@ -110,6 +111,15 @@ func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
 	err = pc.profileUsecase.UpdateProfileBySession(c.Request().Context(), &models.Profile{Email: parsedInputProfile.Email, Login: parsedInputProfile.Login, Username: parsedInputProfile.Username, AvatarImgPath: parsedInputProfile.AvatarImgPath}, &models.Session{SessionId: cookie.Value})
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailIsNotValidError:
+			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.JSON(http.StatusConflict, "email is not valid")
+		case *usecaseToDeliveryErrors.LoginIsNotValidError:
+			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.JSON(http.StatusConflict, "login is not valid")
+		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
+			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.JSON(http.StatusConflict, "password is not valid")
 		case *usecaseToDeliveryErrors.EmailExistsError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.JSON(http.StatusConflict, "email exists")

@@ -9,7 +9,9 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/validators"
 	"context"
+	"errors"
 )
 
 type profileUsecase struct {
@@ -69,6 +71,11 @@ func (pu *profileUsecase) UpdateProfileBySession(ctx context.Context, newProfile
 
 	wrappingErrorMessage := "error while updating newProfile by session"
 
+	if err := pu.validateUserData(ctx, newProfile.Email, newProfile.Login, newProfile.Password); err != nil {
+		pu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
+
 	email, err := pu.sessionRepository.GetEmailBySession(ctx, session)
 	if err != nil {
 		switch err {
@@ -99,6 +106,25 @@ func (pu *profileUsecase) UpdateProfileBySession(ctx context.Context, newProfile
 	// We should update sessions storage
 	if newProfile.Email != email {
 		pu.sessionRepository.UpdateEmailBySession(ctx, session, newProfile.Email)
+	}
+
+	return nil
+}
+
+func (pu *profileUsecase) validateUserData(ctx context.Context, email string, login string, password string) error {
+	pu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the validateUserData function.")
+
+	if !validators.EmailIsValidByCustomValidation(email) {
+		pu.logger.LogrusLoggerWithContext(ctx).Debugf("Email %s is not valid.", email)
+		return &usecaseToDeliveryErrors.EmailIsNotValidError{Err: errors.New("email is not valid")}
+	}
+	if !validators.LoginIsValidByRegExp(login) {
+		pu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
+		return &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")}
+	}
+	if !validators.PasswordIsValidByRegExp(password) {
+		pu.logger.LogrusLoggerWithContext(ctx).Debug("Password is not valid.")
+		return &usecaseToDeliveryErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
 	}
 
 	return nil

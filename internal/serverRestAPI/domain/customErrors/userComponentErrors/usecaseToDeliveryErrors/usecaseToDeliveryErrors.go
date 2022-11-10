@@ -72,14 +72,6 @@ func (linve *LoginIsNotValidError) Error() string {
 	return linve.Err.Error()
 }
 
-type UsernameIsNotValidError struct {
-	Err error
-}
-
-func (uinve *UsernameIsNotValidError) Error() string {
-	return uinve.Err.Error()
-}
-
 type PasswordIsNotValidError struct {
 	Err error
 }

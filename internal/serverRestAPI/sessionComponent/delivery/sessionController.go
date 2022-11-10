@@ -8,6 +8,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/modelsRestApi"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils/httpCookieUtils"
+	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -48,6 +49,15 @@ func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	session, err := sc.sessionUsecase.CreateSessionForUser(c.Request().Context(), email, password)
 	if err != nil {
 		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailIsNotValidError:
+			return c.JSON(http.StatusBadRequest, "email is not valid")
+		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
+			return c.JSON(http.StatusBadRequest, "password is not valid")
+		case *usecaseToDeliveryErrors.IncorrectEmailOrPasswordError:
+			return c.JSON(http.StatusBadRequest, "incorrect email or password")
+		}
+
 		return c.NoContent(http.StatusBadRequest)
 	}
 

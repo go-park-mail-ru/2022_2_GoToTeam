@@ -48,17 +48,15 @@ func (uc *UserController) SignupUserHandler(c echo.Context) error {
 	if err := uc.userUsecase.AddNewUser(c.Request().Context(), parsedInput.NewUserData.Email, parsedInput.NewUserData.Login, parsedInput.NewUserData.Username, parsedInput.NewUserData.Password); err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
-			return c.NoContent(http.StatusBadRequest)
+			return c.JSON(http.StatusBadRequest, "email is not valid")
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
-			return c.NoContent(http.StatusBadRequest)
-		case *usecaseToDeliveryErrors.UsernameIsNotValidError:
-			return c.NoContent(http.StatusBadRequest)
+			return c.JSON(http.StatusBadRequest, "login is not valid")
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
-			return c.NoContent(http.StatusBadRequest)
+			return c.JSON(http.StatusBadRequest, "password is not valid")
 		case *usecaseToDeliveryErrors.EmailExistsError:
-			return c.NoContent(http.StatusConflict)
+			return c.JSON(http.StatusConflict, "email exists")
 		case *usecaseToDeliveryErrors.LoginExistsError:
-			return c.NoContent(http.StatusConflict)
+			return c.JSON(http.StatusConflict, "login exists")
 		default:
 			return c.NoContent(http.StatusInternalServerError)
 		}
