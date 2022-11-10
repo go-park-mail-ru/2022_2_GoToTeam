@@ -14,6 +14,7 @@ const (
 	LAYER_REPOSITORY_STRING_FOR_LOGGER = "repository"
 
 	REQUEST_ID_KEY_FOR_CONTEXT = stringTypeAlias("requestID")
+	USER_EMAIL_KEY_FOR_CONTEXT = stringTypeAlias("email")
 
 	// For the session
 	SESSION_COOKIE_HEADER_NAME = "session_id" // Cookie header

@@ -64,7 +64,7 @@ func newLogrusLogger(logLevel, logFilePath string) (*logrus.Logger, error) {
 
 	formatter := &easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
-		LogFormat:       "[%lvl%][component: %component%][layer: %layer%][requestId: %requestId%][%time%]: %msg%\n_________________________________\n\n",
+		LogFormat:       "[%lvl%][component: %component%][layer: %layer%][requestId: %requestId%][userEmail: %userEmail%][%time%]: %msg%\n_________________________________\n\n",
 	}
 	logrusLogger.SetFormatter(formatter)
 
@@ -74,5 +74,6 @@ func newLogrusLogger(logLevel, logFilePath string) (*logrus.Logger, error) {
 func (l *Logger) LogrusLoggerWithContext(ctx context.Context) *logrus.Entry {
 	return l.LogrusLogger.WithFields(logrus.Fields{
 		"requestId": ctx.Value(domain.REQUEST_ID_KEY_FOR_CONTEXT),
+		"userEmail": ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT),
 	})
 }

@@ -85,7 +85,7 @@ func (su *sessionUsecase) RemoveSession(ctx context.Context, session *models.Ses
 func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *models.Session) (*models.User, error) {
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserInfoByEmail function.")
 
-	wrappingErrorMessage := "error while getting username by session"
+	wrappingErrorMessage := "error while getting user info by session"
 
 	email, err := su.sessionRepository.GetEmailBySession(ctx, session)
 	if err != nil {
@@ -114,4 +114,25 @@ func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *mod
 	}
 
 	return user, nil
+}
+
+func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *models.Session) (string, error) {
+	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserEmailBySession function.")
+
+	wrappingErrorMessage := "error while getting email by session"
+
+	email, err := su.sessionRepository.GetEmailBySession(ctx, session)
+	if err != nil {
+		su.logger.LogrusLoggerWithContext(ctx).Error(err)
+		switch err {
+		case repositoryToUsecaseErrors2.SessionRepositoryEmailDontExistsError:
+			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
+			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
+			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+		default:
+			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		}
+	}
+
+	return email, nil
 }

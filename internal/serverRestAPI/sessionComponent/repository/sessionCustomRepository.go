@@ -92,5 +92,7 @@ func (ss *sessionsStorage) SessionExists(ctx context.Context, session *models.Se
 
 	_, exists := ss.sessions[session.SessionId]
 
+	ss.logger.LogrusLoggerWithContext(ctx).Debugf("The session %v exists: %v", session.SessionId, exists)
+
 	return exists, nil
 }
