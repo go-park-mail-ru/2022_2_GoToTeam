@@ -6,21 +6,10 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils"
 	"context"
-	"math/rand"
 	"sync"
 )
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func generateRandomRunesString(length int) string {
-	b := make([]rune, length)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-
-	return string(b)
-}
 
 type sessionsStorage struct {
 	sessions map[string]string // K: sessionId, V: email
@@ -55,7 +44,7 @@ func (ss *sessionsStorage) getSessionsInStorageString() string {
 func (ss *sessionsStorage) CreateSessionForUser(ctx context.Context, email string) (*models.Session, error) {
 	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionForUser function.")
 
-	sessionId := generateRandomRunesString(domain.SESSION_ID_STRING_LENGTH)
+	sessionId := sessionUtils.GenerateRandomRunesString(domain.SESSION_ID_STRING_LENGTH)
 	ss.sessions[sessionId] = email
 
 	ss.logger.LogrusLoggerWithContext(ctx).Debug("Generated sessionId: ", sessionId, ", for email: ", email, ". Sessions in storage: ", ss.getSessionsInStorageString())
