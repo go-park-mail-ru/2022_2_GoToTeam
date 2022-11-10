@@ -48,20 +48,19 @@ func newLogrusLogger(logLevel, logFilePath string) (*logrus.Logger, error) {
 	}
 	logrusLogger.SetLevel(level)
 
-	if len(logFilePath) != 0 {
-		err := os.MkdirAll(path.Dir(logFilePath), 0750)
-		if err != nil && !os.IsExist(err) {
-			return nil, err
-		}
-		logFile, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			return nil, err
-		}
-
-		logrusLogger.SetOutput(io.MultiWriter(logFile, os.Stdout)) // Logging to console and logFile
-	} else {
+	if len(logFilePath) == 0 {
 		return nil, errors.New("incorrect logFilePath: is empty")
 	}
+
+	if err := os.MkdirAll(path.Dir(logFilePath), 0750); err != nil && !os.IsExist(err) {
+		return nil, err
+	}
+	logFile, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	logrusLogger.SetOutput(io.MultiWriter(logFile, os.Stdout)) // Logging to console and logFile
 
 	formatter := &easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
