@@ -31,3 +31,19 @@ type UserForSessionDontFoundError struct {
 func (ufsdfe *UserForSessionDontFoundError) Error() string {
 	return ufsdfe.Err.Error()
 }
+
+type EmailIsNotValidError struct {
+	Err error
+}
+
+func (einve *EmailIsNotValidError) Error() string {
+	return einve.Err.Error()
+}
+
+type PasswordIsNotValidError struct {
+	Err error
+}
+
+func (pinve *PasswordIsNotValidError) Error() string {
+	return pinve.Err.Error()
+}
