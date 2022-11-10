@@ -122,7 +122,7 @@ func (pu *profileUsecase) validateUserData(ctx context.Context, email string, lo
 		pu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
 		return &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")}
 	}
-	if !validators.PasswordIsValidByRegExp(password) {
+	if password != "" && !validators.PasswordIsValidByRegExp(password) {
 		pu.logger.LogrusLoggerWithContext(ctx).Debug("Password is not valid.")
 		return &usecaseToDeliveryErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
 	}
