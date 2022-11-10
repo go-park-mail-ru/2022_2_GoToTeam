@@ -30,19 +30,6 @@ func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUseca
 	return sessionController
 }
 
-func (sc *SessionController) isAuthorized(c echo.Context) bool {
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the isAuthorized function.")
-
-	authorized := false
-	if cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME); err == nil && cookie != nil {
-		if authorized, err = sc.sessionUsecase.SessionExists(c.Request().Context(), &models.Session{SessionId: cookie.Value}); err != nil {
-			return false
-		}
-	}
-
-	return authorized
-}
-
 func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the CreateSessionHandler function.")
 
@@ -74,11 +61,6 @@ func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
 	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the RemoveSessionHandler function.")
 
-	if !sc.isAuthorized(c) {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("Unauthorized!")
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
 	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
 		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
@@ -100,10 +82,6 @@ func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
 func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the SessionInfoHandler function.")
 
-	if !sc.isAuthorized(c) {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("Unauthorized!")
-		return c.NoContent(http.StatusUnauthorized)
-	}
 	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
 		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
