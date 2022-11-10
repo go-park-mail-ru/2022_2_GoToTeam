@@ -113,13 +113,13 @@ func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusConflict, "email is not valid")
+			return c.JSON(http.StatusBadRequest, "email is not valid")
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusConflict, "login is not valid")
+			return c.JSON(http.StatusBadRequest, "login is not valid")
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusConflict, "password is not valid")
+			return c.JSON(http.StatusBadRequest, "password is not valid")
 		case *usecaseToDeliveryErrors.EmailExistsError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.JSON(http.StatusConflict, "email exists")
