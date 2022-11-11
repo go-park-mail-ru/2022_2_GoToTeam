@@ -47,3 +47,20 @@ func (cu *categoryUsecase) GetCategoryInfo(ctx context.Context, categoryName str
 
 	return category, nil
 }
+
+func (cu *categoryUsecase) GetCategoryList(ctx context.Context) ([]*models.Category, error) {
+	cu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetCategoryList function.")
+
+	wrappingErrorMessage := "error while getting category list"
+
+	categories, err := cu.categoryRepository.GetAllCategories(ctx)
+	if err != nil {
+		switch err {
+		default:
+			cu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		}
+	}
+
+	return categories, nil
+}

@@ -208,6 +208,7 @@ func configureServer(e *echo.Echo, config *configReader.Config, middlewareLogger
 	e.GET("/api/v1/user/info", userController.UserInfoHandler)
 
 	e.GET("/api/v1/category/info", categoryController.CategoryInfoHandler)
+	e.GET("/api/v1/category/list", categoryController.CategoryListHandler)
 
 	e.GET("/api/v1/feed", feedController.FeedHandler)
 	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)

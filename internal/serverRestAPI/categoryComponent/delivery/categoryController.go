@@ -59,3 +59,21 @@ func (cc *CategoryController) CategoryInfoHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, categoryInfo)
 }
+
+func (cc *CategoryController) CategoryListHandler(c echo.Context) error {
+	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the CategoryListHandler function.")
+
+	categories, err := cc.categoryUsecase.GetCategoryList(c.Request().Context())
+	if err != nil {
+		cc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	categoryList := modelsRestApi.CategoryList{}
+	for _, v := range categories {
+		categoryList.CategoryNames = append(categoryList.CategoryNames, v.CategoryName)
+	}
+
+	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed categoryInfo: ", categoryList)
+
+	return c.JSON(http.StatusOK, categoryList)
+}

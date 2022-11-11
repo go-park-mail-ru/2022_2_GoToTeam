@@ -50,3 +50,33 @@ WHERE category_name = $1;
 
 	return category, nil
 }
+
+func (cpsr *categoryPostgreSQLRepository) GetAllCategories(ctx context.Context) ([]*models.Category, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllCategories function.")
+
+	categories := make([]*models.Category, 0, 10)
+
+	rows, err := cpsr.database.Query(`
+SELECT category_name
+FROM categories;
+`)
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.CategoryRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		category := &models.Category{}
+		if err := rows.Scan(&category.CategoryName); err != nil {
+			cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.CategoryRepositoryError
+		}
+
+		categories = append(categories, category)
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got categories: %#v\n", categories)
+
+	return categories, nil
+}
