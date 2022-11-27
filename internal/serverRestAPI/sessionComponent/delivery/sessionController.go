@@ -104,10 +104,10 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 	user, err := sc.sessionUsecase.GetUserInfoBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailForSessionDontFoundError:
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
 			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
-		case *usecaseToDeliveryErrors.UserForSessionDontFoundError:
+		case *usecaseToDeliveryErrors.UserForSessionDoesntExistError:
 			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:

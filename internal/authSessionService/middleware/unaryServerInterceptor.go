@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Access log and panic restore
+// UnaryServerInterceptor Access log and panic restore
 func UnaryServerInterceptor(logger *logger.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		requestProcessStartTime := time.Now()

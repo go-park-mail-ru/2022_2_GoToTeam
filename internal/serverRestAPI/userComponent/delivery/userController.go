@@ -87,7 +87,7 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 	user, err := uc.userUsecase.GetUserInfo(c.Request().Context(), login)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.LoginDontExistsError:
+		case *usecaseToDeliveryErrors.LoginDoesntExistError:
 			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:

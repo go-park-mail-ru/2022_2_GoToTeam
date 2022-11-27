@@ -87,11 +87,11 @@ func (sd *SessionDelivery) GetUserInfoBySession(ctx context.Context, session *au
 	user, err := sd.sessionUsecase.GetUserInfoBySession(ctx, &models.Session{SessionId: session.SessionId})
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailForSessionDontFoundError:
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			//return c.NoContent(http.StatusNotFound)
 			return nil, status.Errorf(404, "")
-		case *usecaseToDeliveryErrors.UserForSessionDontFoundError:
+		case *usecaseToDeliveryErrors.UserForSessionDoesntExistError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			//return c.NoContent(http.StatusNotFound)
 			return nil, status.Errorf(404, "")

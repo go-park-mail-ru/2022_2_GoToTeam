@@ -44,6 +44,7 @@ func getPostgreSQLConnections(databaseUser string, databaseName string, database
 	return db
 }
 
+// Создает папку с логами не там где нужно
 func TestLogin(t *testing.T) {
 	// Setup
 	e := echo.New()

@@ -4,10 +4,10 @@ import "errors"
 
 var UserRepositoryError = errors.New("error in user repository")
 
-var UserRepositoryEmailDontExistsError = errors.New("error in user repository: email dont exists")
+var UserRepositoryEmailDoesntExistError = errors.New("error in user repository: email doesnt exist")
 
 var UserRepositoryEmailExistsError = errors.New("error in user repository: email exists")
 
-var UserRepositoryLoginDontExistsError = errors.New("error in user repository: login dont exists")
+var UserRepositoryLoginDoesntExistError = errors.New("error in user repository: login doesnt exist")
 
 var UserRepositoryLoginExistsError = errors.New("error in user repository: login exists")

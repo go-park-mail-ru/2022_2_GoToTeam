@@ -56,7 +56,7 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 	article, err := ac.articleUsecase.GetArticleById(c.Request().Context(), id)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.ArticleDontExistsError:
+		case *usecaseToDeliveryErrors.ArticleDoesntExistError:
 			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
@@ -131,7 +131,7 @@ func (ac *ArticleController) RemoveArticleHandler(c echo.Context) error {
 	err := ac.articleUsecase.RemoveArticleById(c.Request().Context(), parsedInputArticleId.Id)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.ArticleDontExistsError:
+		case *usecaseToDeliveryErrors.ArticleDoesntExistError:
 			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:

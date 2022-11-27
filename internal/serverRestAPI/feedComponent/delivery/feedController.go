@@ -128,7 +128,7 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
 			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusBadRequest)
-		case *usecaseToDeliveryErrors.LoginDontExistsError:
+		case *usecaseToDeliveryErrors.LoginDoesntExistError:
 			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
@@ -204,7 +204,7 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 	articles, err := fc.feedUsecase.GetFeedForCategory(c.Request().Context(), category)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.CategoryDontExistsError:
+		case *usecaseToDeliveryErrors.CategoryDoesntExistError:
 			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:

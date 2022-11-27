@@ -97,10 +97,10 @@ func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *mod
 	if err != nil {
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
-		case repositoryToUsecaseErrors2.SessionRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors2.SessionRepositoryEmailDoesntExistError:
 			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
 		default:
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 		}
@@ -110,10 +110,10 @@ func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *mod
 	if err != nil {
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
-		case repositoryToUsecaseErrors.UserRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors.UserRepositoryEmailDoesntExistError:
 			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionDontFoundError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionDoesntExistError{Err: err})
 		default:
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 		}
@@ -131,10 +131,10 @@ func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *mo
 	if err != nil {
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
-		case repositoryToUsecaseErrors2.SessionRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors2.SessionRepositoryEmailDoesntExistError:
 			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
-			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
 		default:
 			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 		}

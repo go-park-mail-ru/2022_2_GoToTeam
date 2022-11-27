@@ -364,7 +364,7 @@ FROM categories C WHERE C.category_name = $1;
 		return true, repositoryToUsecaseErrors.FeedRepositoryError
 	}
 
-	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got login: ", categoryTmp)
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got category: ", categoryTmp)
 
 	return true, nil
 }

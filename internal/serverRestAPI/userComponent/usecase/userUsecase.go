@@ -43,9 +43,9 @@ func (uu *userUsecase) GetUserInfo(ctx context.Context, login string) (*models.U
 	user, err := uu.userRepository.GetUserInfo(ctx, login)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.UserRepositoryLoginDontExistsError:
+		case repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError:
 			uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDontExistsError{
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDoesntExistError{
 				Err: err,
 			})
 		default:

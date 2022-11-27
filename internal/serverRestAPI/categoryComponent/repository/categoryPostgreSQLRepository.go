@@ -7,6 +7,7 @@ import (
 	"2022_2_GoTo_team/pkg/logger"
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type categoryPostgreSQLRepository struct {
@@ -22,9 +23,26 @@ func NewCategoryPostgreSQLRepository(database *sql.DB, logger *logger.Logger) ca
 		logger:   logger,
 	}
 
+	logger.LogrusLogger.Debug("All categories in storage:  \n" + func() string {
+		allCategories, err := categoryRepository.GetAllCategories(context.Background())
+		if err != nil {
+			return repositoryToUsecaseErrors.CategoryRepositoryError.Error()
+		}
+		return categoryRepository.getCategoriesString(allCategories)
+	}())
+
 	logger.LogrusLogger.Info("categoryPostgreSQLRepository has created.")
 
 	return categoryRepository
+}
+
+func (cpsr *categoryPostgreSQLRepository) getCategoriesString(categories []*models.Category) string {
+	categoriesString := ""
+	for _, v := range categories {
+		categoriesString += fmt.Sprintf("%#v\n", v)
+	}
+
+	return categoriesString
 }
 
 func (cpsr *categoryPostgreSQLRepository) GetCategoryInfo(ctx context.Context, categoryName string) (*models.Category, error) {
@@ -40,7 +58,7 @@ WHERE category_name = $1;
 	if err := row.Scan(&category.CategoryName, &category.Description, &category.SubscribersCount); err != nil {
 		if err == sql.ErrNoRows {
 			cpsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.CategoryRepositoryCategoryDontExistsError
+			return nil, repositoryToUsecaseErrors.CategoryRepositoryCategoryDoesntExistError
 		}
 		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.CategoryRepositoryError

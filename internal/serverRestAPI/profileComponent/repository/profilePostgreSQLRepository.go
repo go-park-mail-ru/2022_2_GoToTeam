@@ -39,7 +39,7 @@ FROM users WHERE email = $1;
 	if err := row.Scan(&profile.Email, &profile.Login, &profile.Username, &profile.AvatarImgPath); err != nil {
 		if err == sql.ErrNoRows {
 			ppsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.ProfileRepositoryEmailDontExistsError
+			return nil, repositoryToUsecaseErrors.ProfileRepositoryEmailDoesntExistError
 		}
 		ppsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.ProfileRepositoryError

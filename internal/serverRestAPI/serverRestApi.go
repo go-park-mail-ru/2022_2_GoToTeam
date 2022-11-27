@@ -15,6 +15,9 @@ import (
 	profileComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/delivery"
 	profileComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/repository"
 	profileComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/usecase"
+	searchComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/searchComponent/delivery"
+	searchComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/searchComponent/repository"
+	searchComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/searchComponent/usecase"
 	sessionComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery"
 	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
 	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/usecase"
@@ -101,6 +104,9 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	tagDeliveryLogger := globalLogger.ConfigureLogger("tagComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	tagUsecaseLogger := globalLogger.ConfigureLogger("tagComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	tagRepositoryLogger := globalLogger.ConfigureLogger("tagComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+	searchDeliveryLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
+	searchUsecaseLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
+	searchRepositoryLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
 	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections)
@@ -113,6 +119,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	articleRepository := articleComponentRepository.NewArticlePostgreSQLRepository(postgreSQLConnections, articleRepositoryLogger)
 	profileRepository := profileComponentRepository.NewProfilePostgreSQLRepository(postgreSQLConnections, profileRepositoryLogger)
 	tagRepository := tagComponentRepository.NewTagPostgreSQLRepository(postgreSQLConnections, tagRepositoryLogger)
+	searchRepository := searchComponentRepository.NewSearchPostgreSQLRepository(postgreSQLConnections, searchRepositoryLogger)
 
 	// Usecases and Deliveries
 	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
@@ -135,6 +142,9 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	tagUsecae := tagComponentUsecase.NewTagUsecase(tagRepository, tagUsecaseLogger)
 	tagController := tagComponentDelivery.NewTagController(tagUsecae, tagDeliveryLogger)
+
+	searchUsecase := searchComponentUsecase.NewSearchUsecase(searchRepository, searchUsecaseLogger)
+	searchController := searchComponentDelivery.NewSearchController(searchUsecase, searchDeliveryLogger)
 
 	e.Use(middleware.AuthMiddleware(sessionUsecase, middlewareLogger)) // Auth Middleware
 
@@ -160,6 +170,8 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)
 
 	e.GET("/api/v1/tag/list", tagController.TagsListHandler)
+
+	e.GET("/api/v1/search/tag", searchController.SearchTagHandler)
 
 	return nil
 }

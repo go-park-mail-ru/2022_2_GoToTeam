@@ -8,10 +8,10 @@ func (re *RepositoryError) Error() string {
 	return re.Err.Error()
 }
 
-type CategoryNotFoundError struct {
+type TagDoesntExistError struct {
 	Err error
 }
 
-func (cnfe *CategoryNotFoundError) Error() string {
-	return cnfe.Err.Error()
+func (tdee *TagDoesntExistError) Error() string {
+	return tdee.Err.Error()
 }

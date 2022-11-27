@@ -36,9 +36,9 @@ func (cu *categoryUsecase) GetCategoryInfo(ctx context.Context, categoryName str
 	category, err := cu.categoryRepository.GetCategoryInfo(ctx, categoryName)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.CategoryRepositoryCategoryDontExistsError:
+		case repositoryToUsecaseErrors.CategoryRepositoryCategoryDoesntExistError:
 			cu.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryDontExistsError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryNotFoundError{Err: err})
 		default:
 			cu.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})

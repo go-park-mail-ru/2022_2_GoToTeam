@@ -60,8 +60,8 @@ func (ss *sessionsStorage) GetEmailBySession(ctx context.Context, session *model
 
 	email, found := ss.sessions[session.SessionId]
 	if !found {
-		ss.logger.LogrusLoggerWithContext(ctx).Errorf("Email for the sessionId %s dont exists.", session.SessionId)
-		return "", repositoryToUsecaseErrors.SessionRepositoryEmailDontExistsError
+		ss.logger.LogrusLoggerWithContext(ctx).Errorf("Email for the sessionId %s doesnt exist.", session.SessionId)
+		return "", repositoryToUsecaseErrors.SessionRepositoryEmailDoesntExistError
 	}
 
 	return email, nil

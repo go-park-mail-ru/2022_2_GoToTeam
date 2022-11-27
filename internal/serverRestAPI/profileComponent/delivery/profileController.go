@@ -62,10 +62,10 @@ func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 	profile, err := pc.profileUsecase.GetProfileBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailForSessionDontFoundError:
+		case *usecaseToDeliveryErrors.EmailForSessionNotFoundError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusUnauthorized)
-		case *usecaseToDeliveryErrors.UserForSessionDontFoundError:
+		case *usecaseToDeliveryErrors.UserForSessionNotFoundError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusUnauthorized)
 		default:

@@ -41,9 +41,9 @@ func (au *articleUsecase) GetArticleById(ctx context.Context, id int) (*models.A
 	article, err := au.articleRepository.GetArticleById(ctx, id)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.ArticleRepositoryArticleDontExistsError:
+		case repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError:
 			au.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDontExistsError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDoesntExistError{Err: err})
 		default:
 			au.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -66,7 +66,7 @@ func (au *articleUsecase) RemoveArticleById(ctx context.Context, id int) error {
 	}
 	if removedRowsCount <= 0 {
 		au.logger.LogrusLoggerWithContext(ctx).Warn(err)
-		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDontExistsError{Err: errors.New("article dont exists")})
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDoesntExistError{Err: errors.New("article doesnt exist")})
 	}
 
 	return nil
@@ -80,9 +80,9 @@ func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *mode
 	authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDoesntExistError:
 			au.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
 		default:
 			au.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})

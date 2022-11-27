@@ -16,20 +16,20 @@ func (ieope *IncorrectEmailOrPasswordError) Error() string {
 	return ieope.Err.Error()
 }
 
-type EmailForSessionDontFoundError struct {
+type EmailForSessionDoesntExistError struct {
 	Err error
 }
 
-func (efsdfe *EmailForSessionDontFoundError) Error() string {
-	return efsdfe.Err.Error()
+func (efsdee *EmailForSessionDoesntExistError) Error() string {
+	return efsdee.Err.Error()
 }
 
-type UserForSessionDontFoundError struct {
+type UserForSessionDoesntExistError struct {
 	Err error
 }
 
-func (ufsdfe *UserForSessionDontFoundError) Error() string {
-	return ufsdfe.Err.Error()
+func (ufsdee *UserForSessionDoesntExistError) Error() string {
+	return ufsdee.Err.Error()
 }
 
 type EmailIsNotValidError struct {

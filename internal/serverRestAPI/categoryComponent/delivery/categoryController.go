@@ -40,7 +40,7 @@ func (cc *CategoryController) CategoryInfoHandler(c echo.Context) error {
 	category, err := cc.categoryUsecase.GetCategoryInfo(c.Request().Context(), categoryName)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.CategoryDontExistsError:
+		case *usecaseToDeliveryErrors.CategoryNotFoundError:
 			cc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:

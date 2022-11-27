@@ -42,9 +42,9 @@ func (pu *profileUsecase) GetProfileBySession(ctx context.Context, session *mode
 	email, err := pu.sessionRepository.GetEmailBySession(ctx, session)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDoesntExistError:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionNotFoundError{Err: err})
 		default:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -54,9 +54,9 @@ func (pu *profileUsecase) GetProfileBySession(ctx context.Context, session *mode
 	profile, err := pu.profileRepository.GetProfileByEmail(ctx, email)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.ProfileRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors.ProfileRepositoryEmailDoesntExistError:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionDontFoundError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionNotFoundError{Err: err})
 		default:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -79,9 +79,9 @@ func (pu *profileUsecase) UpdateProfileBySession(ctx context.Context, newProfile
 	email, err := pu.sessionRepository.GetEmailBySession(ctx, session)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDontExistsError:
+		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDoesntExistError:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
+			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionNotFoundError{Err: err})
 		default:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})

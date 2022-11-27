@@ -115,7 +115,7 @@ FROM users U WHERE U.login = $1;
 	if err := row.Scan(&user.Username, &user.RegistrationDate, &user.SubscribersCount); err != nil {
 		if err == sql.ErrNoRows {
 			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.UserRepositoryLoginDontExistsError
+			return nil, repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError
 		}
 		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.UserRepositoryError
@@ -207,7 +207,7 @@ FROM users U WHERE U.email = $1;
 	if err := row.Scan(&user.Username, &user.AvatarImgPath); err != nil {
 		if err == sql.ErrNoRows {
 			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.UserRepositoryEmailDontExistsError
+			return nil, repositoryToUsecaseErrors.UserRepositoryEmailDoesntExistError
 		}
 		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.UserRepositoryError

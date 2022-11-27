@@ -66,7 +66,7 @@ WHERE A.article_id = $1;
 		&article.CategoryName); err != nil {
 		if err == sql.ErrNoRows {
 			apsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.ArticleRepositoryArticleDontExistsError
+			return nil, repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError
 		}
 		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.ArticleRepositoryError

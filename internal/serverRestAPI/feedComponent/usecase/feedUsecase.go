@@ -59,8 +59,8 @@ func (fu *feedUsecase) GetFeedForUserByLogin(ctx context.Context, login string) 
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 	}
 	if !exists {
-		fu.logger.LogrusLoggerWithContext(ctx).Infof("Login %s dont exists", login)
-		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDontExistsError{Err: fmt.Errorf("login %#v dont exists", login)})
+		fu.logger.LogrusLoggerWithContext(ctx).Infof("Login %s doesnt exist", login)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDoesntExistError{Err: fmt.Errorf("login %#v doesnt exist", login)})
 	}
 
 	articles, err := fu.feedRepository.GetFeedForUserByLogin(ctx, login)
@@ -83,8 +83,8 @@ func (fu *feedUsecase) GetFeedForCategory(ctx context.Context, category string) 
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 	}
 	if !exists {
-		fu.logger.LogrusLoggerWithContext(ctx).Infof("Category %s dont exists", category)
-		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryDontExistsError{Err: fmt.Errorf("category %#v dont exists", category)})
+		fu.logger.LogrusLoggerWithContext(ctx).Infof("Category %s doesnt exists", category)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryDoesntExistError{Err: fmt.Errorf("category %#v doesnt exist", category)})
 	}
 
 	articles, err := fu.feedRepository.GetFeedForCategory(ctx, category)
