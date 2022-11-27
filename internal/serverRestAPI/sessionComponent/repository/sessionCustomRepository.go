@@ -5,8 +5,8 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils"
+	"2022_2_GoTo_team/pkg/logger"
 	"context"
 	"sync"
 )
@@ -27,7 +27,7 @@ func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterface
 	}
 
 	logger.LogrusLogger.Debug("Sessions in storage: " + sessionsStorage.getSessionsInStorageString())
-	logger.LogrusLogger.Info("SessionCustomRepository has created.")
+	logger.LogrusLogger.Info("sessionCustomRepository has created.")
 
 	return sessionsStorage
 }

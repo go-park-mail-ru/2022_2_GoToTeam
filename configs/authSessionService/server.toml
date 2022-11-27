@@ -1,0 +1,11 @@
+serverAddress = "127.0.0.1:8081"
+originsAddressesCORS = [""]
+logLevel = "debug"
+logFilePath = "logs/authSessionService/logs.log"
+
+databaseUser = "postgres"
+databaseName = "ve_ru"
+databasePassword = "admin"
+databaseHost = "127.0.0.1"
+databasePort = "5432"
+databaseMaxOpenConnections = "10"

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/logger"
 	"fmt"
 	"github.com/labstack/echo/v4"
 )

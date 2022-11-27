@@ -12,29 +12,33 @@ import (
 	"path"
 )
 
-var globalLogrusLogger *logrus.Logger = nil
+const (
+	_DEFAULT_COMPONENT_STRING_FOR_LOGGER  = "unconfigured"
+	_DEFAULT_LAYER_STRING_FOR_LOGGER      = "unconfigured"
+	_DEFAULT_REQUEST_ID_STRING_FOR_LOGGER = "not request"
+	_DEFAULT_USER_EMAIL_STRING_FOR_LOGGER = "unauthorized"
+)
 
 type Logger struct {
-	globalLogrusLogger *logrus.Logger
-	LogrusLogger       *logrus.Entry
+	mainLogrusLogger *logrus.Logger
+	LogrusLogger     *logrus.Entry
 	// Another loggers
 }
 
-func NewLogger(componentName string, layer string, logLevel, logFilePath string) (*Logger, error) {
-	if globalLogrusLogger == nil {
-		var err error
-		globalLogrusLogger, err = newLogrusLogger(logLevel, logFilePath)
-		if err != nil {
-			return nil, fmt.Errorf("can not configure logrus logger: %w", err)
-		}
+func NewLogger(logLevel string, logFilePath string) (*Logger, error) {
+	logrusLogger, err := newLogrusLogger(logLevel, logFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("can not configure logrus logger: %w", err)
 	}
 
 	return &Logger{
-		globalLogrusLogger: globalLogrusLogger,
-		LogrusLogger: globalLogrusLogger.WithFields(
+		mainLogrusLogger: logrusLogger,
+		LogrusLogger: logrusLogger.WithFields(
 			logrus.Fields{
-				"component": componentName,
-				"layer":     layer,
+				"component": _DEFAULT_COMPONENT_STRING_FOR_LOGGER,
+				"layer":     _DEFAULT_LAYER_STRING_FOR_LOGGER,
+				"requestId": _DEFAULT_REQUEST_ID_STRING_FOR_LOGGER,
+				"userEmail": _DEFAULT_USER_EMAIL_STRING_FOR_LOGGER,
 			},
 		),
 	}, nil
@@ -71,9 +75,28 @@ func newLogrusLogger(logLevel, logFilePath string) (*logrus.Logger, error) {
 	return logrusLogger, nil
 }
 
+func (l *Logger) ConfigureLogger(componentName string, layer string) *Logger {
+	return &Logger{
+		mainLogrusLogger: l.mainLogrusLogger,
+		LogrusLogger: l.LogrusLogger.WithFields(logrus.Fields{
+			"component": componentName,
+			"layer":     layer,
+		}),
+	}
+}
+
 func (l *Logger) LogrusLoggerWithContext(ctx context.Context) *logrus.Entry {
+	requestId := ctx.Value(domain.REQUEST_ID_KEY_FOR_CONTEXT)
+	if requestId == nil {
+		requestId = _DEFAULT_REQUEST_ID_STRING_FOR_LOGGER
+	}
+	userEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	if userEmail == nil {
+		userEmail = _DEFAULT_USER_EMAIL_STRING_FOR_LOGGER
+	}
+
 	return l.LogrusLogger.WithFields(logrus.Fields{
-		"requestId": ctx.Value(domain.REQUEST_ID_KEY_FOR_CONTEXT),
-		"userEmail": ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT),
+		"requestId": requestId,
+		"userEmail": userEmail,
 	})
 }

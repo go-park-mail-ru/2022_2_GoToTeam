@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/logger"
 	"context"
 	"github.com/labstack/echo/v4"
 	"net/http"

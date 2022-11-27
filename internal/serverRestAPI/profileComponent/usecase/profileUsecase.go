@@ -7,9 +7,9 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/profileComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/validators"
+	"2022_2_GoTo_team/pkg/errorsUtils"
+	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/validators"
 	"context"
 	"errors"
 )

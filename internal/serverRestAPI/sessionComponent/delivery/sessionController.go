@@ -6,8 +6,8 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils/httpCookieUtils"
+	"2022_2_GoTo_team/pkg/logger"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -48,17 +48,20 @@ func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 
 	session, err := sc.sessionUsecase.CreateSessionForUser(c.Request().Context(), email, password)
 	if err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
+			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.JSON(http.StatusBadRequest, "email is not valid")
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
+			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.JSON(http.StatusBadRequest, "password is not valid")
 		case *usecaseToDeliveryErrors.IncorrectEmailOrPasswordError:
+			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.JSON(http.StatusBadRequest, "incorrect email or password")
+		default:
+			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
-
-		return c.NoContent(http.StatusBadRequest)
 	}
 
 	c.SetCookie(httpCookieUtils.MakeHttpCookie(session.SessionId))
@@ -84,7 +87,7 @@ func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
 	httpCookieUtils.ExpireHttpCookie(cookie)
 	c.SetCookie(cookie) // Need to reset new expired cookie
 
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("User logout success.")
+	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Infof("User session %#v removed successfully.", cookie.Value)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -100,12 +103,12 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 
 	user, err := sc.sessionUsecase.GetUserInfoBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
 	if err != nil {
-		switch err.(type) {
+		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDontFoundError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		case *usecaseToDeliveryErrors.UserForSessionDontFoundError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
 			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
@@ -113,11 +116,11 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 		}
 	}
 
-	sessionInfo := modelsRestApi.SessionInfo{
+	userInfoBySession := modelsRestApi.UserInfoBySession{
 		Username:      user.Username,
 		AvatarImgPath: user.AvatarImgPath,
 	}
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed sessionInfo = ", sessionInfo)
+	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed userInfoBySession = ", userInfoBySession)
 
-	return c.JSON(http.StatusOK, sessionInfo)
+	return c.JSON(http.StatusOK, userInfoBySession)
 }

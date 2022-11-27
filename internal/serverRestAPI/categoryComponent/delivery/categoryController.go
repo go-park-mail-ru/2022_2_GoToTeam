@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/delivery/modelsRestApi"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/categoryComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/categoryComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/logger"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -73,7 +73,7 @@ func (cc *CategoryController) CategoryListHandler(c echo.Context) error {
 		categoryList.CategoryNames = append(categoryList.CategoryNames, v.CategoryName)
 	}
 
-	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed categoryInfo: ", categoryList)
+	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed categoryList: ", categoryList)
 
 	return c.JSON(http.StatusOK, categoryList)
 }

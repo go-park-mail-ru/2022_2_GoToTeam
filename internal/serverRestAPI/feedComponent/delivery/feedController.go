@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/feedComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/logger"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"

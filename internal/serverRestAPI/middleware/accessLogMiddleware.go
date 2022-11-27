@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/logger"
 	"context"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
