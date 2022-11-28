@@ -51,3 +51,17 @@ func (su *searchUsecase) GetArticlesByTag(ctx context.Context, tag string) ([]*m
 
 	return articles, nil
 }
+
+func (su *searchUsecase) GetArticlesBySearchParameters(ctx context.Context, substringToSearch string, login string, categoryName string, tagName string) ([]*models.Article, error) {
+	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetArticlesBySearchParameters function.")
+
+	wrappingErrorMessage := "error while getting articles by search parameters"
+
+	articles, err := su.searchRepository.GetArticlesBySearchParameters(ctx, substringToSearch, login, categoryName, tagName)
+	if err != nil {
+		su.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return articles, nil
+}

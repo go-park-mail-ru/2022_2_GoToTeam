@@ -171,6 +171,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	e.GET("/api/v1/tag/list", tagController.TagsListHandler)
 
+	e.GET("/api/v1/search", searchController.SearchHandler)
 	e.GET("/api/v1/search/tag", searchController.SearchTagHandler)
 
 	return nil
