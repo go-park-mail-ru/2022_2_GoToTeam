@@ -185,6 +185,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.GET("/api/v1/search/tag", searchController.SearchTagHandler)
 
 	e.POST("/api/v1/commentary/create", commentaryController.CreateCommentaryHandler)
+	e.GET("/api/v1/commentary/feed", commentaryController.GetAllCommentariesForArticle)
 
 	return nil
 }

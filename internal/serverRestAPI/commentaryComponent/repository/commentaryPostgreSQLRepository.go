@@ -60,3 +60,43 @@ RETURNING article_id;
 
 	return commentaryLastInsertId, nil
 }
+
+func (cpsr *commentaryPostgreSQLRepository) GetAllCommentsForArticle(ctx context.Context, articleId int) ([]*models.Commentary, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllCommentsForArticle function.")
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debugf("Input articleId: %#v", articleId)
+
+	commentaries := make([]*models.Commentary, 0, 10)
+
+	rows, err := cpsr.database.Query(`
+SELECT C.comment_id,
+       C.content,
+       C.rating,
+       C.article_id,
+       COALESCE(C.comment_for_comment_id::text, ''),
+       COALESCE(UP.username, ''),
+       UP.login
+FROM comments C
+         JOIN users UP ON C.publisher_id = UP.user_id
+WHERE C.article_id = $1;
+`, articleId)
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.CommentaryRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		commentary := &models.Commentary{}
+		if err := rows.Scan(&commentary.CommentId, &commentary.Content, &commentary.Rating, &commentary.ArticleId, &commentary.CommentForCommentId, &commentary.Publisher.Username, &commentary.Publisher.Login); err != nil {
+			cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.CommentaryRepositoryError
+		}
+
+		commentaries = append(commentaries, commentary)
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got commentaries for article:%#v \n", commentaries)
+
+	return commentaries, nil
+}

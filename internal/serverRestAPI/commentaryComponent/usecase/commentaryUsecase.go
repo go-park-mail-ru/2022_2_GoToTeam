@@ -52,3 +52,17 @@ func (acbs *commentaryUsecase) AddCommentaryBySession(ctx context.Context, comme
 
 	return nil
 }
+
+func (acbs *commentaryUsecase) GetAllCommentariesForArticle(ctx context.Context, articleId int) ([]*models.Commentary, error) {
+	acbs.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllCommentariesForArticle function.")
+
+	wrappingErrorMessage := "error while getting commentaries for articleId"
+
+	articles, err := acbs.commentaryRepository.GetAllCommentsForArticle(ctx, articleId)
+	if err != nil {
+		acbs.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return articles, nil
+}
