@@ -123,15 +123,32 @@ INSERT INTO articles (title, description, content, cover_img_path, co_author_id,
         (SELECT categories.category_id FROM categories WHERE category_name = $7)) RETURNING article_id;
 `, article.Title, article.Description, article.Content, article.CoverImgPath, article.CoAuthor.Login, article.Publisher.Email, article.CategoryName)
 
-	var lastInsertId int
-	if err := row.Scan(&lastInsertId); err != nil {
+	var articleLastInsertId int
+	if err := row.Scan(&articleLastInsertId); err != nil {
 		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
 	}
 
-	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got lastInsertId: ", lastInsertId)
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got articleLastInsertId: ", articleLastInsertId)
 
-	return lastInsertId, nil
+	apsr.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to add tags: %#v", article.Tags)
+
+	for _, tagName := range article.Tags {
+		row2 := apsr.database.QueryRow(`
+INSERT INTO tags_articles (article_id, tag_id)  VALUES ($1, 
+        (SELECT tag_id FROM tags WHERE tag_name = $2)) RETURNING article_id;
+`, articleLastInsertId, tagName)
+
+		var tagLastInsertArticleId int
+		if err := row2.Scan(&tagLastInsertArticleId); err != nil {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+
+		apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got tagLastInsertArticleId: ", tagLastInsertArticleId)
+	}
+
+	return articleLastInsertId, nil
 }
 
 func (apsr *articlePostgreSQLRepository) DeleteArticleById(ctx context.Context, articleId int) (int64, error) {
