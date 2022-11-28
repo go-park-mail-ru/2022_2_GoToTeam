@@ -16,6 +16,8 @@ var (
 		"/api/v1/session/remove": {},
 		"/api/v1/article/create": {},
 		"/api/v1/article/remove": {},
+
+		"/api/v1/commentary/create": {},
 	}
 	noNeedSessionUrls = map[string]struct{}{
 		"/": struct{}{},

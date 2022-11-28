@@ -6,12 +6,9 @@ import (
 )
 
 type CommentaryUsecaseInterface interface {
-	AddArticleBySession(ctx context.Context, article *models.Article, session *models.Session) error
-	RemoveArticleById(ctx context.Context, articleId int) error
+	AddCommentaryBySession(ctx context.Context, commentary *models.Commentary) error
 }
 
 type CommentaryRepositoryInterface interface {
-	GetTagsForArticle(ctx context.Context, articleId int) ([]string, error)
-	AddArticle(ctx context.Context, article *models.Article) (int, error)
-	DeleteArticleById(ctx context.Context, articleId int) (int64, error)
+	AddCommentaryByEmail(ctx context.Context, commentary *models.Commentary) (int, error)
 }

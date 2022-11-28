@@ -7,6 +7,9 @@ import (
 	categoryComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/delivery"
 	categoryComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/repository"
 	categoryComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/categoryComponent/usecase"
+	commentaryComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/commentaryComponent/delivery"
+	commentaryComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/commentaryComponent/repository"
+	commentaryComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/commentaryComponent/usecase"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	feedComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery"
 	feedComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/feedComponent/repository"
@@ -107,6 +110,9 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	searchDeliveryLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	searchUsecaseLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	searchRepositoryLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+	commentaryDeliveryLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
+	commentaryUsecaseLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
+	commentaryRepositoryLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
 	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections)
@@ -120,6 +126,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	profileRepository := profileComponentRepository.NewProfilePostgreSQLRepository(postgreSQLConnections, profileRepositoryLogger)
 	tagRepository := tagComponentRepository.NewTagPostgreSQLRepository(postgreSQLConnections, tagRepositoryLogger)
 	searchRepository := searchComponentRepository.NewSearchPostgreSQLRepository(postgreSQLConnections, searchRepositoryLogger)
+	commentaryRepository := commentaryComponentRepository.NewCommentaryPostgreSQLRepository(postgreSQLConnections, commentaryRepositoryLogger)
 
 	// Usecases and Deliveries
 	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
@@ -145,6 +152,9 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	searchUsecase := searchComponentUsecase.NewSearchUsecase(searchRepository, searchUsecaseLogger)
 	searchController := searchComponentDelivery.NewSearchController(searchUsecase, searchDeliveryLogger)
+
+	commentaryUsecase := commentaryComponentUsecase.NewCommentaryUsecase(commentaryRepository, commentaryUsecaseLogger)
+	commentaryController := commentaryComponentDelivery.NewCommentaryController(commentaryUsecase, commentaryDeliveryLogger)
 
 	e.Use(middleware.AuthMiddleware(sessionUsecase, middlewareLogger)) // Auth Middleware
 
@@ -173,6 +183,8 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	e.GET("/api/v1/search", searchController.SearchHandler)
 	e.GET("/api/v1/search/tag", searchController.SearchTagHandler)
+
+	e.POST("/api/v1/commentary/create", commentaryController.CreateCommentaryHandler)
 
 	return nil
 }
