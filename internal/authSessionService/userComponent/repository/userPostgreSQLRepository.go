@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/authSessionService/domain/customErrors/userComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/authSessionService/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/authSessionService/domain/models"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"database/sql"
 	"fmt"

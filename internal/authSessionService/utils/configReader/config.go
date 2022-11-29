@@ -5,10 +5,9 @@ import (
 )
 
 type Config struct {
-	ServerAddress             string   `toml:"serverAddress"`
-	AllowOriginsAddressesCORS []string `toml:"originsAddressesCORS"`
-	LogLevel                  string   `toml:"logLevel"`
-	LogFilePath               string   `toml:"logFilePath"`
+	ServerAddress string `toml:"serverAddress"`
+	LogLevel      string `toml:"logLevel"`
+	LogFilePath   string `toml:"logFilePath"`
 
 	DatabaseUser               string `toml:"databaseUser"`
 	DatabaseName               string `toml:"databaseName"`

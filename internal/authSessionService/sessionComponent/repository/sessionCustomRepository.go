@@ -6,7 +6,7 @@ import (
 	"2022_2_GoTo_team/internal/authSessionService/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/authSessionService/domain/models"
 	"2022_2_GoTo_team/internal/authSessionService/utils/sessionUtils"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"sync"
 )
@@ -67,13 +67,15 @@ func (ss *sessionsStorage) GetEmailBySession(ctx context.Context, session *model
 	return email, nil
 }
 
-func (ss *sessionsStorage) UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) {
+func (ss *sessionsStorage) UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) error {
 	ss.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateEmailBySession function.")
 	ss.logger.LogrusLoggerWithContext(ctx).Debugf("Before updating email is: %s for the sessionId: %s", ss.sessions[session.SessionId], session.SessionId)
 
 	ss.sessions[session.SessionId] = newEmail
 
 	ss.logger.LogrusLoggerWithContext(ctx).Debugf("After updating email is: %s for the sessionId: %s", ss.sessions[session.SessionId], session.SessionId)
+
+	return nil
 }
 
 func (ss *sessionsStorage) RemoveSession(ctx context.Context, session *models.Session) error {

@@ -11,12 +11,13 @@ type SessionUsecaseInterface interface {
 	RemoveSession(ctx context.Context, session *models.Session) error
 	GetUserInfoBySession(ctx context.Context, session *models.Session) (*models.User, error)
 	GetUserEmailBySession(ctx context.Context, session *models.Session) (string, error)
+	UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) error
 }
 
 type SessionRepositoryInterface interface {
-	CreateSessionForUser(ctx context.Context, email string) (*models.Session, error)
-	GetEmailBySession(ctx context.Context, session *models.Session) (string, error)
-	RemoveSession(ctx context.Context, session *models.Session) error
 	SessionExists(ctx context.Context, session *models.Session) (bool, error)
-	UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string)
+	CreateSessionForUser(ctx context.Context, email string) (*models.Session, error)
+	RemoveSession(ctx context.Context, session *models.Session) error
+	GetEmailBySession(ctx context.Context, session *models.Session) (string, error)
+	UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) error
 }

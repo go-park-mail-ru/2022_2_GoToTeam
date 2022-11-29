@@ -6,7 +6,7 @@ import (
 )
 
 type ProfileUsecaseInterface interface {
-	GetProfileBySession(ctx context.Context, session *models.Session) (*models.Profile, error)
+	GetProfileBySession(ctx context.Context) (*models.Profile, error)
 	UpdateProfileBySession(ctx context.Context, newProfile *models.Profile, session *models.Session) error
 }
 

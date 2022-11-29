@@ -3,10 +3,10 @@ package repository
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfacesOLD"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"sync"
 )
@@ -17,7 +17,7 @@ type sessionsStorage struct {
 	logger   *logger.Logger
 }
 
-func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterfaces.SessionRepositoryInterface {
+func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterfacesOLD.SessionRepositoryInterface {
 	logger.LogrusLogger.Debug("Enter to the NewSessionCustomRepository function.")
 
 	sessionsStorage := &sessionsStorage{

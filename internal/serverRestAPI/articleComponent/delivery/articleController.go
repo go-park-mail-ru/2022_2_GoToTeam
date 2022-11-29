@@ -8,7 +8,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"

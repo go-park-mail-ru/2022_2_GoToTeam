@@ -7,9 +7,9 @@ import (
 	"2022_2_GoTo_team/internal/authSessionService/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/authSessionService/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/authSessionService/domain/models"
-	"2022_2_GoTo_team/pkg/errorsUtils"
-	"2022_2_GoTo_team/pkg/logger"
-	"2022_2_GoTo_team/pkg/validators"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/validators"
 	"context"
 	"errors"
 )
@@ -141,6 +141,18 @@ func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *mo
 	}
 
 	return email, nil
+}
+
+func (su *sessionUsecase) UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) error {
+	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateEmailBySession function.")
+
+	wrappingErrorMessage := "error while updating email session"
+
+	if err := su.sessionRepository.UpdateEmailBySession(ctx, session, newEmail); err != nil {
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return nil
 }
 
 func (su *sessionUsecase) validateUserData(ctx context.Context, email string, password string) error {

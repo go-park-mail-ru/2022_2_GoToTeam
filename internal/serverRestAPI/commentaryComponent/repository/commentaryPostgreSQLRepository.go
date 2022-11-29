@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/commentaryComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/commentaryComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"database/sql"
 	"strconv"

@@ -9,3 +9,5 @@ databasePassword = "admin"
 databaseHost = "127.0.0.1"
 databasePort = "5432"
 databaseMaxOpenConnections = "10"
+
+authSessionServiceAddress = "127.0.0.1:8081"

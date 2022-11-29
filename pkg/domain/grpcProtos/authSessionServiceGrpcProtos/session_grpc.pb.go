@@ -4,7 +4,7 @@
 // - protoc             v3.17.3
 // source: session.proto
 
-package authSessionService
+package authSessionServiceGrpcProtos
 
 import (
 	context "context"
@@ -22,9 +22,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthSessionServiceClient interface {
+	SessionExists(ctx context.Context, in *Session, opts ...grpc.CallOption) (*Exists, error)
 	CreateSessionForUser(ctx context.Context, in *UserAccountData, opts ...grpc.CallOption) (*Session, error)
 	RemoveSession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*Nothing, error)
 	GetUserInfoBySession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*UserInfoBySession, error)
+	GetUserEmailBySession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*UserEmail, error)
+	UpdateEmailBySession(ctx context.Context, in *UpdateEmailData, opts ...grpc.CallOption) (*Nothing, error)
 }
 
 type authSessionServiceClient struct {
@@ -33,6 +36,15 @@ type authSessionServiceClient struct {
 
 func NewAuthSessionServiceClient(cc grpc.ClientConnInterface) AuthSessionServiceClient {
 	return &authSessionServiceClient{cc}
+}
+
+func (c *authSessionServiceClient) SessionExists(ctx context.Context, in *Session, opts ...grpc.CallOption) (*Exists, error) {
+	out := new(Exists)
+	err := c.cc.Invoke(ctx, "/session.AuthSessionService/SessionExists", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *authSessionServiceClient) CreateSessionForUser(ctx context.Context, in *UserAccountData, opts ...grpc.CallOption) (*Session, error) {
@@ -62,13 +74,34 @@ func (c *authSessionServiceClient) GetUserInfoBySession(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *authSessionServiceClient) GetUserEmailBySession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*UserEmail, error) {
+	out := new(UserEmail)
+	err := c.cc.Invoke(ctx, "/session.AuthSessionService/GetUserEmailBySession", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authSessionServiceClient) UpdateEmailBySession(ctx context.Context, in *UpdateEmailData, opts ...grpc.CallOption) (*Nothing, error) {
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, "/session.AuthSessionService/UpdateEmailBySession", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthSessionServiceServer is the server API for AuthSessionService service.
 // All implementations must embed UnimplementedAuthSessionServiceServer
 // for forward compatibility
 type AuthSessionServiceServer interface {
+	SessionExists(context.Context, *Session) (*Exists, error)
 	CreateSessionForUser(context.Context, *UserAccountData) (*Session, error)
 	RemoveSession(context.Context, *Session) (*Nothing, error)
 	GetUserInfoBySession(context.Context, *Session) (*UserInfoBySession, error)
+	GetUserEmailBySession(context.Context, *Session) (*UserEmail, error)
+	UpdateEmailBySession(context.Context, *UpdateEmailData) (*Nothing, error)
 	mustEmbedUnimplementedAuthSessionServiceServer()
 }
 
@@ -76,6 +109,9 @@ type AuthSessionServiceServer interface {
 type UnimplementedAuthSessionServiceServer struct {
 }
 
+func (UnimplementedAuthSessionServiceServer) SessionExists(context.Context, *Session) (*Exists, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionExists not implemented")
+}
 func (UnimplementedAuthSessionServiceServer) CreateSessionForUser(context.Context, *UserAccountData) (*Session, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSessionForUser not implemented")
 }
@@ -84,6 +120,12 @@ func (UnimplementedAuthSessionServiceServer) RemoveSession(context.Context, *Ses
 }
 func (UnimplementedAuthSessionServiceServer) GetUserInfoBySession(context.Context, *Session) (*UserInfoBySession, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfoBySession not implemented")
+}
+func (UnimplementedAuthSessionServiceServer) GetUserEmailBySession(context.Context, *Session) (*UserEmail, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserEmailBySession not implemented")
+}
+func (UnimplementedAuthSessionServiceServer) UpdateEmailBySession(context.Context, *UpdateEmailData) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEmailBySession not implemented")
 }
 func (UnimplementedAuthSessionServiceServer) mustEmbedUnimplementedAuthSessionServiceServer() {}
 
@@ -96,6 +138,24 @@ type UnsafeAuthSessionServiceServer interface {
 
 func RegisterAuthSessionServiceServer(s grpc.ServiceRegistrar, srv AuthSessionServiceServer) {
 	s.RegisterService(&AuthSessionService_ServiceDesc, srv)
+}
+
+func _AuthSessionService_SessionExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Session)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSessionServiceServer).SessionExists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.AuthSessionService/SessionExists",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSessionServiceServer).SessionExists(ctx, req.(*Session))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthSessionService_CreateSessionForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -152,6 +212,42 @@ func _AuthSessionService_GetUserInfoBySession_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthSessionService_GetUserEmailBySession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Session)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSessionServiceServer).GetUserEmailBySession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.AuthSessionService/GetUserEmailBySession",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSessionServiceServer).GetUserEmailBySession(ctx, req.(*Session))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthSessionService_UpdateEmailBySession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateEmailData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthSessionServiceServer).UpdateEmailBySession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.AuthSessionService/UpdateEmailBySession",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthSessionServiceServer).UpdateEmailBySession(ctx, req.(*UpdateEmailData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthSessionService_ServiceDesc is the grpc.ServiceDesc for AuthSessionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -159,6 +255,10 @@ var AuthSessionService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "session.AuthSessionService",
 	HandlerType: (*AuthSessionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SessionExists",
+			Handler:    _AuthSessionService_SessionExists_Handler,
+		},
 		{
 			MethodName: "CreateSessionForUser",
 			Handler:    _AuthSessionService_CreateSessionForUser_Handler,
@@ -170,6 +270,14 @@ var AuthSessionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserInfoBySession",
 			Handler:    _AuthSessionService_GetUserInfoBySession_Handler,
+		},
+		{
+			MethodName: "GetUserEmailBySession",
+			Handler:    _AuthSessionService_GetUserEmailBySession_Handler,
+		},
+		{
+			MethodName: "UpdateEmailBySession",
+			Handler:    _AuthSessionService_UpdateEmailBySession_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

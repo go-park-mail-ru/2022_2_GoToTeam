@@ -4,9 +4,9 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/feedComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/errorsUtils"
-	"2022_2_GoTo_team/pkg/logger"
-	"2022_2_GoTo_team/pkg/validators"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/validators"
 	"context"
 	"fmt"
 )

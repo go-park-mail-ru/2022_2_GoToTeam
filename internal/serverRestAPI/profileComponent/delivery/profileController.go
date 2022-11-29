@@ -4,10 +4,9 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/profileComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/profileComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/profileComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -15,16 +14,14 @@ import (
 
 type ProfileController struct {
 	profileUsecase profileComponentInterfaces.ProfileUsecaseInterface
-	sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface
 	logger         *logger.Logger
 }
 
-func NewProfileController(profileUsecase profileComponentInterfaces.ProfileUsecaseInterface, sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface, logger *logger.Logger) *ProfileController {
+func NewProfileController(profileUsecase profileComponentInterfaces.ProfileUsecaseInterface, logger *logger.Logger) *ProfileController {
 	logger.LogrusLogger.Debug("Enter to the NewProfileController function.")
 
 	profileController := &ProfileController{
 		profileUsecase: profileUsecase,
-		sessionUsecase: sessionUsecase,
 		logger:         logger,
 	}
 
@@ -33,39 +30,16 @@ func NewProfileController(profileUsecase profileComponentInterfaces.ProfileUseca
 	return profileController
 }
 
-func (pc *ProfileController) isAuthorized(c echo.Context) bool {
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the isAuthorized function.")
-
-	authorized := false
-	if cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME); err == nil && cookie != nil {
-		if authorized, err = pc.sessionUsecase.SessionExists(c.Request().Context(), &models.Session{SessionId: cookie.Value}); err != nil {
-			return false
-		}
-	}
-
-	return authorized
-}
-
 func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the GetProfileHandler function.")
 
-	if !pc.isAuthorized(c) {
-		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("Unauthorized!")
-		return c.NoContent(http.StatusUnauthorized)
-	}
-	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
-	if err != nil {
-		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
-	profile, err := pc.profileUsecase.GetProfileBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
+	profile, err := pc.profileUsecase.GetProfileBySession(c.Request().Context())
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailForSessionNotFoundError:
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusUnauthorized)
-		case *usecaseToDeliveryErrors.UserForSessionNotFoundError:
+		case *usecaseToDeliveryErrors.UserForSessionDoesntExistError:
 			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusUnauthorized)
 		default:
@@ -90,10 +64,6 @@ func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
 	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UpdateProfileHandler function.")
 	defer c.Request().Body.Close()
 
-	if !pc.isAuthorized(c) {
-		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("Unauthorized!")
-		return c.NoContent(http.StatusUnauthorized)
-	}
 	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
 		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)

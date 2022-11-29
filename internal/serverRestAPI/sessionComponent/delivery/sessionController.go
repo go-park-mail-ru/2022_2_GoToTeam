@@ -2,14 +2,14 @@ package delivery
 
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/delivery/modelsRestApi"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils/httpCookieUtils"
-	"2022_2_GoTo_team/pkg/logger"
-	"errors"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"github.com/labstack/echo/v4"
+	"google.golang.org/grpc/status"
 	"net/http"
 )
 
@@ -48,20 +48,9 @@ func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 
 	session, err := sc.sessionUsecase.CreateSessionForUser(c.Request().Context(), email, password)
 	if err != nil {
-		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailIsNotValidError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusBadRequest, "email is not valid")
-		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusBadRequest, "password is not valid")
-		case *usecaseToDeliveryErrors.IncorrectEmailOrPasswordError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusBadRequest, "incorrect email or password")
-		default:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		st, _ := status.FromError(err)
+		return c.JSON(errorsUtils.ExtractCodeFromGrpcErrorStatus(st), st.Message())
 	}
 
 	c.SetCookie(httpCookieUtils.MakeHttpCookie(session.SessionId))
@@ -103,17 +92,9 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 
 	user, err := sc.sessionUsecase.GetUserInfoBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
 	if err != nil {
-		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.NoContent(http.StatusNotFound)
-		case *usecaseToDeliveryErrors.UserForSessionDoesntExistError:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.NoContent(http.StatusNotFound)
-		default:
-			sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		st, _ := status.FromError(err)
+		return c.NoContent(errorsUtils.ExtractCodeFromGrpcErrorStatus(st))
 	}
 
 	userInfoBySession := modelsRestApi.UserInfoBySession{

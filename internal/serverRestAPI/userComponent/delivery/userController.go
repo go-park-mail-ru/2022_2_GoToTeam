@@ -6,7 +6,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery/modelsRestApi"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils/httpCookieUtils"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"

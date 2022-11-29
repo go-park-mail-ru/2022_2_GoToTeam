@@ -30,17 +30,17 @@ import (
 	userComponentDelivery "2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery"
 	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
 	userComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/userComponent/usecase"
-	"2022_2_GoTo_team/pkg/configReader"
-	"2022_2_GoTo_team/pkg/errorsUtils"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"database/sql"
-	"net/http"
-	"strconv"
-
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
+	"google.golang.org/grpc"
 	"log"
+	"net/http"
+	"strconv"
 )
 
 var (
@@ -89,27 +89,35 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	sessionDeliveryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	sessionUsecaseLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	sessionRepositoryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	userDeliveryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	userUsecaseLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	userRepositoryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	feedDeliveryLogger := globalLogger.ConfigureLogger("feedComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	feedUsecaseLogger := globalLogger.ConfigureLogger("feedComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	feedRepositoryLogger := globalLogger.ConfigureLogger("feedComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	categoryDeliveryLogger := globalLogger.ConfigureLogger("categoryComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	categoryUsecaseLogger := globalLogger.ConfigureLogger("categoryComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	categoryRepositoryLogger := globalLogger.ConfigureLogger("categoryComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	articleDeliveryLogger := globalLogger.ConfigureLogger("articleComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	articleUsecaseLogger := globalLogger.ConfigureLogger("articleComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	articleRepositoryLogger := globalLogger.ConfigureLogger("articleComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	profileDeliveryLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	profileUsecaseLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	profileRepositoryLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	tagDeliveryLogger := globalLogger.ConfigureLogger("tagComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	tagUsecaseLogger := globalLogger.ConfigureLogger("tagComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	tagRepositoryLogger := globalLogger.ConfigureLogger("tagComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	searchDeliveryLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	searchUsecaseLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	searchRepositoryLogger := globalLogger.ConfigureLogger("searchComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+
 	commentaryDeliveryLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	commentaryUsecaseLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	commentaryRepositoryLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
@@ -117,8 +125,11 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	// PostgreSQL connections
 	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections)
 
+	// AuthSessionService connection
+	authSessionServiceConnection := getGrpcServiceConnection(config.AuthSessionServiceAddress)
+
 	// Repositories
-	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
+	sessionRepository := sessionComponentRepository.NewAuthSessionServiceRepository(authSessionServiceConnection, sessionRepositoryLogger)
 	userRepository := userComponentRepository.NewUserPostgreSQLRepository(postgreSQLConnections, userRepositoryLogger)
 	feedRepository := feedComponentRepository.NewFeedPostgreSQLRepository(postgreSQLConnections, feedRepositoryLogger)
 	categoryRepository := categoryComponentRepository.NewCategoryPostgreSQLRepository(postgreSQLConnections, categoryRepositoryLogger)
@@ -129,7 +140,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	commentaryRepository := commentaryComponentRepository.NewCommentaryPostgreSQLRepository(postgreSQLConnections, commentaryRepositoryLogger)
 
 	// Usecases and Deliveries
-	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
+	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, sessionUsecaseLogger)
 	sessionController := sessionComponentDelivery.NewSessionController(sessionUsecase, sessionDeliveryLogger)
 
 	userUsecase := userComponentUsecase.NewUserUsecase(userRepository, userUsecaseLogger)
@@ -141,11 +152,11 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	categoryUsecase := categoryComponentUsecase.NewCategoryUsecase(categoryRepository, categoryUsecaseLogger)
 	categoryController := categoryComponentDelivery.NewCategoryController(categoryUsecase, categoryDeliveryLogger)
 
-	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, sessionRepository, articleUsecaseLogger)
+	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, articleUsecaseLogger)
 	articleController := articleComponentDelivery.NewArticleController(articleUsecase, articleDeliveryLogger)
 
 	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, sessionRepository, profileUsecaseLogger)
-	profileController := profileComponentDelivery.NewProfileController(profileUsecase, sessionUsecase, profileDeliveryLogger)
+	profileController := profileComponentDelivery.NewProfileController(profileUsecase, profileDeliveryLogger)
 
 	tagUsecae := tagComponentUsecase.NewTagUsecase(tagRepository, tagUsecaseLogger)
 	tagController := tagComponentDelivery.NewTagController(tagUsecae, tagDeliveryLogger)
@@ -208,4 +219,17 @@ func getPostgreSQLConnections(databaseUser string, databaseName string, database
 	db.SetMaxOpenConns(databaseMaxOpenConnectionsINT)
 
 	return db
+}
+
+func getGrpcServiceConnection(serverAddress string) *grpc.ClientConn {
+	middlewareLogger.LogrusLogger.Debug("Enter to the getGrpcServiceConnection function.")
+
+	grcpConn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
+	// defer grcpConn.Close()
+
+	if err != nil {
+		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while opening connection to grpc service", err))
+	}
+
+	return grcpConn
 }

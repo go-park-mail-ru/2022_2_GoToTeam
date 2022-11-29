@@ -1,16 +1,19 @@
 package delivery
 
+/*
+import "database/sql"
+
+
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	profileComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/repository"
 	profileComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/usecase"
-	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/repository"
-	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponent/usecase"
+	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponentOLD/repository"
+	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponentOLD/usecase"
 	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
-	"2022_2_GoTo_team/pkg/errorsUtils"
-	logger2 "2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	logger2 "2022_2_GoTo_team/pkg/utils/logger"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -71,14 +74,14 @@ func TestLogin(t *testing.T) {
 	c := e.NewContext(req, recorder)
 	c.SetPath("/feed")
 
-	profileDeliveryLogger, _ := logger.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	profileUsecaseLogger, _ := logger.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	sessionUsecaseLogger, _ := logger.GetConfiguredLoggerWrapper("sessionComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	sessionRepositoryLogger, _ := logger.GetConfiguredLoggerWrapper("sessionComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	profileRepositoryLogger, _ := logger.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	userRepositoryLogger, _ := logger.GetConfiguredLoggerWrapper("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	profileDeliveryLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	profileUsecaseLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	sessionUsecaseLogger, _ := logger2.GetConfiguredLoggerWrapper("sessionComponentOLD", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	sessionRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("sessionComponentOLD", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	profileRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	userRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
 
-	middlewareLogger, _ := logger.GetConfiguredLoggerWrapper("middlewareComponent", "middlewareLayer", "debug", "logs/serverRestApi/logs.log")
+	middlewareLogger, _ := logger2.GetConfiguredLoggerWrapper("middlewareComponent", "middlewareLayer", "debug", "logs/serverRestApi/logs.log")
 	postgreSQLConnections := getPostgreSQLConnections("postgres", "ve_ru", "admin", "127.0.0.1", "5432", "10", middlewareLogger)
 	userRepository := userComponentRepository.NewUserPostgreSQLRepository(postgreSQLConnections, userRepositoryLogger)
 	profileRepository := profileComponentRepository.NewProfilePostgreSQLRepository(postgreSQLConnections, profileRepositoryLogger)
@@ -93,3 +96,5 @@ func TestLogin(t *testing.T) {
 		assert.Equal(t, "", recorder.Body.String())
 	}
 }
+
+*/

@@ -3,7 +3,7 @@ package delivery
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/tagComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/tagComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

@@ -7,10 +7,10 @@ import (
 	sessionComponentRepository "2022_2_GoTo_team/internal/authSessionService/sessionComponent/repository"
 	sessionComponentUsecase "2022_2_GoTo_team/internal/authSessionService/sessionComponent/usecase"
 	userComponentRepository "2022_2_GoTo_team/internal/authSessionService/userComponent/repository"
-	"2022_2_GoTo_team/pkg/configReader"
-	"2022_2_GoTo_team/pkg/domain/grpcProtos/authSessionService"
-	"2022_2_GoTo_team/pkg/errorsUtils"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/internal/authSessionService/utils/configReader"
+	"2022_2_GoTo_team/pkg/domain/grpcProtos/authSessionServiceGrpcProtos"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"database/sql"
 	"google.golang.org/grpc"
 	"log"
@@ -51,8 +51,6 @@ func Run(configFilePath string) {
 	sessionDeliveryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	sessionUsecaseLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	sessionRepositoryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
-	//userDeliveryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
-	//userUsecaseLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	userRepositoryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
@@ -66,7 +64,7 @@ func Run(configFilePath string) {
 	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
 	sessionDelivery := sessionComponentDelivery.NewSessionDelivery(sessionUsecase, sessionDeliveryLogger)
 
-	authSessionService.RegisterAuthSessionServiceServer(server, sessionDelivery)
+	authSessionServiceGrpcProtos.RegisterAuthSessionServiceServer(server, sessionDelivery)
 
 	if err := server.Serve(listener); err != nil {
 		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while serve", err))

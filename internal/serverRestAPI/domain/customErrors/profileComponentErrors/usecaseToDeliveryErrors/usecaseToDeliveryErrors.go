@@ -8,20 +8,20 @@ func (re *RepositoryError) Error() string {
 	return re.Err.Error()
 }
 
-type EmailForSessionNotFoundError struct {
+type EmailForSessionDoesntExistError struct {
 	Err error
 }
 
-func (efsnfe *EmailForSessionNotFoundError) Error() string {
-	return efsnfe.Err.Error()
+func (efsde *EmailForSessionDoesntExistError) Error() string {
+	return efsde.Err.Error()
 }
 
-type UserForSessionNotFoundError struct {
+type UserForSessionDoesntExistError struct {
 	Err error
 }
 
-func (ufsnfe *UserForSessionNotFoundError) Error() string {
-	return ufsnfe.Err.Error()
+func (ufsde *UserForSessionDoesntExistError) Error() string {
+	return ufsde.Err.Error()
 }
 
 type EmailExistsError struct {

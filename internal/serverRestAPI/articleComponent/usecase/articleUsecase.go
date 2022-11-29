@@ -3,28 +3,25 @@ package usecase
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
-	repositoryToUsecaseErrors_sessionComponent "2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/errorsUtils"
-	"2022_2_GoTo_team/pkg/logger"
+	"2022_2_GoTo_team/pkg/domain/constants"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"errors"
 )
 
 type articleUsecase struct {
 	articleRepository articleComponentInterfaces.ArticleRepositoryInterface
-	sessionRepository sessionComponentInterfaces.SessionRepositoryInterface
 	logger            *logger.Logger
 }
 
-func NewArticleUsecase(articleRepository articleComponentInterfaces.ArticleRepositoryInterface, sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, logger *logger.Logger) articleComponentInterfaces.ArticleUsecaseInterface {
+func NewArticleUsecase(articleRepository articleComponentInterfaces.ArticleRepositoryInterface, logger *logger.Logger) articleComponentInterfaces.ArticleUsecaseInterface {
 	logger.LogrusLogger.Debug("Enter to the NewArticleUsecase function.")
 
 	articleUsecase := &articleUsecase{
 		articleRepository: articleRepository,
-		sessionRepository: sessionRepository,
 		logger:            logger,
 	}
 
@@ -77,20 +74,17 @@ func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *mode
 
 	wrappingErrorMessage := "error while adding new article by session"
 
-	authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
-	if err != nil {
-		switch err {
-		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDoesntExistError:
-			au.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
-		default:
-			au.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-		}
+	//authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
+	authorEmail := ctx.Value(constants.USER_EMAIL_KEY_FOR_CONTEXT).(string)
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
+
+	if authorEmail == "" {
+		au.logger.LogrusLoggerWithContext(ctx).Warn("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
 	}
 	article.Publisher.Email = authorEmail
 
-	_, err = au.articleRepository.AddArticle(ctx, article)
+	_, err := au.articleRepository.AddArticle(ctx, article)
 	if err != nil {
 		au.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return errorsUtils.WrapError(wrappingErrorMessage, err)
