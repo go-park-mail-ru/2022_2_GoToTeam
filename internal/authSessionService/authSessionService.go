@@ -52,7 +52,15 @@ func Run(configFilePath string) {
 	userRepositoryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
-	postgreSQLConnections := repositoriesConnectionsUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
+	postgreSQLConnections := repositoriesConnectionsUtils.GetPostgreSQLConnections(
+		config.DatabaseUser,
+		config.DatabaseName,
+		config.DatabasePassword,
+		config.DatabaseHost,
+		config.DatabasePort,
+		config.DatabaseMaxOpenConnections,
+		middlewareLogger,
+	)
 
 	// Repositories
 	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)

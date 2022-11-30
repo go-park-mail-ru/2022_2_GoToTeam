@@ -41,7 +41,6 @@ func (sd *SessionDelivery) SessionExists(ctx context.Context, session *authSessi
 		switch errors.Unwrap(err).(type) {
 		default:
 			sd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			//return c.NoContent(http.StatusInternalServerError)
 			return nil, status.Errorf(500, "")
 		}
 	}
@@ -63,19 +62,15 @@ func (sd *SessionDelivery) CreateSessionForUser(ctx context.Context, userAccount
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusBadRequest, "email is not valid")
 			return nil, status.Errorf(400, authSessionServiceErrors.EmailIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusBadRequest, "password is not valid")
 			return nil, status.Errorf(400, authSessionServiceErrors.PasswordIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.IncorrectEmailOrPasswordError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusBadRequest, "incorrect email or password")
 			return nil, status.Errorf(400, authSessionServiceErrors.IncorrectEmailOrPasswordError.Error())
 		default:
 			sd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			//return c.NoContent(http.StatusInternalServerError)
 			return nil, status.Errorf(500, "")
 		}
 	}
@@ -93,7 +88,6 @@ func (sd *SessionDelivery) RemoveSession(ctx context.Context, session *authSessi
 
 	if err := sd.sessionUsecase.RemoveSession(ctx, &models.Session{SessionId: session.SessionId}); err != nil {
 		sd.logger.LogrusLoggerWithContext(ctx).Error(err)
-		//return c.NoContent(http.StatusInternalServerError)
 		return nil, status.Errorf(500, "")
 	}
 
@@ -111,15 +105,12 @@ func (sd *SessionDelivery) GetUserInfoBySession(ctx context.Context, session *au
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.NoContent(http.StatusNotFound)
 			return nil, status.Errorf(404, "")
 		case *usecaseToDeliveryErrors.UserForSessionDoesntExistError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.NoContent(http.StatusNotFound)
 			return nil, status.Errorf(404, "")
 		default:
 			sd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			//return c.NoContent(http.StatusInternalServerError)
 			return nil, status.Errorf(500, "")
 		}
 	}
@@ -142,11 +133,9 @@ func (sd *SessionDelivery) GetUserEmailBySession(ctx context.Context, session *a
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.NoContent(http.StatusNotFound)
 			return nil, status.Errorf(404, "")
 		default:
 			sd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			//return c.NoContent(http.StatusInternalServerError)
 			return nil, status.Errorf(500, "")
 		}
 	}
@@ -165,7 +154,6 @@ func (sd *SessionDelivery) UpdateEmailBySession(ctx context.Context, updateEmail
 
 	if err := sd.sessionUsecase.UpdateEmailBySession(ctx, &models.Session{SessionId: updateEmailData.Session.SessionId}, updateEmailData.Email); err != nil {
 		sd.logger.LogrusLoggerWithContext(ctx).Error(err)
-		//return c.NoContent(http.StatusInternalServerError)
 		return nil, status.Errorf(500, "")
 	}
 

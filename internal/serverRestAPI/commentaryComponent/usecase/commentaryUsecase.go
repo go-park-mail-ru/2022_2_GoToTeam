@@ -34,7 +34,6 @@ func (acbs *commentaryUsecase) AddCommentaryBySession(ctx context.Context, comme
 
 	wrappingErrorMessage := "error while adding new commentary by session"
 
-	//authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
 	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
 	acbs.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
 

@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
@@ -10,7 +9,6 @@ import (
 
 type sessionUsecase struct {
 	sessionRepository sessionComponentInterfaces.SessionRepositoryInterface
-	userRepository    userComponentInterfaces.UserRepositoryInterface
 	logger            *logger.Logger
 }
 

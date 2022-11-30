@@ -74,7 +74,6 @@ func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *mode
 
 	wrappingErrorMessage := "error while adding new article by session"
 
-	//authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
 	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
 	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
 

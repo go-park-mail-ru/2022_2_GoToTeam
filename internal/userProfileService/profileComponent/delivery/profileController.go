@@ -41,11 +41,9 @@ func (pd *ProfileDelivery) GetProfileByEmail(ctx context.Context, email *userPro
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailDoesntExistError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.NoContent(http.StatusUnauthorized)
 			return nil, status.Errorf(401, "")
 		default:
 			pd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			//return c.NoContent(http.StatusInternalServerError)
 			return nil, status.Errorf(500, "")
 		}
 	}
@@ -87,23 +85,18 @@ func (pd *ProfileDelivery) UpdateProfileByEmail(ctx context.Context, updateProfi
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusBadRequest, "email is not valid")
 			return nil, status.Errorf(400, userProfileServiceErrors.EmailIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusBadRequest, "login is not valid")
 			return nil, status.Errorf(400, userProfileServiceErrors.LoginIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusBadRequest, "password is not valid")
 			return nil, status.Errorf(400, userProfileServiceErrors.PasswordIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.EmailExistsError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusConflict, "email exists")
 			return nil, status.Errorf(409, userProfileServiceErrors.EmailExistsError.Error())
 		case *usecaseToDeliveryErrors.LoginExistsError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			//return c.JSON(http.StatusConflict, "login exists")
 			return nil, status.Errorf(409, userProfileServiceErrors.LoginExistsError.Error())
 		default:
 			pd.logger.LogrusLoggerWithContext(ctx).Error(err)
