@@ -1,16 +1,17 @@
 package userProfileService
 
 import (
-	"2022_2_GoTo_team/internal/authSessionService/middleware"
-	sessionComponentDelivery "2022_2_GoTo_team/internal/authSessionService/sessionComponent/delivery"
-	sessionComponentRepository "2022_2_GoTo_team/internal/authSessionService/sessionComponent/repository"
-	sessionComponentUsecase "2022_2_GoTo_team/internal/authSessionService/sessionComponent/usecase"
 	"2022_2_GoTo_team/internal/userProfileService/domain"
+	"2022_2_GoTo_team/internal/userProfileService/middleware"
+	profileComponentDelivery "2022_2_GoTo_team/internal/userProfileService/profileComponent/delivery"
+	profileComponentRepository "2022_2_GoTo_team/internal/userProfileService/profileComponent/repository"
+	profileComponentUsecase "2022_2_GoTo_team/internal/userProfileService/profileComponent/usecase"
+	sessionComponentRepository "2022_2_GoTo_team/internal/userProfileService/sessionComponent/repository"
 	"2022_2_GoTo_team/internal/userProfileService/utils/configReader"
-	"2022_2_GoTo_team/pkg/domain/grpcProtos/authSessionServiceGrpcProtos"
+	"2022_2_GoTo_team/pkg/domain/grpcProtos/userProfileServiceGrpcProtos"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
-	"2022_2_GoTo_team/pkg/utils/postgresUtils"
+	"2022_2_GoTo_team/pkg/utils/repositoriesConnectionsUtils"
 	_ "github.com/jackc/pgx/stdlib"
 	"google.golang.org/grpc"
 	"log"
@@ -48,18 +49,23 @@ func Run(configFilePath string) {
 	profileDeliveryLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
 	profileUsecaseLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
 	profileRepositoryLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+	sessionRepositoryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
-	postgreSQLConnections := postgresUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
+	postgreSQLConnections := repositoriesConnectionsUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
+
+	// authSessionService connection
+	authSessionServiceConnection := repositoriesConnectionsUtils.GetGrpcServiceConnection(config.AuthSessionServiceAddress, middlewareLogger)
 
 	// Repositories
-	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
+	profileRepository := profileComponentRepository.NewProfilePostgreSQLRepository(postgreSQLConnections, profileRepositoryLogger)
+	sessionRepository := sessionComponentRepository.NewAuthSessionServiceRepository(authSessionServiceConnection, sessionRepositoryLogger)
 
 	// Usecases and Deliveries
-	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, sessionUsecaseLogger)
-	sessionDelivery := sessionComponentDelivery.NewSessionDelivery(sessionUsecase, sessionDeliveryLogger)
+	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, sessionRepository, profileUsecaseLogger)
+	profileDelivery := profileComponentDelivery.NewProfileDelivery(profileUsecase, profileDeliveryLogger)
 
-	authSessionServiceGrpcProtos.RegisterAuthSessionServiceServer(server, sessionDelivery)
+	userProfileServiceGrpcProtos.RegisterUserProfileServiceServer(server, profileDelivery)
 
 	if err := server.Serve(listener); err != nil {
 		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while serve", err))

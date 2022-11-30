@@ -37,7 +37,7 @@ message Nothing {
 }
 
 service AuthSessionService {
-  rpc SessionExists(Session) returns (Exists) {}
+  rpc SessionExists (Session) returns (Exists) {}
   rpc CreateSessionForUser (UserAccountData) returns (Session) {}
   rpc RemoveSession (Session) returns (Nothing) {}
   rpc GetUserInfoBySession (Session) returns (UserInfoBySession) {}

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/profileComponentErrors/repositoryToUsecaseErrors"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/profileComponentInterfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/profileComponentInterfacesOLD"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
@@ -14,7 +14,7 @@ type profilePostgreSQLRepository struct {
 	logger   *logger.Logger
 }
 
-func NewProfilePostgreSQLRepository(database *sql.DB, logger *logger.Logger) profileComponentInterfaces.ProfileRepositoryInterface {
+func NewProfilePostgreSQLRepository(database *sql.DB, logger *logger.Logger) profileComponentInterfacesOLD.ProfileRepositoryInterface {
 	logger.LogrusLogger.Debug("Enter to the NewProfilePostgreSQLRepository function.")
 
 	profileRepository := &profilePostgreSQLRepository{

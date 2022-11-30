@@ -1,20 +1,19 @@
 package delivery
 
 import (
-	 asd "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/internal/userProfileService/domain"
 	"2022_2_GoTo_team/internal/userProfileService/domain/customErrors/profileComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/userProfileService/domain/interfaces/profileComponentInterfaces"
 	"2022_2_GoTo_team/internal/userProfileService/domain/models"
+	"2022_2_GoTo_team/pkg/domain/grpcCustomErrors/userProfileServiceErrors"
 	"2022_2_GoTo_team/pkg/domain/grpcProtos/userProfileServiceGrpcProtos"
 	"2022_2_GoTo_team/pkg/utils/logger"
+	"context"
 	"errors"
-	"github.com/labstack/echo/v4"
-	"net/http"
+	"google.golang.org/grpc/status"
 )
 
 type ProfileDelivery struct {
-	userProfileServiceGrpcProtos.UnimplementedAuthSessionServiceServer
+	userProfileServiceGrpcProtos.UnimplementedUserProfileServiceServer
 
 	profileUsecase profileComponentInterfaces.ProfileUsecaseInterface
 	logger         *logger.Logger
@@ -33,77 +32,84 @@ func NewProfileDelivery(profileUsecase profileComponentInterfaces.ProfileUsecase
 	return profileDelivery
 }
 
-func (pc *ProfileDelivery) GetProfileBySession(c echo.Context) error {
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the GetProfileHandler function.")
+func (pd *ProfileDelivery) GetProfileByEmail(ctx context.Context, email *userProfileServiceGrpcProtos.UserEmail) (*userProfileServiceGrpcProtos.Profile, error) {
+	pd.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetProfileByEmail function.")
+	pd.logger.LogrusLoggerWithContext(ctx).Debugf("Input email: %#v", email)
 
-	profile, err := pc.profileUsecase.GetProfileBySession(c.Request().Context())
+	profile, err := pd.profileUsecase.GetProfileByEmail(ctx, email.Email)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
-			return c.NoContent(http.StatusUnauthorized)
-		case *usecaseToDeliveryErrors.UserForSessionDoesntExistError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
-			return c.NoContent(http.StatusUnauthorized)
+		case *usecaseToDeliveryErrors.EmailDoesntExistError:
+			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			//return c.NoContent(http.StatusUnauthorized)
+			return nil, status.Errorf(401, "")
 		default:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
-			return c.NoContent(http.StatusInternalServerError)
+			pd.logger.LogrusLoggerWithContext(ctx).Error(err)
+			//return c.NoContent(http.StatusInternalServerError)
+			return nil, status.Errorf(500, "")
 		}
 	}
 
-	profileOutput := modelsRestApi.Profile{
+	profileOutput := &userProfileServiceGrpcProtos.Profile{
 		Email:         profile.Email,
 		Login:         profile.Login,
 		Password:      profile.Password,
 		Username:      profile.Username,
 		AvatarImgPath: profile.AvatarImgPath,
 	}
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed profileInfo = ", profileOutput)
+	pd.logger.LogrusLoggerWithContext(ctx).Debugf("Formed profile = %#v, %#v, %#v, %#v, %#v",
+		profileOutput.Email,
+		profileOutput.Login,
+		profileOutput.Password,
+		profileOutput.Username,
+		profileOutput.AvatarImgPath,
+	)
 
-	return c.JSON(http.StatusOK, profileOutput)
+	return profileOutput, nil
 }
 
-func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UpdateProfileHandler function.")
-	defer c.Request().Body.Close()
+func (pd *ProfileDelivery) UpdateProfileByEmail(ctx context.Context, updateProfileData *userProfileServiceGrpcProtos.UpdateProfileData) (*userProfileServiceGrpcProtos.Nothing, error) {
+	pd.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateProfileByEmail function.")
+	pd.logger.LogrusLoggerWithContext(ctx).Debugf("Input updateProfileData: %#v", updateProfileData)
 
-	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
-	if err != nil {
-		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
-		return c.NoContent(http.StatusUnauthorized)
+	parsedInputProfile := &models.Profile{
+		Email:         updateProfileData.Profile.Email,
+		Login:         updateProfileData.Profile.Login,
+		Password:      updateProfileData.Profile.Password,
+		Username:      updateProfileData.Profile.Username,
+		AvatarImgPath: updateProfileData.Profile.AvatarImgPath,
 	}
 
-	parsedInputProfile := new(modelsRestApi.Profile)
-	if err := c.Bind(parsedInputProfile); err != nil {
-		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-		return c.NoContent(http.StatusBadRequest)
-	}
+	pd.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed parsedInputProfile: %#v, input email: %#v, sessionId: %#v", parsedInputProfile, updateProfileData.Email, updateProfileData.SessionId)
 
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputProfile: %#v", parsedInputProfile)
-
-	err = pc.profileUsecase.UpdateProfileBySession(c.Request().Context(), &models.Profile{Email: parsedInputProfile.Email, Login: parsedInputProfile.Login, Username: parsedInputProfile.Username, AvatarImgPath: parsedInputProfile.AvatarImgPath}, &models.Session{SessionId: cookie.Value})
+	err := pd.profileUsecase.UpdateProfileByEmail(ctx, parsedInputProfile, updateProfileData.Email, &models.Session{SessionId: updateProfileData.SessionId})
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusBadRequest, "email is not valid")
+			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			//return c.JSON(http.StatusBadRequest, "email is not valid")
+			return nil, status.Errorf(400, userProfileServiceErrors.EmailIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusBadRequest, "login is not valid")
+			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			//return c.JSON(http.StatusBadRequest, "login is not valid")
+			return nil, status.Errorf(400, userProfileServiceErrors.LoginIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusBadRequest, "password is not valid")
+			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			//return c.JSON(http.StatusBadRequest, "password is not valid")
+			return nil, status.Errorf(400, userProfileServiceErrors.PasswordIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.EmailExistsError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusConflict, "email exists")
+			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			//return c.JSON(http.StatusConflict, "email exists")
+			return nil, status.Errorf(409, userProfileServiceErrors.EmailExistsError.Error())
 		case *usecaseToDeliveryErrors.LoginExistsError:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-			return c.JSON(http.StatusConflict, "login exists")
+			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			//return c.JSON(http.StatusConflict, "login exists")
+			return nil, status.Errorf(409, userProfileServiceErrors.LoginExistsError.Error())
 		default:
-			pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
-			return c.NoContent(http.StatusInternalServerError)
+			pd.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, status.Errorf(500, "")
 		}
 	}
 
-	return c.NoContent(http.StatusOK)
+	return &userProfileServiceGrpcProtos.Nothing{Ok: true}, nil
 }

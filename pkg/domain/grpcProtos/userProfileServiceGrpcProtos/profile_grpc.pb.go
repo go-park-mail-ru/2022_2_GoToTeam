@@ -18,86 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// AuthSessionServiceClient is the client API for AuthSessionService service.
+// UserProfileServiceClient is the client API for UserProfileService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AuthSessionServiceClient interface {
-	UpdateEmailBySession(ctx context.Context, in *UpdateEmailData, opts ...grpc.CallOption) (*Nothing, error)
+type UserProfileServiceClient interface {
+	GetProfileByEmail(ctx context.Context, in *UserEmail, opts ...grpc.CallOption) (*Profile, error)
+	UpdateProfileByEmail(ctx context.Context, in *UpdateProfileData, opts ...grpc.CallOption) (*Nothing, error)
 }
 
-type authSessionServiceClient struct {
+type userProfileServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAuthSessionServiceClient(cc grpc.ClientConnInterface) AuthSessionServiceClient {
-	return &authSessionServiceClient{cc}
+func NewUserProfileServiceClient(cc grpc.ClientConnInterface) UserProfileServiceClient {
+	return &userProfileServiceClient{cc}
 }
 
-func (c *authSessionServiceClient) UpdateEmailBySession(ctx context.Context, in *UpdateEmailData, opts ...grpc.CallOption) (*Nothing, error) {
-	out := new(Nothing)
-	err := c.cc.Invoke(ctx, "/profile.AuthSessionService/UpdateEmailBySession", in, out, opts...)
+func (c *userProfileServiceClient) GetProfileByEmail(ctx context.Context, in *UserEmail, opts ...grpc.CallOption) (*Profile, error) {
+	out := new(Profile)
+	err := c.cc.Invoke(ctx, "/profile.UserProfileService/GetProfileByEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AuthSessionServiceServer is the server API for AuthSessionService service.
-// All implementations must embed UnimplementedAuthSessionServiceServer
+func (c *userProfileServiceClient) UpdateProfileByEmail(ctx context.Context, in *UpdateProfileData, opts ...grpc.CallOption) (*Nothing, error) {
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, "/profile.UserProfileService/UpdateProfileByEmail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// UserProfileServiceServer is the server API for UserProfileService service.
+// All implementations must embed UnimplementedUserProfileServiceServer
 // for forward compatibility
-type AuthSessionServiceServer interface {
-	UpdateEmailBySession(context.Context, *UpdateEmailData) (*Nothing, error)
-	mustEmbedUnimplementedAuthSessionServiceServer()
+type UserProfileServiceServer interface {
+	GetProfileByEmail(context.Context, *UserEmail) (*Profile, error)
+	UpdateProfileByEmail(context.Context, *UpdateProfileData) (*Nothing, error)
+	mustEmbedUnimplementedUserProfileServiceServer()
 }
 
-// UnimplementedAuthSessionServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedAuthSessionServiceServer struct {
+// UnimplementedUserProfileServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedUserProfileServiceServer struct {
 }
 
-func (UnimplementedAuthSessionServiceServer) UpdateEmailBySession(context.Context, *UpdateEmailData) (*Nothing, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateEmailBySession not implemented")
+func (UnimplementedUserProfileServiceServer) GetProfileByEmail(context.Context, *UserEmail) (*Profile, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfileByEmail not implemented")
 }
-func (UnimplementedAuthSessionServiceServer) mustEmbedUnimplementedAuthSessionServiceServer() {}
+func (UnimplementedUserProfileServiceServer) UpdateProfileByEmail(context.Context, *UpdateProfileData) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProfileByEmail not implemented")
+}
+func (UnimplementedUserProfileServiceServer) mustEmbedUnimplementedUserProfileServiceServer() {}
 
-// UnsafeAuthSessionServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AuthSessionServiceServer will
+// UnsafeUserProfileServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UserProfileServiceServer will
 // result in compilation errors.
-type UnsafeAuthSessionServiceServer interface {
-	mustEmbedUnimplementedAuthSessionServiceServer()
+type UnsafeUserProfileServiceServer interface {
+	mustEmbedUnimplementedUserProfileServiceServer()
 }
 
-func RegisterAuthSessionServiceServer(s grpc.ServiceRegistrar, srv AuthSessionServiceServer) {
-	s.RegisterService(&AuthSessionService_ServiceDesc, srv)
+func RegisterUserProfileServiceServer(s grpc.ServiceRegistrar, srv UserProfileServiceServer) {
+	s.RegisterService(&UserProfileService_ServiceDesc, srv)
 }
 
-func _AuthSessionService_UpdateEmailBySession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateEmailData)
+func _UserProfileService_GetProfileByEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserEmail)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthSessionServiceServer).UpdateEmailBySession(ctx, in)
+		return srv.(UserProfileServiceServer).GetProfileByEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/profile.AuthSessionService/UpdateEmailBySession",
+		FullMethod: "/profile.UserProfileService/GetProfileByEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthSessionServiceServer).UpdateEmailBySession(ctx, req.(*UpdateEmailData))
+		return srv.(UserProfileServiceServer).GetProfileByEmail(ctx, req.(*UserEmail))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// AuthSessionService_ServiceDesc is the grpc.ServiceDesc for AuthSessionService service.
+func _UserProfileService_UpdateProfileByEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProfileData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserProfileServiceServer).UpdateProfileByEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profile.UserProfileService/UpdateProfileByEmail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserProfileServiceServer).UpdateProfileByEmail(ctx, req.(*UpdateProfileData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// UserProfileService_ServiceDesc is the grpc.ServiceDesc for UserProfileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AuthSessionService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "profile.AuthSessionService",
-	HandlerType: (*AuthSessionServiceServer)(nil),
+var UserProfileService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "profile.UserProfileService",
+	HandlerType: (*UserProfileServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "UpdateEmailBySession",
-			Handler:    _AuthSessionService_UpdateEmailBySession_Handler,
+			MethodName: "GetProfileByEmail",
+			Handler:    _UserProfileService_GetProfileByEmail_Handler,
+		},
+		{
+			MethodName: "UpdateProfileByEmail",
+			Handler:    _UserProfileService_UpdateProfileByEmail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

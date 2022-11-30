@@ -7,8 +7,8 @@ import "database/sql"
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	profileComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/repository"
-	profileComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/profileComponent/usecase"
+	profileComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/profileComponentOLD/repository"
+	profileComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/profileComponentOLD/usecase"
 	sessionComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/sessionComponentOLD/repository"
 	sessionComponentUsecase "2022_2_GoTo_team/internal/serverRestAPI/sessionComponentOLD/usecase"
 	userComponentRepository "2022_2_GoTo_team/internal/serverRestAPI/userComponent/repository"
@@ -74,11 +74,11 @@ func TestLogin(t *testing.T) {
 	c := e.NewContext(req, recorder)
 	c.SetPath("/feed")
 
-	profileDeliveryLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	profileUsecaseLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	profileDeliveryLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponentOLD", domain.LAYER_DELIVERY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	profileUsecaseLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponentOLD", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
 	sessionUsecaseLogger, _ := logger2.GetConfiguredLoggerWrapper("sessionComponentOLD", domain.LAYER_USECASE_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
 	sessionRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("sessionComponentOLD", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
-	profileRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
+	profileRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("profileComponentOLD", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
 	userRepositoryLogger, _ := logger2.GetConfiguredLoggerWrapper("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER, "debug", "logs/serverRestApi/logs.log")
 
 	middlewareLogger, _ := logger2.GetConfiguredLoggerWrapper("middlewareComponent", "middlewareLayer", "debug", "logs/serverRestApi/logs.log")

@@ -18,6 +18,7 @@ type Config struct {
 	DatabaseMaxOpenConnections string `toml:"databaseMaxOpenConnections"`
 
 	AuthSessionServiceAddress string `toml:"authSessionServiceAddress"`
+	UserProfileServiceAddress string `toml:"userProfileServiceAddress"`
 }
 
 func NewConfig(configFilePath string) (*Config, error) {

@@ -1,11 +1,12 @@
 package usecase
 
 import (
-	"2022_2_GoTo_team/internal/userProfileService/domain/customErrors/profileComponentErrors/repositoryToUsecaseErrors"
-	"2022_2_GoTo_team/internal/userProfileService/domain/customErrors/profileComponentErrors/usecaseToDeliveryErrors"
-	"2022_2_GoTo_team/internal/userProfileService/domain/interfaces/profileComponentInterfaces"
-	"2022_2_GoTo_team/internal/userProfileService/domain/interfaces/sessionComponentInterfaces"
-	"2022_2_GoTo_team/internal/userProfileService/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/profileComponentErrors/repositoryToUsecaseErrors"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/profileComponentErrors/usecaseToDeliveryErrors"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/profileComponentInterfacesOLD"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
+	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"2022_2_GoTo_team/pkg/utils/validators"
@@ -14,13 +15,13 @@ import (
 )
 
 type profileUsecase struct {
-	profileRepository profileComponentInterfaces.ProfileRepositoryInterface
+	profileRepository profileComponentInterfacesOLD.ProfileRepositoryInterface
 	sessionRepository sessionComponentInterfaces.SessionRepositoryInterface
 	logger            *logger.Logger
 }
 
-func NewProfileUsecase(profileRepository profileComponentInterfaces.ProfileRepositoryInterface, sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, logger *logger.Logger) profileComponentInterfaces.ProfileUsecaseInterface {
-	logger.LogrusLogger.Debug("Enter to the NewProfileUsecase function.")
+func NewProfileUsecase(profileRepository profileComponentInterfacesOLD.ProfileRepositoryInterface, sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, logger *logger.Logger) profileComponentInterfacesOLD.ProfileUsecaseInterface {
+	logger.LogrusLogger.Debug("Enter to the NewCategoryUsecase function.")
 
 	profileUsecase := &profileUsecase{
 		profileRepository: profileRepository,
@@ -33,17 +34,24 @@ func NewProfileUsecase(profileRepository profileComponentInterfaces.ProfileRepos
 	return profileUsecase
 }
 
-func (pu *profileUsecase) GetProfileByEmail(ctx context.Context, email string) (*models.Profile, error) {
-	pu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetProfileByEmail function.")
+func (pu *profileUsecase) GetProfileBySession(ctx context.Context) (*models.Profile, error) {
+	pu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetProfileBySession function.")
 
-	wrappingErrorMessage := "error while getting profile by email"
+	wrappingErrorMessage := "error while getting profile by session"
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
+	pu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+	if email == "" {
+		pu.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
 
 	profile, err := pu.profileRepository.GetProfileByEmail(ctx, email)
 	if err != nil {
 		switch err {
 		case repositoryToUsecaseErrors.ProfileRepositoryEmailDoesntExistError:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailDoesntExistError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionDoesntExistError{Err: err})
 		default:
 			pu.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -53,7 +61,7 @@ func (pu *profileUsecase) GetProfileByEmail(ctx context.Context, email string) (
 	return profile, nil
 }
 
-func (pu *profileUsecase) UpdateProfileByEmail(ctx context.Context, newProfile *models.Profile, email string, session *models.Session) error {
+func (pu *profileUsecase) UpdateProfileBySession(ctx context.Context, newProfile *models.Profile, session *models.Session) error {
 	pu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateProfileBySession function.")
 
 	wrappingErrorMessage := "error while updating newProfile by session"
@@ -61,6 +69,13 @@ func (pu *profileUsecase) UpdateProfileByEmail(ctx context.Context, newProfile *
 	if err := pu.validateUserData(ctx, newProfile.Email, newProfile.Login, newProfile.Password); err != nil {
 		pu.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
+	pu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+	if email == "" {
+		pu.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
 	}
 
 	err := pu.profileRepository.UpdateProfileByEmail(ctx, newProfile, email)

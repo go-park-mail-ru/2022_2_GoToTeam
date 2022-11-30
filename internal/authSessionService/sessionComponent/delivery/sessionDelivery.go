@@ -64,7 +64,7 @@ func (sd *SessionDelivery) CreateSessionForUser(ctx context.Context, userAccount
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			//return c.JSON(http.StatusBadRequest, "email is not valid")
-			return nil, status.Errorf(400, "email is not valid")
+			return nil, status.Errorf(400, authSessionServiceErrors.EmailIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
 			sd.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			//return c.JSON(http.StatusBadRequest, "password is not valid")

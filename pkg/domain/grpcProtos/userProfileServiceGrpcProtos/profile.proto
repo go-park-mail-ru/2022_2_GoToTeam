@@ -5,24 +5,29 @@ option go_package = "./;userProfileServiceGrpcProtos";
 
 package profile;
 
-message Session {
-  string SessionId = 1;
-}
-
 message Profile {
   string email = 1;
-  string password = 2;
+  string login = 2;
+  string password = 3;
+  string username = 4;
+  string avatarImgPath = 5;
 }
 
-message UpdateEmailData {
-  Session session = 1;
+message UserEmail {
+  string email = 1;
+}
+
+message UpdateProfileData {
+  Profile profile = 1;
   string email = 2;
+  string SessionId = 3;
 }
 
 message Nothing {
   bool ok = 1;
 }
 
-service AuthSessionService {
-  rpc UpdateEmailBySession (UpdateEmailData) returns (Nothing){}
+service UserProfileService {
+  rpc GetProfileByEmail (UserEmail) returns (Profile){}
+  rpc UpdateProfileByEmail (UpdateProfileData) returns (Nothing){}
 }

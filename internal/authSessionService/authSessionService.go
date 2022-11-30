@@ -11,7 +11,7 @@ import (
 	"2022_2_GoTo_team/pkg/domain/grpcProtos/authSessionServiceGrpcProtos"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
-	"2022_2_GoTo_team/pkg/utils/postgresUtils"
+	"2022_2_GoTo_team/pkg/utils/repositoriesConnectionsUtils"
 	_ "github.com/jackc/pgx/stdlib"
 	"google.golang.org/grpc"
 	"log"
@@ -52,7 +52,7 @@ func Run(configFilePath string) {
 	userRepositoryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
-	postgreSQLConnections := postgresUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
+	postgreSQLConnections := repositoriesConnectionsUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
 
 	// Repositories
 	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)

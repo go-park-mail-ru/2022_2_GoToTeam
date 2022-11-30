@@ -15,6 +15,8 @@ type Config struct {
 	DatabaseHost               string `toml:"databaseHost"`
 	DatabasePort               string `toml:"databasePort"`
 	DatabaseMaxOpenConnections string `toml:"databaseMaxOpenConnections"`
+
+	AuthSessionServiceAddress string `toml:"authSessionServiceAddress"`
 }
 
 func NewConfig(configFilePath string) (*Config, error) {

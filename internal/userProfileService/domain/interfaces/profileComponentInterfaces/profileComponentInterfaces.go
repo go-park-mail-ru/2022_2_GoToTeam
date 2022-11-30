@@ -6,8 +6,8 @@ import (
 )
 
 type ProfileUsecaseInterface interface {
-	GetProfileBySession(ctx context.Context) (*models.Profile, error)
-	UpdateProfileBySession(ctx context.Context, newProfile *models.Profile, session *models.Session) error
+	GetProfileByEmail(ctx context.Context, email string) (*models.Profile, error)
+	UpdateProfileByEmail(ctx context.Context, newProfile *models.Profile, email string, session *models.Session) error
 }
 
 type ProfileRepositoryInterface interface {

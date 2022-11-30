@@ -33,11 +33,10 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
-	"2022_2_GoTo_team/pkg/utils/postgresUtils"
+	"2022_2_GoTo_team/pkg/utils/repositoriesConnectionsUtils"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
-	"google.golang.org/grpc"
 	"log"
 	"net/http"
 )
@@ -122,10 +121,12 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	commentaryRepositoryLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
-	postgreSQLConnections := postgresUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
+	postgreSQLConnections := repositoriesConnectionsUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
 
 	// AuthSessionService connection
-	authSessionServiceConnection := getGrpcServiceConnection(config.AuthSessionServiceAddress)
+	authSessionServiceConnection := repositoriesConnectionsUtils.GetGrpcServiceConnection(config.AuthSessionServiceAddress, middlewareLogger)
+	// UserProfileService connection
+	userProfileServiceConnection := repositoriesConnectionsUtils.GetGrpcServiceConnection(config.UserProfileServiceAddress, middlewareLogger)
 
 	// Repositories
 	sessionRepository := sessionComponentRepository.NewAuthSessionServiceRepository(authSessionServiceConnection, sessionRepositoryLogger)
@@ -133,7 +134,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	feedRepository := feedComponentRepository.NewFeedPostgreSQLRepository(postgreSQLConnections, feedRepositoryLogger)
 	categoryRepository := categoryComponentRepository.NewCategoryPostgreSQLRepository(postgreSQLConnections, categoryRepositoryLogger)
 	articleRepository := articleComponentRepository.NewArticlePostgreSQLRepository(postgreSQLConnections, articleRepositoryLogger)
-	profileRepository := profileComponentRepository.NewProfilePostgreSQLRepository(postgreSQLConnections, profileRepositoryLogger)
+	profileRepository := profileComponentRepository.NewUserProfileServiceRepository(userProfileServiceConnection, profileRepositoryLogger)
 	tagRepository := tagComponentRepository.NewTagPostgreSQLRepository(postgreSQLConnections, tagRepositoryLogger)
 	searchRepository := searchComponentRepository.NewSearchPostgreSQLRepository(postgreSQLConnections, searchRepositoryLogger)
 	commentaryRepository := commentaryComponentRepository.NewCommentaryPostgreSQLRepository(postgreSQLConnections, commentaryRepositoryLogger)
@@ -154,7 +155,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	articleUsecase := articleComponentUsecase.NewArticleUsecase(articleRepository, articleUsecaseLogger)
 	articleController := articleComponentDelivery.NewArticleController(articleUsecase, articleDeliveryLogger)
 
-	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, sessionRepository, profileUsecaseLogger)
+	profileUsecase := profileComponentUsecase.NewProfileUsecase(profileRepository, profileUsecaseLogger)
 	profileController := profileComponentDelivery.NewProfileController(profileUsecase, profileDeliveryLogger)
 
 	tagUsecae := tagComponentUsecase.NewTagUsecase(tagRepository, tagUsecaseLogger)
@@ -198,17 +199,4 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.GET("/api/v1/commentary/feed", commentaryController.GetAllCommentariesForArticle)
 
 	return nil
-}
-
-func getGrpcServiceConnection(serverAddress string) *grpc.ClientConn {
-	middlewareLogger.LogrusLogger.Debug("Enter to the getGrpcServiceConnection function.")
-
-	grcpConn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
-	// defer grcpConn.Close()
-
-	if err != nil {
-		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while opening connection to grpc service", err))
-	}
-
-	return grcpConn
 }
