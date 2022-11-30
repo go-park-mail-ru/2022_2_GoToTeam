@@ -102,27 +102,27 @@ func TestSessionRepositoryNegative(t *testing.T) {
 	})})
 
 	_, err := sessionUsecase.SessionExists(context.Background(), &models.Session{SessionId: "sess1"})
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 
 	_, err = sessionUsecase.CreateSessionForUser(context.Background(), "asd@asd.asd", "pswd")
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 
 	err = sessionUsecase.RemoveSession(context.Background(), &models.Session{SessionId: "sess1"})
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 
 	_, err = sessionUsecase.GetUserInfoBySession(context.Background(), &models.Session{SessionId: "sess1"})
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 
 	_, err = sessionUsecase.GetUserEmailBySession(context.Background(), &models.Session{SessionId: "sess1"})
-	if err != nil {
+	if err == nil {
 		t.Error(err)
 	}
 }

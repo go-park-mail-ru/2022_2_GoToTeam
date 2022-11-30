@@ -150,7 +150,7 @@ func (sd *SessionDelivery) GetUserEmailBySession(ctx context.Context, session *a
 
 func (sd *SessionDelivery) UpdateEmailBySession(ctx context.Context, updateEmailData *authSessionServiceGrpcProtos.UpdateEmailData) (*authSessionServiceGrpcProtos.Nothing, error) {
 	sd.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateEmailBySession function.")
-	sd.logger.LogrusLoggerWithContext(ctx).Debugf("Input updateEmailData: %#v, %#v.", updateEmailData.Session.SessionId, updateEmailData.Email)
+	sd.logger.LogrusLoggerWithContext(ctx).Debugf("Input updateEmailData: %#v", updateEmailData)
 
 	if err := sd.sessionUsecase.UpdateEmailBySession(ctx, &models.Session{SessionId: updateEmailData.Session.SessionId}, updateEmailData.Email); err != nil {
 		sd.logger.LogrusLoggerWithContext(ctx).Error(err)
