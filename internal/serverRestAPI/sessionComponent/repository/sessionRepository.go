@@ -37,7 +37,7 @@ func (assr *authSessionServiceRepository) SessionExists(ctx context.Context, ses
 	if err != nil {
 		assr.logger.LogrusLoggerWithContext(ctx).Warn(err)
 	}
-	assr.logger.LogrusLoggerWithContext(ctx).Debug("Got exists: ", exists.Exists)
+	assr.logger.LogrusLoggerWithContext(ctx).Debug("Got exists: ", exists)
 	if exists == nil {
 		return false, err
 	}

@@ -8,7 +8,6 @@ import (
 	domainPkg "2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -90,9 +89,6 @@ func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {
 	if err != nil {
 		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 		st, _ := status.FromError(err)
-		code := errorsUtils.ExtractCodeFromGrpcErrorStatus(st)
-		fmt.Println("Code = ", code)
-		fmt.Println("message = ", st.Message())
 		return c.JSON(errorsUtils.ExtractCodeFromGrpcErrorStatus(st), st.Message())
 	}
 

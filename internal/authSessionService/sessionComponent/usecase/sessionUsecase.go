@@ -98,7 +98,7 @@ func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *mod
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
 		case repositoryToUsecaseErrors2.SessionRepositoryEmailDoesntExistError:
-			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
+			su.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
 		default:
@@ -111,7 +111,7 @@ func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *mod
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
 		case repositoryToUsecaseErrors.UserRepositoryEmailDoesntExistError:
-			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
+			su.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionDoesntExistError{Err: err})
 		default:
@@ -132,7 +132,7 @@ func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *mo
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
 		case repositoryToUsecaseErrors2.SessionRepositoryEmailDoesntExistError:
-			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
+			su.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
 			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
 		default:

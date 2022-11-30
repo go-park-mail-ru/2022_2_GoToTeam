@@ -9,7 +9,7 @@ import (
 const (
 	EMAIL_RFC5322_REGEXP_STRING = `^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$` // RFC 5322. https://stackoverflow.com/questions/201323/how-to-validate-an-email-address-using-a-regular-expression/201378#201378  http://emailregex.com/  got for the javascript
 
-	LOGIN_REGEXP_STRING = `^[a-zA-Z][a-zA-Z0-9]{3,}$` // Starts from latin letter, after its possible latin letters and number, min length = 3
+	LOGIN_REGEXP_STRING = `^[a-zA-Z][a-zA-Z0-9]{3,}$` // Starts from latin letter, after its possible latin letters and number, min length = 4
 
 	PASSWORD_REGEXP_STRING = `^[a-zA-Z0-9]{4,}$` // Only latins and numbers, min length = 4
 )
