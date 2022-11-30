@@ -5,7 +5,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/domain/constants"
+	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
@@ -75,11 +75,11 @@ func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *mode
 	wrappingErrorMessage := "error while adding new article by session"
 
 	//authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
-	authorEmail := ctx.Value(constants.USER_EMAIL_KEY_FOR_CONTEXT).(string)
+	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
 	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
 
 	if authorEmail == "" {
-		au.logger.LogrusLoggerWithContext(ctx).Warn("Email from context is empty.")
+		au.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
 		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
 	}
 	article.Publisher.Email = authorEmail

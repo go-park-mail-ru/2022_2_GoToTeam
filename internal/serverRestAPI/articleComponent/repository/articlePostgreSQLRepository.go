@@ -78,7 +78,7 @@ WHERE A.article_id = $1;
 	}
 	article.Tags = tags
 
-	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got article: %#v", article)
+	apsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got article: %#v", article)
 
 	return article, nil
 }
@@ -168,7 +168,7 @@ func (apsr *articlePostgreSQLRepository) DeleteArticleById(ctx context.Context, 
 		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
 	}
-	apsr.logger.LogrusLoggerWithContext(ctx).Debugf("Removed articles count: %#v", removedRowsCount)
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed articles count: ", removedRowsCount)
 
 	return removedRowsCount, nil
 }

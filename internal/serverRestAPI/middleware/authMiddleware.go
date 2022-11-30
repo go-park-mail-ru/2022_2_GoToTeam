@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/domain/constants"
+	domain2 "2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"github.com/labstack/echo/v4"
@@ -58,7 +58,7 @@ func AuthMiddleware(sessionUsecase sessionComponentInterfaces.SessionUsecaseInte
 			if _, ok := needAuthUrls[ctx.Request().URL.Path]; !ok {
 				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Dont need auth for the URL.Path: ", ctx.Request().URL.Path)
 
-				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), constants.USER_EMAIL_KEY_FOR_CONTEXT, "dont need auth")))
+				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain2.USER_EMAIL_KEY_FOR_CONTEXT, "dont need auth")))
 
 				return next(ctx)
 			}
@@ -75,7 +75,7 @@ func AuthMiddleware(sessionUsecase sessionComponentInterfaces.SessionUsecaseInte
 					logger.LogrusLoggerWithContext(ctx.Request().Context()).Error(err)
 				}
 
-				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), constants.USER_EMAIL_KEY_FOR_CONTEXT, email)))
+				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain2.USER_EMAIL_KEY_FOR_CONTEXT, email)))
 			}
 
 			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Authorized!")

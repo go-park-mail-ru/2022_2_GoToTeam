@@ -1,4 +1,4 @@
-package constants
+package domain
 
 const (
 	// For the grpc metadata keys

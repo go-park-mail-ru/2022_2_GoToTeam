@@ -31,7 +31,7 @@ func NewAuthSessionServiceRepository(grpcConnection *grpc.ClientConn, logger *lo
 func (assr *authSessionServiceRepository) SessionExists(ctx context.Context, session *models.Session) (bool, error) {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SessionExists function.")
 
-	exists, err := assr.authSessionServiceClient.SessionExists(grpcUtils.MakeNewContextWithGrpcMetadata(ctx), &authSessionServiceGrpcProtos.Session{
+	exists, err := assr.authSessionServiceClient.SessionExists(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.Session{
 		SessionId: session.SessionId,
 	})
 	if err != nil {
@@ -48,7 +48,7 @@ func (assr *authSessionServiceRepository) SessionExists(ctx context.Context, ses
 func (assr *authSessionServiceRepository) CreateSessionForUser(ctx context.Context, email string, password string) (*models.Session, error) {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionForUser function.")
 
-	session, err := assr.authSessionServiceClient.CreateSessionForUser(grpcUtils.MakeNewContextWithGrpcMetadata(ctx), &authSessionServiceGrpcProtos.UserAccountData{
+	session, err := assr.authSessionServiceClient.CreateSessionForUser(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.UserAccountData{
 		Email:    email,
 		Password: password,
 	})
@@ -66,7 +66,7 @@ func (assr *authSessionServiceRepository) CreateSessionForUser(ctx context.Conte
 func (assr *authSessionServiceRepository) RemoveSession(ctx context.Context, session *models.Session) error {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveSession function.")
 
-	_, err := assr.authSessionServiceClient.RemoveSession(grpcUtils.MakeNewContextWithGrpcMetadata(ctx), &authSessionServiceGrpcProtos.Session{
+	_, err := assr.authSessionServiceClient.RemoveSession(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.Session{
 		SessionId: session.SessionId,
 	})
 	if err != nil {
@@ -79,7 +79,7 @@ func (assr *authSessionServiceRepository) RemoveSession(ctx context.Context, ses
 func (assr *authSessionServiceRepository) GetUserInfoBySession(ctx context.Context, session *models.Session) (*models.User, error) {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserInfoBySession function.")
 
-	userInfo, err := assr.authSessionServiceClient.GetUserInfoBySession(grpcUtils.MakeNewContextWithGrpcMetadata(ctx), &authSessionServiceGrpcProtos.Session{
+	userInfo, err := assr.authSessionServiceClient.GetUserInfoBySession(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.Session{
 		SessionId: session.SessionId,
 	})
 	if err != nil {
@@ -96,7 +96,7 @@ func (assr *authSessionServiceRepository) GetUserInfoBySession(ctx context.Conte
 func (assr *authSessionServiceRepository) GetUserEmailBySession(ctx context.Context, session *models.Session) (string, error) {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserEmailBySession function.")
 
-	userEmail, err := assr.authSessionServiceClient.GetUserEmailBySession(grpcUtils.MakeNewContextWithGrpcMetadata(ctx), &authSessionServiceGrpcProtos.Session{
+	userEmail, err := assr.authSessionServiceClient.GetUserEmailBySession(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.Session{
 		SessionId: session.SessionId,
 	})
 	if err != nil {
@@ -113,7 +113,7 @@ func (assr *authSessionServiceRepository) GetUserEmailBySession(ctx context.Cont
 func (assr *authSessionServiceRepository) UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) error {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateEmailBySession function.")
 
-	_, err := assr.authSessionServiceClient.UpdateEmailBySession(grpcUtils.MakeNewContextWithGrpcMetadata(ctx), &authSessionServiceGrpcProtos.UpdateEmailData{
+	_, err := assr.authSessionServiceClient.UpdateEmailBySession(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.UpdateEmailData{
 		Session: &authSessionServiceGrpcProtos.Session{SessionId: session.SessionId},
 		Email:   newEmail,
 	})

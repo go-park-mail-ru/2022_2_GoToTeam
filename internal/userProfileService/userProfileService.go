@@ -1,13 +1,12 @@
-package authSessionService
+package userProfileService
 
 import (
-	"2022_2_GoTo_team/internal/authSessionService/domain"
 	"2022_2_GoTo_team/internal/authSessionService/middleware"
 	sessionComponentDelivery "2022_2_GoTo_team/internal/authSessionService/sessionComponent/delivery"
 	sessionComponentRepository "2022_2_GoTo_team/internal/authSessionService/sessionComponent/repository"
 	sessionComponentUsecase "2022_2_GoTo_team/internal/authSessionService/sessionComponent/usecase"
-	userComponentRepository "2022_2_GoTo_team/internal/authSessionService/userComponent/repository"
-	"2022_2_GoTo_team/internal/authSessionService/utils/configReader"
+	"2022_2_GoTo_team/internal/userProfileService/domain"
+	"2022_2_GoTo_team/internal/userProfileService/utils/configReader"
 	"2022_2_GoTo_team/pkg/domain/grpcProtos/authSessionServiceGrpcProtos"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
@@ -46,20 +45,18 @@ func Run(configFilePath string) {
 	server := grpc.NewServer(grpc.UnaryInterceptor(middleware.UnaryServerInterceptor(middlewareLogger)))
 
 	// Loggers
-	sessionDeliveryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
-	sessionUsecaseLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
-	sessionRepositoryLogger := globalLogger.ConfigureLogger("sessionComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
-	userRepositoryLogger := globalLogger.ConfigureLogger("userComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
+	profileDeliveryLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_DELIVERY_STRING_FOR_LOGGER)
+	profileUsecaseLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_USECASE_STRING_FOR_LOGGER)
+	profileRepositoryLogger := globalLogger.ConfigureLogger("profileComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
 	postgreSQLConnections := postgresUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
 
 	// Repositories
 	sessionRepository := sessionComponentRepository.NewSessionCustomRepository(sessionRepositoryLogger)
-	userRepository := userComponentRepository.NewUserPostgreSQLRepository(postgreSQLConnections, userRepositoryLogger)
 
 	// Usecases and Deliveries
-	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, userRepository, sessionUsecaseLogger)
+	sessionUsecase := sessionComponentUsecase.NewSessionUsecase(sessionRepository, sessionUsecaseLogger)
 	sessionDelivery := sessionComponentDelivery.NewSessionDelivery(sessionUsecase, sessionDeliveryLogger)
 
 	authSessionServiceGrpcProtos.RegisterAuthSessionServiceServer(server, sessionDelivery)

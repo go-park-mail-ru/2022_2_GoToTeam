@@ -33,14 +33,13 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/configReader"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
-	"database/sql"
+	"2022_2_GoTo_team/pkg/utils/postgresUtils"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"google.golang.org/grpc"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 var (
@@ -123,7 +122,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	commentaryRepositoryLogger := globalLogger.ConfigureLogger("commentaryComponent", domain.LAYER_REPOSITORY_STRING_FOR_LOGGER)
 
 	// PostgreSQL connections
-	postgreSQLConnections := getPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections)
+	postgreSQLConnections := postgresUtils.GetPostgreSQLConnections(config.DatabaseUser, config.DatabaseName, config.DatabasePassword, config.DatabaseHost, config.DatabasePort, config.DatabaseMaxOpenConnections, middlewareLogger)
 
 	// AuthSessionService connection
 	authSessionServiceConnection := getGrpcServiceConnection(config.AuthSessionServiceAddress)
@@ -199,26 +198,6 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.GET("/api/v1/commentary/feed", commentaryController.GetAllCommentariesForArticle)
 
 	return nil
-}
-
-func getPostgreSQLConnections(databaseUser string, databaseName string, databasePassword string, databaseHost string, databasePort string, databaseMaxOpenConnections string) *sql.DB {
-	dsn := "user=" + databaseUser + " dbname=" + databaseName + " password=" + databasePassword + " host=" + databaseHost + " port=" + databasePort + " sslmode=disable"
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while opening connection to database", err))
-	}
-	// Test connection
-	if err = db.Ping(); err != nil {
-		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while testing connection to database", err))
-	}
-
-	databaseMaxOpenConnectionsINT, err := strconv.Atoi(databaseMaxOpenConnections)
-	if err != nil {
-		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while parsing databaseMaxOpenConnections to int value", err))
-	}
-	db.SetMaxOpenConns(databaseMaxOpenConnectionsINT)
-
-	return db
 }
 
 func getGrpcServiceConnection(serverAddress string) *grpc.ClientConn {

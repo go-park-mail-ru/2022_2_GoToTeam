@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"2022_2_GoTo_team/pkg/domain/constants"
+	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"fmt"
@@ -19,15 +19,15 @@ func UnaryServerInterceptor(logger *logger.Logger) grpc.UnaryServerInterceptor {
 
 		incomingMetaData, _ := metadata.FromIncomingContext(ctx)
 
-		requestIdStrings := incomingMetaData.Get(constants.REQUEST_ID_KEY_FOR_METADATA)
-		emailStrings := incomingMetaData.Get(constants.USER_EMAIL_KEY_FOR_METADATA)
+		requestIdStrings := incomingMetaData.Get(domain.REQUEST_ID_KEY_FOR_METADATA)
+		emailStrings := incomingMetaData.Get(domain.USER_EMAIL_KEY_FOR_METADATA)
 
 		var updatedCtx = ctx
 		if len(requestIdStrings) == 1 {
-			updatedCtx = context.WithValue(ctx, constants.REQUEST_ID_KEY_FOR_CONTEXT, requestIdStrings[0])
+			updatedCtx = context.WithValue(ctx, domain.REQUEST_ID_KEY_FOR_CONTEXT, requestIdStrings[0])
 		}
 		if len(emailStrings) == 1 {
-			updatedCtx = context.WithValue(updatedCtx, constants.USER_EMAIL_KEY_FOR_CONTEXT, emailStrings[0])
+			updatedCtx = context.WithValue(updatedCtx, domain.USER_EMAIL_KEY_FOR_CONTEXT, emailStrings[0])
 		}
 		logger.LogrusLoggerWithContext(updatedCtx).Debug("Incoming metadata: ", incomingMetaData)
 

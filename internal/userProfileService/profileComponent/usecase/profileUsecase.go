@@ -1,11 +1,11 @@
 package usecase
 
 import (
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/profileComponentErrors/repositoryToUsecaseErrors"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/profileComponentErrors/usecaseToDeliveryErrors"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/profileComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/userProfileService/domain/customErrors/profileComponentErrors/repositoryToUsecaseErrors"
+	"2022_2_GoTo_team/internal/userProfileService/domain/customErrors/profileComponentErrors/usecaseToDeliveryErrors"
+	"2022_2_GoTo_team/internal/userProfileService/domain/interfaces/profileComponentInterfaces"
+	"2022_2_GoTo_team/internal/userProfileService/domain/interfaces/sessionComponentInterfaces"
+	"2022_2_GoTo_team/internal/userProfileService/domain/models"
 	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"

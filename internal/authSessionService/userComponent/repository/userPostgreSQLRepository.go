@@ -126,7 +126,7 @@ FROM users U WHERE U.email = $1;
 		return nil, repositoryToUsecaseErrors.UserRepositoryError
 	}
 
-	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got user: %#v", user)
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got user: ", user)
 
 	return user, nil
 }

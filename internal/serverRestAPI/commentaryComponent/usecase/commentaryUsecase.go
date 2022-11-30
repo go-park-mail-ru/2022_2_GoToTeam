@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/commentaryComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/commentaryComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/pkg/domain/constants"
+	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
@@ -35,7 +35,7 @@ func (acbs *commentaryUsecase) AddCommentaryBySession(ctx context.Context, comme
 	wrappingErrorMessage := "error while adding new commentary by session"
 
 	//authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
-	authorEmail := ctx.Value(constants.USER_EMAIL_KEY_FOR_CONTEXT).(string)
+	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
 	acbs.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
 
 	if authorEmail == "" {

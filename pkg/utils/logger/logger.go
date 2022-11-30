@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"2022_2_GoTo_team/pkg/domain/constants"
+	"2022_2_GoTo_team/pkg/domain"
 	"context"
 	"errors"
 	"fmt"
@@ -86,11 +86,11 @@ func (l *Logger) ConfigureLogger(componentName string, layer string) *Logger {
 }
 
 func (l *Logger) LogrusLoggerWithContext(ctx context.Context) *logrus.Entry {
-	requestId := ctx.Value(constants.REQUEST_ID_KEY_FOR_CONTEXT)
+	requestId := ctx.Value(domain.REQUEST_ID_KEY_FOR_CONTEXT)
 	if requestId == nil {
 		requestId = _DEFAULT_REQUEST_ID_STRING_FOR_LOGGER
 	}
-	userEmail := ctx.Value(constants.USER_EMAIL_KEY_FOR_CONTEXT)
+	userEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
 	if userEmail == nil {
 		userEmail = _DEFAULT_USER_EMAIL_STRING_FOR_LOGGER
 	}
