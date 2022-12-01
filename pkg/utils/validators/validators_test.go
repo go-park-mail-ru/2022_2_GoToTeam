@@ -1,50 +1,71 @@
 package validators
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestValidators(t *testing.T) {
-	if EmailIsValidByRegExp("asd@asd.asd") != true {
-		t.Error()
-	}
-	if LoginIsValidByRegExp("Aaaa") != true {
-		t.Error()
-	}
-	if PasswordIsValidByRegExp("Aaa3") != true {
-		t.Error()
-	}
-	if EmailIsValidByCustomValidation("asd@asd.asd") != true {
-		t.Error()
-	}
-	if LoginIsValidByCustomValidation("Aaaaa") != true {
-		t.Error()
-	}
-	if PasswordIsValidByCustomValidation("Aaaaa_gfewqrq") != true {
-		t.Error()
-	}
+func TestEmailIsValid(t *testing.T) {
+	res := EmailIsValidByRegExp("asd@asd.asd")
+	assert.Equal(t, true, res)
 }
 
-func TestValidatorsNegative(t *testing.T) {
-	if EmailIsValidByRegExp("asdasd.asd") == true {
-		t.Error()
-	}
-	if LoginIsValidByRegExp("Aa") == true {
-		t.Error()
-	}
-	if PasswordIsValidByRegExp("Aa") == true {
-		t.Error()
-	}
-	if EmailIsValidByCustomValidation("asdasd.asd") == true {
-		t.Error()
-	}
-	if LoginIsValidByCustomValidation("Aaa") == true {
-		t.Error()
-	}
-	if LoginIsValidByCustomValidation("A1/aa") == true {
-		t.Error()
-	}
-	if PasswordIsValidByCustomValidation("Aaaaa_") == true {
-		t.Error()
-	}
+func TestLoginIsValidByRegExp(t *testing.T) {
+	res := LoginIsValidByRegExp("Aaaa")
+	assert.Equal(t, true, res)
+}
+
+func TestPasswordIsValidByRegExp(t *testing.T) {
+	res := PasswordIsValidByRegExp("Aaa3")
+	assert.Equal(t, true, res)
+}
+
+func TestEmailIsValidByCustomValidation(t *testing.T) {
+	res := EmailIsValidByCustomValidation("asd@asd.asd")
+	assert.Equal(t, true, res)
+}
+
+func TestPasswordIsValidByCustomValidation(t *testing.T) {
+	res := PasswordIsValidByCustomValidation("Aaaaa_gfewqrq")
+	assert.Equal(t, true, res)
+}
+
+func TestLoginIsValidByCustomValidation(t *testing.T) {
+	res := LoginIsValidByCustomValidation("Aaaaa")
+	assert.Equal(t, true, res)
+}
+
+func TestEmailIsValidNegative(t *testing.T) {
+	res := EmailIsValidByRegExp("asdasd.asd")
+	assert.Equal(t, false, res)
+}
+
+func TestLoginIsValidByRegExpNegative(t *testing.T) {
+	res := LoginIsValidByRegExp("Aa")
+	assert.Equal(t, false, res)
+}
+
+func TestPasswordIsValidByRegExpNegative(t *testing.T) {
+	res := PasswordIsValidByRegExp("Aa")
+	assert.Equal(t, false, res)
+}
+
+func TestEmailIsValidByCustomValidationNegative(t *testing.T) {
+	res := EmailIsValidByCustomValidation("asdasd.asd")
+	assert.Equal(t, false, res)
+}
+
+func TestPasswordIsValidByCustomValidationNegative(t *testing.T) {
+	res := PasswordIsValidByCustomValidation("Aaaaa_")
+	assert.Equal(t, false, res)
+}
+
+func TestLoginIsValidByCustomValidationNegative(t *testing.T) {
+	res := LoginIsValidByCustomValidation("A1/aa")
+	assert.Equal(t, false, res)
+}
+
+func TestLoginIsValidByCustomValidationNegative2(t *testing.T) {
+	res := LoginIsValidByCustomValidation("Aaa")
+	assert.Equal(t, false, res)
 }
