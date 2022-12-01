@@ -26,12 +26,17 @@ func UnaryServerInterceptor(logger *logger.Logger) grpc.UnaryServerInterceptor {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.LogrusLoggerWithContext(updatedCtx).Error("Enter to the panic restore middleware defer function. Error: ", fmt.Errorf("%s", err), ". Request: ", req)
+				RecordPanicsCount(info.FullMethod)
 			}
 		}()
 
 		reply, err := handler(updatedCtx, req)
 
-		logger.LogrusLoggerWithContext(updatedCtx).Info("Request process finished. Elapsed time: ", time.Since(requestProcessStartTime).Seconds(), " seconds.")
+		elapsedTime := time.Since(requestProcessStartTime).Seconds()
+		RecordHits(info.FullMethod)
+		RecordLatency(info.FullMethod, elapsedTime)
+
+		logger.LogrusLoggerWithContext(updatedCtx).Info("Request process finished. Elapsed time: ", elapsedTime, " seconds.")
 		logger.LogrusLoggerWithContext(updatedCtx).Info("Request method: ", info.FullMethod, ", request: ", req, ", incomingMetadata: ", incomingMetaData, ", reply: ", reply, ", error: ", err, ", request process start time: ", requestProcessStartTime)
 
 		return reply, err

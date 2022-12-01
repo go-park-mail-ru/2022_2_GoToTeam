@@ -12,10 +12,13 @@ import (
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"2022_2_GoTo_team/pkg/utils/repositoriesConnectionsUtils"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	_ "github.com/jackc/pgx/stdlib"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"net/http"
 )
 
 var (
@@ -71,6 +74,13 @@ func Run(configFilePath string) {
 	sessionDelivery := sessionComponentDelivery.NewSessionDelivery(sessionUsecase, sessionDeliveryLogger)
 
 	authSessionServiceGrpcProtos.RegisterAuthSessionServiceServer(server, sessionDelivery)
+
+	grpc_prometheus.Register(server)
+	middleware.RegisterPrometheusMetrics()
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		log.Fatal(http.ListenAndServe(config.PrometheusServerAddress, nil))
+	}()
 
 	if err := server.Serve(listener); err != nil {
 		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while serve", err))

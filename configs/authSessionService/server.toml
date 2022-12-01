@@ -1,4 +1,5 @@
 serverAddress = "127.0.0.1:8081"
+prometheusServerAddress = "127.0.0.1:8082"
 logLevel = "debug"
 logFilePath = "logs/authSessionService/logs.log"
 
