@@ -7,8 +7,10 @@ import (
 
 type CategoryUsecaseInterface interface {
 	GetCategoryInfo(ctx context.Context, category string) (*models.Category, error)
+	GetCategoryList(ctx context.Context) ([]*models.Category, error)
 }
 
 type CategoryRepositoryInterface interface {
 	GetCategoryInfo(ctx context.Context, category string) (*models.Category, error)
+	GetAllCategories(ctx context.Context) ([]*models.Category, error)
 }

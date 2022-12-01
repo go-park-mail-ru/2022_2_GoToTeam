@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/feedComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"database/sql"
 	"fmt"
@@ -22,14 +22,6 @@ func NewFeedPostgreSQLRepository(database *sql.DB, logger *logger.Logger) feedCo
 		database: database,
 		logger:   logger,
 	}
-
-	logger.LogrusLogger.Debug("All articles in storage:  \n" + func() string {
-		allArticles, err := feedRepository.GetAllArticles(context.Background())
-		if err != nil {
-			return repositoryToUsecaseErrors.FeedRepositoryError.Error()
-		}
-		return feedRepository.getArticlesString(allArticles)
-	}())
 
 	logger.LogrusLogger.Info("FeedPostgreSQLRepository has created.")
 
@@ -364,7 +356,7 @@ FROM categories C WHERE C.category_name = $1;
 		return true, repositoryToUsecaseErrors.FeedRepositoryError
 	}
 
-	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got login: ", categoryTmp)
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got category: ", categoryTmp)
 
 	return true, nil
 }

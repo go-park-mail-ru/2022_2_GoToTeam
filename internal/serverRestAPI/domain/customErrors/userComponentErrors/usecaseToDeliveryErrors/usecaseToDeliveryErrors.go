@@ -32,11 +32,11 @@ func (eee *EmailExistsError) Error() string {
 	return eee.Err.Error()
 }
 
-type EmailDontExistsError struct {
+type EmailDoesntExistError struct {
 	Err error
 }
 
-func (ede *EmailDontExistsError) Error() string {
+func (ede *EmailDoesntExistError) Error() string {
 	return ede.Err.Error()
 }
 
@@ -48,11 +48,11 @@ func (lee *LoginExistsError) Error() string {
 	return lee.Err.Error()
 }
 
-type LoginDontExistsError struct {
+type LoginDoesntExistError struct {
 	Err error
 }
 
-func (lde *LoginDontExistsError) Error() string {
+func (lde *LoginDoesntExistError) Error() string {
 	return lde.Err.Error()
 }
 

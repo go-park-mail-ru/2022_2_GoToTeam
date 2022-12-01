@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+// protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative *.proto
+option go_package = "./;authSessionServiceGrpcProtos";
+
+package session;
+
+message Session {
+  string SessionId = 1;
+}
+
+message UserAccountData {
+  string email = 1;
+  string password = 2;
+}
+
+message UserInfoBySession {
+  string username = 1;
+  string avatarImgPath = 2;
+}
+
+message Exists {
+  bool exists = 1;
+}
+
+message UserEmail {
+  string email = 1;
+}
+
+message UpdateEmailData {
+  Session session = 1;
+  string email = 2;
+}
+
+message Nothing {
+  bool ok = 1;
+}
+
+service AuthSessionService {
+  rpc SessionExists (Session) returns (Exists) {}
+  rpc CreateSessionForUser (UserAccountData) returns (Session) {}
+  rpc RemoveSession (Session) returns (Nothing) {}
+  rpc GetUserInfoBySession (Session) returns (UserInfoBySession) {}
+  rpc GetUserEmailBySession (Session) returns (UserEmail) {}
+  rpc UpdateEmailBySession (UpdateEmailData) returns (Nothing){}
+}

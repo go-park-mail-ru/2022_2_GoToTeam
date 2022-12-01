@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/feedComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -128,7 +128,7 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
 			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusBadRequest)
-		case *usecaseToDeliveryErrors.LoginDontExistsError:
+		case *usecaseToDeliveryErrors.LoginDoesntExistError:
 			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
@@ -204,7 +204,7 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 	articles, err := fc.feedUsecase.GetFeedForCategory(c.Request().Context(), category)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.CategoryDontExistsError:
+		case *usecaseToDeliveryErrors.CategoryDoesntExistError:
 			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:

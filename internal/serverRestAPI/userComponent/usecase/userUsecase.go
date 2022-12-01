@@ -5,9 +5,9 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/validators"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/validators"
 	"context"
 	"errors"
 )
@@ -43,9 +43,9 @@ func (uu *userUsecase) GetUserInfo(ctx context.Context, login string) (*models.U
 	user, err := uu.userRepository.GetUserInfo(ctx, login)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.UserRepositoryLoginDontExistsError:
+		case repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError:
 			uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDontExistsError{
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDoesntExistError{
 				Err: err,
 			})
 		default:
