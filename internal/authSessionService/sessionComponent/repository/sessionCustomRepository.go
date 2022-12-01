@@ -26,7 +26,6 @@ func NewSessionCustomRepository(logger *logger.Logger) sessionComponentInterface
 		logger:   logger,
 	}
 
-	logger.LogrusLogger.Debug("Sessions in storage: " + sessionsStorage.getSessionsInStorageString())
 	logger.LogrusLogger.Info("sessionCustomRepository has created.")
 
 	return sessionsStorage

@@ -69,19 +69,19 @@ func (au *articleUsecase) RemoveArticleById(ctx context.Context, id int) error {
 	return nil
 }
 
-func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *models.Article, session *models.Session) error {
+func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *models.Article) error {
 	au.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddArticleBySession function.")
 
 	wrappingErrorMessage := "error while adding new article by session"
 
-	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
+	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
 	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
 
-	if authorEmail == "" {
+	if authorEmail == nil || authorEmail.(string) == "" {
 		au.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
 		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
 	}
-	article.Publisher.Email = authorEmail
+	article.Publisher.Email = authorEmail.(string)
 
 	_, err := au.articleRepository.AddArticle(ctx, article)
 	if err != nil {
