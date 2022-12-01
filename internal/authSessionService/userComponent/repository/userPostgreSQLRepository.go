@@ -23,14 +23,6 @@ func NewUserPostgreSQLRepository(database *sql.DB, logger *logger.Logger) userCo
 		logger:   logger,
 	}
 
-	logger.LogrusLogger.Debug("All users in storage:  \n" + func() string {
-		allUsers, err := userRepository.GetAllUsers(context.Background())
-		if err != nil {
-			return repositoryToUsecaseErrors.UserRepositoryError.Error()
-		}
-		return userRepository.getUsersString(allUsers)
-	}())
-
 	logger.LogrusLogger.Info("NewUserPostgreSQLRepository has created.")
 
 	return userRepository

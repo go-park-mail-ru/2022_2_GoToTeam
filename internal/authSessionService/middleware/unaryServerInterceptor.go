@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"2022_2_GoTo_team/pkg/domain"
+	"2022_2_GoTo_team/pkg/utils/grpcUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"fmt"
@@ -18,17 +18,8 @@ func UnaryServerInterceptor(logger *logger.Logger) grpc.UnaryServerInterceptor {
 		requestProcessStartTime := time.Now()
 
 		incomingMetaData, _ := metadata.FromIncomingContext(ctx)
+		updatedCtx := grpcUtils.UpgradeContextByMetadata(ctx, incomingMetaData)
 
-		requestIdStrings := incomingMetaData.Get(domain.REQUEST_ID_KEY_FOR_METADATA)
-		emailStrings := incomingMetaData.Get(domain.USER_EMAIL_KEY_FOR_METADATA)
-
-		var updatedCtx = ctx
-		if len(requestIdStrings) == 1 {
-			updatedCtx = context.WithValue(ctx, domain.REQUEST_ID_KEY_FOR_CONTEXT, requestIdStrings[0])
-		}
-		if len(emailStrings) == 1 {
-			updatedCtx = context.WithValue(updatedCtx, domain.USER_EMAIL_KEY_FOR_CONTEXT, emailStrings[0])
-		}
 		logger.LogrusLoggerWithContext(updatedCtx).Debug("Incoming metadata: ", incomingMetaData)
 
 		// Panic restore
@@ -40,7 +31,7 @@ func UnaryServerInterceptor(logger *logger.Logger) grpc.UnaryServerInterceptor {
 
 		reply, err := handler(updatedCtx, req)
 
-		logger.LogrusLoggerWithContext(updatedCtx).Info("Request process finished. Spent time: ", time.Since(requestProcessStartTime))
+		logger.LogrusLoggerWithContext(updatedCtx).Info("Request process finished. Elapsed time: ", time.Since(requestProcessStartTime).Seconds(), " seconds.")
 		logger.LogrusLoggerWithContext(updatedCtx).Info("Request method: ", info.FullMethod, ", request: ", req, ", incomingMetadata: ", incomingMetaData, ", reply: ", reply, ", error: ", err, ", request process start time: ", requestProcessStartTime)
 
 		return reply, err

@@ -13,6 +13,7 @@ func PanicRestoreMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
 			defer func(ctx echo.Context) {
 				if err := recover(); err != nil {
 					logger.LogrusLoggerWithContext(ctx.Request().Context()).Error("Enter to the panic restore middleware defer function. Error: ", fmt.Errorf("%s", err), ". Request: ", ctx.Request())
+					RecordPanicsCount(ctx.Request().Method, ctx.Request().URL.Path)
 				}
 
 				err := ctx.NoContent(http.StatusInternalServerError)

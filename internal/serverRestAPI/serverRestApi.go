@@ -37,6 +37,7 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
 )
@@ -73,6 +74,8 @@ func Run(configFilePath string) {
 	//e.Use(echoMiddleware.Recover())
 	e.Use(middleware.PanicRestoreMiddleware(middlewareLogger))
 	e.Use(middleware.AccessLogMiddleware(middlewareLogger))
+	middleware.RegisterPrometheusMetrics()
+	e.Any("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	if err := configureServer(e, config); err != nil {
 		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while configuring server", err))

@@ -23,14 +23,6 @@ func NewFeedPostgreSQLRepository(database *sql.DB, logger *logger.Logger) feedCo
 		logger:   logger,
 	}
 
-	logger.LogrusLogger.Debug("All articles in storage:  \n" + func() string {
-		allArticles, err := feedRepository.GetAllArticles(context.Background())
-		if err != nil {
-			return repositoryToUsecaseErrors.FeedRepositoryError.Error()
-		}
-		return feedRepository.getArticlesString(allArticles)
-	}())
-
 	logger.LogrusLogger.Info("FeedPostgreSQLRepository has created.")
 
 	return feedRepository

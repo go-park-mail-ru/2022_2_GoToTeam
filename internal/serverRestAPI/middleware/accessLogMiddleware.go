@@ -15,7 +15,15 @@ func AccessLogMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
 			requestProcessStartTime := time.Now()
 
 			defer func() {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("Request process finished. Spent time: ", time.Since(requestProcessStartTime))
+				requestMethod := ctx.Request().Method
+				urlPath := ctx.Request().URL.Path
+				responseCode := ctx.Response().Status
+				elapsedTime := time.Since(requestProcessStartTime).Seconds()
+
+				RecordHits(requestMethod, urlPath, responseCode)
+				RecordLatency(requestMethod, urlPath, elapsedTime)
+
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("Request process finished. Elapsed time: ", elapsedTime, " seconds.")
 			}()
 			//c.Request().Header.Set(echo.HeaderXRequestID, uuid.New().String())
 			ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain.REQUEST_ID_KEY_FOR_CONTEXT, uuid.New().String())))

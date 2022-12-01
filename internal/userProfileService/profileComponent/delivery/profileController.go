@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"google.golang.org/grpc/status"
+	"net/http"
 )
 
 type ProfileDelivery struct {
@@ -41,10 +42,10 @@ func (pd *ProfileDelivery) GetProfileByEmail(ctx context.Context, email *userPro
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailDoesntExistError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, status.Errorf(401, "")
+			return nil, status.Errorf(http.StatusUnauthorized, "")
 		default:
 			pd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, status.Errorf(500, "")
+			return nil, status.Errorf(http.StatusInternalServerError, "")
 		}
 	}
 
@@ -85,22 +86,22 @@ func (pd *ProfileDelivery) UpdateProfileByEmail(ctx context.Context, updateProfi
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, status.Errorf(400, userProfileServiceErrors.EmailIsNotValidError.Error())
+			return nil, status.Errorf(http.StatusBadRequest, userProfileServiceErrors.EmailIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, status.Errorf(400, userProfileServiceErrors.LoginIsNotValidError.Error())
+			return nil, status.Errorf(http.StatusBadRequest, userProfileServiceErrors.LoginIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.PasswordIsNotValidError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, status.Errorf(400, userProfileServiceErrors.PasswordIsNotValidError.Error())
+			return nil, status.Errorf(http.StatusBadRequest, userProfileServiceErrors.PasswordIsNotValidError.Error())
 		case *usecaseToDeliveryErrors.EmailExistsError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, status.Errorf(409, userProfileServiceErrors.EmailExistsError.Error())
+			return nil, status.Errorf(http.StatusConflict, userProfileServiceErrors.EmailExistsError.Error())
 		case *usecaseToDeliveryErrors.LoginExistsError:
 			pd.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, status.Errorf(409, userProfileServiceErrors.LoginExistsError.Error())
+			return nil, status.Errorf(http.StatusConflict, userProfileServiceErrors.LoginExistsError.Error())
 		default:
 			pd.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, status.Errorf(500, "")
+			return nil, status.Errorf(http.StatusInternalServerError, "")
 		}
 	}
 

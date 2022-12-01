@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	repositoryToUsecaseErrors2 "2022_2_GoTo_team/internal/authSessionService/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
+	repositoryToUsecaseErrorsOfSession "2022_2_GoTo_team/internal/authSessionService/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/authSessionService/domain/customErrors/sessionComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/authSessionService/domain/customErrors/userComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/authSessionService/domain/interfaces/sessionComponentInterfaces"
@@ -97,7 +97,7 @@ func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *mod
 	if err != nil {
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
-		case repositoryToUsecaseErrors2.SessionRepositoryEmailDoesntExistError:
+		case repositoryToUsecaseErrorsOfSession.SessionRepositoryEmailDoesntExistError:
 			su.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to remove the garbage session: %#v", session)
 			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
@@ -131,9 +131,12 @@ func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *mo
 	if err != nil {
 		su.logger.LogrusLoggerWithContext(ctx).Error(err)
 		switch err {
-		case repositoryToUsecaseErrors2.SessionRepositoryEmailDoesntExistError:
+		case repositoryToUsecaseErrorsOfSession.SessionRepositoryEmailDoesntExistError:
 			su.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to remove the garbage session: %#v", session)
-			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
+			// We should try to remove "garbage" session
+			if err = su.RemoveSession(ctx, session); err != nil {
+				su.logger.LogrusLoggerWithContext(ctx).Debug("Error while trying to remove the garbage session: ", err.Error())
+			}
 			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
 		default:
 			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})

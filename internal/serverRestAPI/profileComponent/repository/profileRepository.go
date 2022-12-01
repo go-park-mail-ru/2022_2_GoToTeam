@@ -31,7 +31,7 @@ func NewUserProfileServiceRepository(grpcConnection *grpc.ClientConn, logger *lo
 func (upsr *userProfileServiceRepository) GetProfileByEmail(ctx context.Context, email string) (*models.Profile, error) {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetProfileByEmail function.")
 
-	profile, err := upsr.userProfileServiceClient.GetProfileByEmail(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &userProfileServiceGrpcProtos.UserEmail{
+	profile, err := upsr.userProfileServiceClient.GetProfileByEmail(grpcUtils.UpgradeContextByInjectedMetadata(ctx), &userProfileServiceGrpcProtos.UserEmail{
 		Email: email,
 	})
 	if err != nil {
@@ -54,7 +54,7 @@ func (upsr *userProfileServiceRepository) GetProfileByEmail(ctx context.Context,
 func (upsr *userProfileServiceRepository) UpdateProfileByEmail(ctx context.Context, newProfile *models.Profile, email string, session *models.Session) error {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateProfileByEmail function.")
 
-	_, err := upsr.userProfileServiceClient.UpdateProfileByEmail(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &userProfileServiceGrpcProtos.UpdateProfileData{
+	_, err := upsr.userProfileServiceClient.UpdateProfileByEmail(grpcUtils.UpgradeContextByInjectedMetadata(ctx), &userProfileServiceGrpcProtos.UpdateProfileData{
 		Profile: &userProfileServiceGrpcProtos.Profile{
 			Email:         newProfile.Email,
 			Login:         newProfile.Login,

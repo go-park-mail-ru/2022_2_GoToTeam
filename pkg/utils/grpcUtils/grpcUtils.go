@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func MakeNewContextWithGrpcMetadataBasedOnContext(ctx context.Context) context.Context {
+func UpgradeContextByInjectedMetadata(ctx context.Context) context.Context {
 	var md1 metadata.MD
 	requestId := ctx.Value(domain.REQUEST_ID_KEY_FOR_CONTEXT)
 	if requestId != nil {
@@ -23,4 +23,19 @@ func MakeNewContextWithGrpcMetadataBasedOnContext(ctx context.Context) context.C
 	newCtx = metadata.NewOutgoingContext(context.Background(), md1)
 
 	return newCtx
+}
+
+func UpgradeContextByMetadata(ctx context.Context, incomingMetaData metadata.MD) context.Context {
+	requestIdStrings := incomingMetaData.Get(domain.REQUEST_ID_KEY_FOR_METADATA)
+	emailStrings := incomingMetaData.Get(domain.USER_EMAIL_KEY_FOR_METADATA)
+
+	var updatedCtx = ctx
+	if len(requestIdStrings) == 1 {
+		updatedCtx = context.WithValue(ctx, domain.REQUEST_ID_KEY_FOR_CONTEXT, requestIdStrings[0])
+	}
+	if len(emailStrings) == 1 {
+		updatedCtx = context.WithValue(updatedCtx, domain.USER_EMAIL_KEY_FOR_CONTEXT, emailStrings[0])
+	}
+
+	return updatedCtx
 }

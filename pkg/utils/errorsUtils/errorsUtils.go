@@ -3,6 +3,7 @@ package errorsUtils
 import (
 	"fmt"
 	"google.golang.org/grpc/status"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -18,10 +19,10 @@ func ExtractCodeFromGrpcErrorStatus(status *status.Status) int {
 
 	statusCode, err := strconv.Atoi(statusCodeStr)
 	if err != nil {
-		return 500
+		return http.StatusInternalServerError
 	}
 	if statusCode == 2 {
-		return 500
+		return http.StatusInternalServerError
 	}
 
 	return statusCode

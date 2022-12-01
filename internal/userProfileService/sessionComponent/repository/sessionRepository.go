@@ -31,7 +31,7 @@ func NewAuthSessionServiceRepository(grpcConnection *grpc.ClientConn, logger *lo
 func (assr *authSessionServiceRepository) UpdateEmailBySession(ctx context.Context, session *models.Session, newEmail string) error {
 	assr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateEmailBySession function.")
 
-	_, err := assr.authSessionServiceClient.UpdateEmailBySession(grpcUtils.MakeNewContextWithGrpcMetadataBasedOnContext(ctx), &authSessionServiceGrpcProtos.UpdateEmailData{
+	_, err := assr.authSessionServiceClient.UpdateEmailBySession(grpcUtils.UpgradeContextByInjectedMetadata(ctx), &authSessionServiceGrpcProtos.UpdateEmailData{
 		Session: &authSessionServiceGrpcProtos.Session{SessionId: session.SessionId},
 		Email:   newEmail,
 	})
