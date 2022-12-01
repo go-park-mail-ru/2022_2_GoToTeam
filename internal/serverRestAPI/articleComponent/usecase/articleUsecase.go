@@ -74,14 +74,14 @@ func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *mode
 
 	wrappingErrorMessage := "error while adding new article by session"
 
-	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
-	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
 
-	if authorEmail == nil || authorEmail.(string) == "" {
+	if email == nil || email.(string) == "" {
 		au.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
 		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
 	}
-	article.Publisher.Email = authorEmail.(string)
+	article.Publisher.Email = email.(string)
 
 	_, err := au.articleRepository.AddArticle(ctx, article)
 	if err != nil {

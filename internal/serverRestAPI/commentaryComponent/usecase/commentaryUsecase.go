@@ -34,14 +34,14 @@ func (acbs *commentaryUsecase) AddCommentaryBySession(ctx context.Context, comme
 
 	wrappingErrorMessage := "error while adding new commentary by session"
 
-	authorEmail := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT).(string)
-	acbs.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", authorEmail)
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	acbs.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
 
-	if authorEmail == "" {
+	if email == nil || email.(string) == "" {
 		acbs.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
 		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
 	}
-	commentary.Publisher.Email = authorEmail
+	commentary.Publisher.Email = email.(string)
 
 	_, err := acbs.commentaryRepository.AddCommentaryByEmail(ctx, commentary)
 	if err != nil {
