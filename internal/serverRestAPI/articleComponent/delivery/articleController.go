@@ -4,11 +4,10 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/createArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/getArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/removeArticle"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -56,7 +55,7 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 	article, err := ac.articleUsecase.GetArticleById(c.Request().Context(), id)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.ArticleDontExistsError:
+		case *usecaseToDeliveryErrors.ArticleDoesntExistError:
 			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
@@ -93,12 +92,6 @@ func (ac *ArticleController) CreateArticleHandler(c echo.Context) error {
 	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the CreateArticleHandler function.")
 	defer c.Request().Body.Close()
 
-	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
-	if err != nil {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
-		return c.NoContent(http.StatusUnauthorized)
-	}
-
 	parsedInputArticle := new(createArticle.Article)
 	if err := c.Bind(parsedInputArticle); err != nil {
 		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
@@ -107,7 +100,7 @@ func (ac *ArticleController) CreateArticleHandler(c echo.Context) error {
 
 	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
 
-	err = ac.articleUsecase.AddArticleBySession(c.Request().Context(), &models.Article{Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, CoverImgPath: parsedInputArticle.CoverImgPath, Content: parsedInputArticle.Content, CoAuthor: models.CoAuthor{Login: parsedInputArticle.CoAuthorLogin}}, &models.Session{SessionId: cookie.Value})
+	err := ac.articleUsecase.AddArticleBySession(c.Request().Context(), &models.Article{Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, CoverImgPath: parsedInputArticle.CoverImgPath, Content: parsedInputArticle.Content, CoAuthor: models.CoAuthor{Login: parsedInputArticle.CoAuthorLogin}})
 	if err != nil {
 		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -131,7 +124,7 @@ func (ac *ArticleController) RemoveArticleHandler(c echo.Context) error {
 	err := ac.articleUsecase.RemoveArticleById(c.Request().Context(), parsedInputArticleId.Id)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.ArticleDontExistsError:
+		case *usecaseToDeliveryErrors.ArticleDoesntExistError:
 			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:

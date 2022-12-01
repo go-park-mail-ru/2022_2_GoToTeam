@@ -19,3 +19,7 @@
 
 # Logs directory
 logs
+
+# go tests files
+c
+c.out

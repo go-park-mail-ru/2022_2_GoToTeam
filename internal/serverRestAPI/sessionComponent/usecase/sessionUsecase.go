@@ -1,31 +1,22 @@
 package usecase
 
 import (
-	repositoryToUsecaseErrors2 "2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/usecaseToDeliveryErrors"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/validators"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
-	"errors"
 )
 
 type sessionUsecase struct {
 	sessionRepository sessionComponentInterfaces.SessionRepositoryInterface
-	userRepository    userComponentInterfaces.UserRepositoryInterface
 	logger            *logger.Logger
 }
 
-func NewSessionUsecase(sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, userRepository userComponentInterfaces.UserRepositoryInterface, logger *logger.Logger) sessionComponentInterfaces.SessionUsecaseInterface {
+func NewSessionUsecase(sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, logger *logger.Logger) sessionComponentInterfaces.SessionUsecaseInterface {
 	logger.LogrusLogger.Debug("Enter to the NewSessionUsecase function.")
 
 	sessionUsecase := &sessionUsecase{
 		sessionRepository: sessionRepository,
-		userRepository:    userRepository,
 		logger:            logger,
 	}
 
@@ -37,123 +28,54 @@ func NewSessionUsecase(sessionRepository sessionComponentInterfaces.SessionRepos
 func (su *sessionUsecase) SessionExists(ctx context.Context, session *models.Session) (bool, error) {
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SessionExists function.")
 
-	wrappingErrorMessage := "error while checking session exists"
-
 	exists, err := su.sessionRepository.SessionExists(ctx, session)
 	if err != nil {
-		su.logger.LogrusLoggerWithContext(ctx).Error(err)
-		return false, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		su.logger.LogrusLoggerWithContext(ctx).Warn(err)
 	}
 
-	return exists, nil
+	return exists, err
 }
 
 func (su *sessionUsecase) CreateSessionForUser(ctx context.Context, email string, password string) (*models.Session, error) {
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionForUser function.")
 
-	wrappingErrorMessage := "error while creating session for user"
-
-	if err := su.validateUserData(ctx, email, password); err != nil {
+	session, err := su.sessionRepository.CreateSessionForUser(ctx, email, password)
+	if err != nil {
 		su.logger.LogrusLoggerWithContext(ctx).Warn(err)
-		return nil, errorsUtils.WrapError(wrappingErrorMessage, err)
 	}
 
-	exists, err := su.userRepository.CheckUserEmailAndPassword(ctx, email, password)
-	if err != nil {
-		su.logger.LogrusLoggerWithContext(ctx).Error(err)
-		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-	}
-	if !exists {
-		su.logger.LogrusLoggerWithContext(ctx).Warn("Incorrect email or password.")
-		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.IncorrectEmailOrPasswordError{Err: errors.New("incorrect email or password")})
-	}
-
-	session, err := su.sessionRepository.CreateSessionForUser(ctx, email)
-	if err != nil {
-		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-	}
-
-	return session, nil
+	return session, err
 }
 
 func (su *sessionUsecase) RemoveSession(ctx context.Context, session *models.Session) error {
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveSession function.")
 
-	wrappingErrorMessage := "error while removing session"
-
-	if err := su.sessionRepository.RemoveSession(ctx, session); err != nil {
-		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	err := su.sessionRepository.RemoveSession(ctx, session)
+	if err != nil {
+		su.logger.LogrusLoggerWithContext(ctx).Warn(err)
 	}
 
-	return nil
+	return err
 }
 
 func (su *sessionUsecase) GetUserInfoBySession(ctx context.Context, session *models.Session) (*models.User, error) {
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserInfoByEmail function.")
 
-	wrappingErrorMessage := "error while getting user info by session"
-
-	email, err := su.sessionRepository.GetEmailBySession(ctx, session)
+	user, err := su.sessionRepository.GetUserInfoBySession(ctx, session)
 	if err != nil {
-		su.logger.LogrusLoggerWithContext(ctx).Error(err)
-		switch err {
-		case repositoryToUsecaseErrors2.SessionRepositoryEmailDontExistsError:
-			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
-			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
-		default:
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-		}
+		su.logger.LogrusLoggerWithContext(ctx).Warn(err)
 	}
 
-	user, err := su.userRepository.GetUserInfoForSessionComponentByEmail(ctx, email)
-	if err != nil {
-		su.logger.LogrusLoggerWithContext(ctx).Error(err)
-		switch err {
-		case repositoryToUsecaseErrors.UserRepositoryEmailDontExistsError:
-			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
-			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.UserForSessionDontFoundError{Err: err})
-		default:
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-		}
-	}
-
-	return user, nil
+	return user, err
 }
 
 func (su *sessionUsecase) GetUserEmailBySession(ctx context.Context, session *models.Session) (string, error) {
 	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserEmailBySession function.")
 
-	wrappingErrorMessage := "error while getting email by session"
-
-	email, err := su.sessionRepository.GetEmailBySession(ctx, session)
+	email, err := su.sessionRepository.GetUserEmailBySession(ctx, session)
 	if err != nil {
-		su.logger.LogrusLoggerWithContext(ctx).Error(err)
-		switch err {
-		case repositoryToUsecaseErrors2.SessionRepositoryEmailDontExistsError:
-			su.logger.LogrusLoggerWithContext(ctx).Debug("Trying to remove the garbage session: %#v", session)
-			_ = su.RemoveSession(ctx, session) // We should try to remove "garbage" session
-			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
-		default:
-			return "", errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-		}
+		su.logger.LogrusLoggerWithContext(ctx).Warn(err)
 	}
 
-	return email, nil
-}
-
-func (su *sessionUsecase) validateUserData(ctx context.Context, email string, password string) error {
-	su.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the validateUserData function.")
-
-	if !validators.EmailIsValidByCustomValidation(email) {
-		su.logger.LogrusLoggerWithContext(ctx).Debugf("Email %s is not valid.", email)
-		return &usecaseToDeliveryErrors.EmailIsNotValidError{Err: errors.New("email is not valid")}
-	}
-	if !validators.PasswordIsValidByRegExp(password) {
-		su.logger.LogrusLoggerWithContext(ctx).Debug("Password is not valid.")
-		return &usecaseToDeliveryErrors.PasswordIsNotValidError{Err: errors.New("password is not valid")}
-	}
-
-	return nil
+	return email, err
 }

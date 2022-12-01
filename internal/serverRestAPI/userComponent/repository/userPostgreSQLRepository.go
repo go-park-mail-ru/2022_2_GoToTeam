@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"database/sql"
 	"fmt"
@@ -23,15 +23,7 @@ func NewUserPostgreSQLRepository(database *sql.DB, logger *logger.Logger) userCo
 		logger:   logger,
 	}
 
-	logger.LogrusLogger.Debug("All users in storage:  \n" + func() string {
-		allUsers, err := userRepository.GetAllUsers(context.Background())
-		if err != nil {
-			return repositoryToUsecaseErrors.UserRepositoryError.Error()
-		}
-		return userRepository.getUsersString(allUsers)
-	}())
-
-	logger.LogrusLogger.Info("NewUserPostgreSQLRepository has created.")
+	logger.LogrusLogger.Info("userPostgreSQLRepository has created.")
 
 	return userRepository
 }
@@ -115,7 +107,7 @@ FROM users U WHERE U.login = $1;
 	if err := row.Scan(&user.Username, &user.RegistrationDate, &user.SubscribersCount); err != nil {
 		if err == sql.ErrNoRows {
 			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.UserRepositoryLoginDontExistsError
+			return nil, repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError
 		}
 		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.UserRepositoryError
@@ -170,50 +162,4 @@ FROM users U WHERE U.login = $1;
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got login: ", loginTmp)
 
 	return true, nil
-}
-
-func (upsr *userPostgreSQLRepository) CheckUserEmailAndPassword(ctx context.Context, email string, password string) (bool, error) {
-	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CheckUserEmailAndPassword function.")
-
-	row := upsr.database.QueryRow(`
-SELECT U.email
-FROM users U WHERE U.email = $1 AND U.password = $2;
-`, email, password)
-
-	emailTmp := ""
-	if err := row.Scan(&emailTmp); err != nil {
-		if err == sql.ErrNoRows {
-			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return false, nil
-		}
-		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-		return false, repositoryToUsecaseErrors.UserRepositoryError
-	}
-
-	return true, nil
-}
-
-func (upsr *userPostgreSQLRepository) GetUserInfoForSessionComponentByEmail(ctx context.Context, email string) (*models.User, error) {
-	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserInfoForSessionComponentByEmail function.")
-
-	row := upsr.database.QueryRow(`
-SELECT 
-    COALESCE(U.username, U.login), 
-    COALESCE(U.avatar_img_path, '')
-FROM users U WHERE U.email = $1;
-`, email)
-
-	user := &models.User{}
-	if err := row.Scan(&user.Username, &user.AvatarImgPath); err != nil {
-		if err == sql.ErrNoRows {
-			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.UserRepositoryEmailDontExistsError
-		}
-		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-		return nil, repositoryToUsecaseErrors.UserRepositoryError
-	}
-
-	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got user: %#v", user)
-
-	return user, nil
 }

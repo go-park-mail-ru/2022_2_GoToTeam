@@ -24,18 +24,18 @@ func (linve *LoginIsNotValidError) Error() string {
 	return linve.Err.Error()
 }
 
-type LoginDontExistsError struct {
+type LoginDoesntExistError struct {
 	Err error
 }
 
-func (ldee *LoginDontExistsError) Error() string {
+func (ldee *LoginDoesntExistError) Error() string {
 	return ldee.Err.Error()
 }
 
-type CategoryDontExistsError struct {
+type CategoryDoesntExistError struct {
 	Err error
 }
 
-func (cdee *CategoryDontExistsError) Error() string {
+func (cdee *CategoryDoesntExistError) Error() string {
 	return cdee.Err.Error()
 }

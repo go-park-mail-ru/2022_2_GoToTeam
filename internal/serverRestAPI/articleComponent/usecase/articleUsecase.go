@@ -3,28 +3,25 @@ package usecase
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
-	repositoryToUsecaseErrors_sessionComponent "2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/sessionComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
-	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/domain"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"errors"
 )
 
 type articleUsecase struct {
 	articleRepository articleComponentInterfaces.ArticleRepositoryInterface
-	sessionRepository sessionComponentInterfaces.SessionRepositoryInterface
 	logger            *logger.Logger
 }
 
-func NewArticleUsecase(articleRepository articleComponentInterfaces.ArticleRepositoryInterface, sessionRepository sessionComponentInterfaces.SessionRepositoryInterface, logger *logger.Logger) articleComponentInterfaces.ArticleUsecaseInterface {
+func NewArticleUsecase(articleRepository articleComponentInterfaces.ArticleRepositoryInterface, logger *logger.Logger) articleComponentInterfaces.ArticleUsecaseInterface {
 	logger.LogrusLogger.Debug("Enter to the NewArticleUsecase function.")
 
 	articleUsecase := &articleUsecase{
 		articleRepository: articleRepository,
-		sessionRepository: sessionRepository,
 		logger:            logger,
 	}
 
@@ -41,9 +38,9 @@ func (au *articleUsecase) GetArticleById(ctx context.Context, id int) (*models.A
 	article, err := au.articleRepository.GetArticleById(ctx, id)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.ArticleRepositoryArticleDontExistsError:
+		case repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError:
 			au.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDontExistsError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDoesntExistError{Err: err})
 		default:
 			au.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -66,31 +63,27 @@ func (au *articleUsecase) RemoveArticleById(ctx context.Context, id int) error {
 	}
 	if removedRowsCount <= 0 {
 		au.logger.LogrusLoggerWithContext(ctx).Warn(err)
-		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDontExistsError{Err: errors.New("article dont exists")})
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.ArticleDoesntExistError{Err: errors.New("article doesnt exist")})
 	}
 
 	return nil
 }
 
-func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *models.Article, session *models.Session) error {
+func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *models.Article) error {
 	au.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddArticleBySession function.")
 
 	wrappingErrorMessage := "error while adding new article by session"
 
-	authorEmail, err := au.sessionRepository.GetEmailBySession(ctx, session)
-	if err != nil {
-		switch err {
-		case repositoryToUsecaseErrors_sessionComponent.SessionRepositoryEmailDontExistsError:
-			au.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDontFoundError{Err: err})
-		default:
-			au.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
-		}
-	}
-	article.Publisher.Email = authorEmail
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
 
-	_, err = au.articleRepository.AddArticle(ctx, article)
+	if email == nil || email.(string) == "" {
+		au.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
+	article.Publisher.Email = email.(string)
+
+	_, err := au.articleRepository.AddArticle(ctx, article)
 	if err != nil {
 		au.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return errorsUtils.WrapError(wrappingErrorMessage, err)

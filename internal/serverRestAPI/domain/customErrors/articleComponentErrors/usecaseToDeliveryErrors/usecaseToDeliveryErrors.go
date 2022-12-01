@@ -8,18 +8,18 @@ func (re *RepositoryError) Error() string {
 	return re.Err.Error()
 }
 
-type ArticleDontExistsError struct {
+type ArticleDoesntExistError struct {
 	Err error
 }
 
-func (adee *ArticleDontExistsError) Error() string {
+func (adee *ArticleDoesntExistError) Error() string {
 	return adee.Err.Error()
 }
 
-type EmailForSessionDontFoundError struct {
+type EmailForSessionDoesntExistError struct {
 	Err error
 }
 
-func (efsdfe *EmailForSessionDontFoundError) Error() string {
-	return efsdfe.Err.Error()
+func (efsdee *EmailForSessionDoesntExistError) Error() string {
+	return efsdee.Err.Error()
 }

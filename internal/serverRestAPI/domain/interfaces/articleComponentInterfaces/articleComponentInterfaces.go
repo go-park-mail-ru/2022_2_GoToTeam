@@ -7,7 +7,7 @@ import (
 
 type ArticleUsecaseInterface interface {
 	GetArticleById(ctx context.Context, id int) (*models.Article, error)
-	AddArticleBySession(ctx context.Context, article *models.Article, session *models.Session) error
+	AddArticleBySession(ctx context.Context, article *models.Article) error
 	RemoveArticleById(ctx context.Context, articleId int) error
 }
 
