@@ -5,8 +5,8 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/categoryComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/categoryComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/errorsUtils"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/errorsUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 )
 
@@ -36,9 +36,9 @@ func (cu *categoryUsecase) GetCategoryInfo(ctx context.Context, categoryName str
 	category, err := cu.categoryRepository.GetCategoryInfo(ctx, categoryName)
 	if err != nil {
 		switch err {
-		case repositoryToUsecaseErrors.CategoryRepositoryCategoryDontExistsError:
+		case repositoryToUsecaseErrors.CategoryRepositoryCategoryDoesntExistError:
 			cu.logger.LogrusLoggerWithContext(ctx).Warn(err)
-			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryDontExistsError{Err: err})
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryNotFoundError{Err: err})
 		default:
 			cu.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -46,4 +46,21 @@ func (cu *categoryUsecase) GetCategoryInfo(ctx context.Context, categoryName str
 	}
 
 	return category, nil
+}
+
+func (cu *categoryUsecase) GetCategoryList(ctx context.Context) ([]*models.Category, error) {
+	cu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetCategoryList function.")
+
+	wrappingErrorMessage := "error while getting category list"
+
+	categories, err := cu.categoryRepository.GetAllCategories(ctx)
+	if err != nil {
+		switch err {
+		default:
+			cu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		}
+	}
+
+	return categories, nil
 }

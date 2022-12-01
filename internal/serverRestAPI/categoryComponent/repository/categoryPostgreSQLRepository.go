@@ -4,9 +4,10 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/categoryComponentErrors/repositoryToUsecaseErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/categoryComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type categoryPostgreSQLRepository struct {
@@ -22,9 +23,26 @@ func NewCategoryPostgreSQLRepository(database *sql.DB, logger *logger.Logger) ca
 		logger:   logger,
 	}
 
+	logger.LogrusLogger.Debug("All categories in storage:  \n" + func() string {
+		allCategories, err := categoryRepository.GetAllCategories(context.Background())
+		if err != nil {
+			return repositoryToUsecaseErrors.CategoryRepositoryError.Error()
+		}
+		return categoryRepository.getCategoriesString(allCategories)
+	}())
+
 	logger.LogrusLogger.Info("categoryPostgreSQLRepository has created.")
 
 	return categoryRepository
+}
+
+func (cpsr *categoryPostgreSQLRepository) getCategoriesString(categories []*models.Category) string {
+	categoriesString := ""
+	for _, v := range categories {
+		categoriesString += fmt.Sprintf("%#v\n", v)
+	}
+
+	return categoriesString
 }
 
 func (cpsr *categoryPostgreSQLRepository) GetCategoryInfo(ctx context.Context, categoryName string) (*models.Category, error) {
@@ -40,7 +58,7 @@ WHERE category_name = $1;
 	if err := row.Scan(&category.CategoryName, &category.Description, &category.SubscribersCount); err != nil {
 		if err == sql.ErrNoRows {
 			cpsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
-			return nil, repositoryToUsecaseErrors.CategoryRepositoryCategoryDontExistsError
+			return nil, repositoryToUsecaseErrors.CategoryRepositoryCategoryDoesntExistError
 		}
 		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.CategoryRepositoryError
@@ -49,4 +67,34 @@ WHERE category_name = $1;
 	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got category: %#v", category)
 
 	return category, nil
+}
+
+func (cpsr *categoryPostgreSQLRepository) GetAllCategories(ctx context.Context) ([]*models.Category, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllCategories function.")
+
+	categories := make([]*models.Category, 0, 10)
+
+	rows, err := cpsr.database.Query(`
+SELECT category_name
+FROM categories;
+`)
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.CategoryRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		category := &models.Category{}
+		if err := rows.Scan(&category.CategoryName); err != nil {
+			cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.CategoryRepositoryError
+		}
+
+		categories = append(categories, category)
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got categories: %#v\n", categories)
+
+	return categories, nil
 }

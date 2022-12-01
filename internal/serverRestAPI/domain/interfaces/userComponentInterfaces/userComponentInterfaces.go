@@ -16,6 +16,4 @@ type UserRepositoryInterface interface {
 	GetUserInfo(ctx context.Context, login string) (*models.User, error)
 	UserExistsByEmail(ctx context.Context, email string) (bool, error)
 	UserExistsByLogin(ctx context.Context, login string) (bool, error)
-	CheckUserEmailAndPassword(ctx context.Context, email string, password string) (bool, error)
-	GetUserInfoForSessionComponentByEmail(ctx context.Context, email string) (*models.User, error)
 }

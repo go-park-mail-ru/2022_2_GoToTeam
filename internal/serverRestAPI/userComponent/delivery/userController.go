@@ -5,8 +5,8 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/userComponent/delivery/modelsRestApi"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
 	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils/httpCookieUtils"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -87,7 +87,7 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 	user, err := uc.userUsecase.GetUserInfo(c.Request().Context(), login)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
-		case *usecaseToDeliveryErrors.LoginDontExistsError:
+		case *usecaseToDeliveryErrors.LoginDoesntExistError:
 			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:

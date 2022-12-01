@@ -4,7 +4,8 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	"2022_2_GoTo_team/internal/serverRestAPI/utils/logger"
+	domain2 "2022_2_GoTo_team/pkg/domain"
+	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -16,6 +17,11 @@ var (
 		"/api/v1/session/remove": {},
 		"/api/v1/article/create": {},
 		"/api/v1/article/remove": {},
+
+		"/api/v1/profile":        {},
+		"/api/v1/profile/update": {},
+
+		"/api/v1/commentary/create": {},
 	}
 	noNeedSessionUrls = map[string]struct{}{
 		"/": struct{}{},
@@ -47,10 +53,13 @@ func getCookieValue(ctx echo.Context) *http.Cookie {
 func AuthMiddleware(sessionUsecase sessionComponentInterfaces.SessionUsecaseInterface, logger *logger.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Auth middleware. URL.Path: ", ctx.Request().URL.Path)
+			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Auth middleware. Request URL.Path: ", ctx.Request().URL.Path)
 
 			if _, ok := needAuthUrls[ctx.Request().URL.Path]; !ok {
 				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Dont need auth for the URL.Path: ", ctx.Request().URL.Path)
+
+				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain2.USER_EMAIL_KEY_FOR_CONTEXT, "dont need auth")))
+
 				return next(ctx)
 			}
 
@@ -61,12 +70,12 @@ func AuthMiddleware(sessionUsecase sessionComponentInterfaces.SessionUsecaseInte
 
 			cookie := getCookieValue(ctx)
 			if cookie != nil {
-				email, err := sessionUsecase.GetUserEmailBySession(context.Background(), &models.Session{SessionId: cookie.Value})
+				email, err := sessionUsecase.GetUserEmailBySession(ctx.Request().Context(), &models.Session{SessionId: cookie.Value})
 				if err != nil {
 					logger.LogrusLoggerWithContext(ctx.Request().Context()).Error(err)
 				}
 
-				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain.USER_EMAIL_KEY_FOR_CONTEXT, email)))
+				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain2.USER_EMAIL_KEY_FOR_CONTEXT, email)))
 			}
 
 			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Authorized!")
