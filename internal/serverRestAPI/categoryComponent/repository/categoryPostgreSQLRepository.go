@@ -69,6 +69,35 @@ WHERE category_name = $1;
 	return category, nil
 }
 
+func (cpsr *categoryPostgreSQLRepository) IsUserSubscribedOnCategory(ctx context.Context, userEmail string, categoryName string) (bool, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the IsUserSubscribedOnCategory function.")
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Input userEmail = ", userEmail, " categoryName = ", categoryName)
+
+	row := cpsr.database.QueryRow(`
+SELECT COUNT(*) count
+FROM categories C
+JOIN users_categories_subscriptions UCS ON C.category_id = UCS.category_id
+JOIN users U ON U.user_id = UCS.user_id 
+WHERE U.email = $1 AND C.category_name = $2;
+`, userEmail, categoryName)
+
+	entriesFound := 0
+	if err := row.Scan(&entriesFound); err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return false, repositoryToUsecaseErrors.CategoryRepositoryError
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got entriesFound: ", entriesFound)
+
+	result := false
+	if entriesFound == 1 {
+		result = true
+	}
+
+	return result, nil
+}
+
 func (cpsr *categoryPostgreSQLRepository) GetAllCategories(ctx context.Context) ([]*models.Category, error) {
 	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllCategories function.")
 

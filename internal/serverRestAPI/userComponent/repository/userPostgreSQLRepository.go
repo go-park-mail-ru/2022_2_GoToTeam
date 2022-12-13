@@ -118,6 +118,35 @@ FROM users U WHERE U.login = $1;
 	return user, nil
 }
 
+func (upsr *userPostgreSQLRepository) IsUserSubscribedOnUser(ctx context.Context, sessionEmail string, login string) (bool, error) {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the IsUserSubscribedOnUser function.")
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Input sessionEmail = ", sessionEmail, " login = ", login)
+
+	row := upsr.database.QueryRow(`
+SELECT COUNT(*) count
+FROM users U1
+JOIN subscriptions S ON U1.user_id = S.subscribed_to_id
+JOIN users U2 ON U2.user_id = S.user_id 
+WHERE U2.email = $1 AND U1.login = $2;
+`, sessionEmail, login)
+
+	entriesFound := 0
+	if err := row.Scan(&entriesFound); err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return false, repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got entriesFound: ", entriesFound)
+
+	result := false
+	if entriesFound == 1 {
+		result = true
+	}
+
+	return result, nil
+}
+
 func (upsr *userPostgreSQLRepository) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByEmail function.")
 

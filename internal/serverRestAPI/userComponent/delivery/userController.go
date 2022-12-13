@@ -99,10 +99,22 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 		}
 	}
 
+	isSubscribed, err := uc.userUsecase.IsUserSubscribedOnUser(c.Request().Context(), login)
+	if err != nil {
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
+			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		default:
+			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
 	userInfo := modelsRestApi.UserInfo{
 		Username:         user.Username,
 		RegistrationDate: user.RegistrationDate,
 		SubscribersCount: user.SubscribersCount,
+		Subscribed:       isSubscribed,
 	}
 
 	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed userInfo: ", userInfo)

@@ -5,6 +5,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/userComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/userComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"2022_2_GoTo_team/pkg/utils/validators"
@@ -57,6 +58,31 @@ func (uu *userUsecase) GetUserInfo(ctx context.Context, login string) (*models.U
 	}
 
 	return user, nil
+}
+
+func (uu *userUsecase) IsUserSubscribedOnUser(ctx context.Context, login string) (bool, error) {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the IsUserSubscribedOnUser function.")
+
+	wrappingErrorMessage := "error while IsUserSubscribedOnUser for category"
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+
+	if email == nil || email.(string) == "" {
+		uu.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return false, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
+
+	isSubscribed, err := uu.userRepository.IsUserSubscribedOnUser(ctx, email.(string), login)
+	if err != nil {
+		switch err {
+		default:
+			uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return false, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+		}
+	}
+
+	return isSubscribed, nil
 }
 
 func (uu *userUsecase) AddNewUser(ctx context.Context, email string, login string, username string, password string) error {

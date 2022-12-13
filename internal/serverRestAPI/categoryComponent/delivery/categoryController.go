@@ -49,10 +49,22 @@ func (cc *CategoryController) CategoryInfoHandler(c echo.Context) error {
 		}
 	}
 
+	isSubscribed, err := cc.categoryUsecase.IsUserSubscribedOnCategory(c.Request().Context(), categoryName)
+	if err != nil {
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
+			cc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		default:
+			cc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
 	categoryInfo := modelsRestApi.CategoryInfo{
 		CategoryName:     category.CategoryName,
 		Description:      category.Description,
 		SubscribersCount: category.SubscribersCount,
+		Subscribed:       isSubscribed,
 	}
 
 	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed categoryInfo: ", categoryInfo)

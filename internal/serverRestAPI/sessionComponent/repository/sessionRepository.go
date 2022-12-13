@@ -90,7 +90,7 @@ func (assr *authSessionServiceRepository) GetUserInfoBySession(ctx context.Conte
 		return nil, err
 	}
 
-	return &models.User{Username: userInfo.Username, AvatarImgPath: userInfo.AvatarImgPath}, err
+	return &models.User{Username: userInfo.Username, Login: userInfo.Login, AvatarImgPath: userInfo.AvatarImgPath}, err
 }
 
 func (assr *authSessionServiceRepository) GetUserEmailBySession(ctx context.Context, session *models.Session) (string, error) {

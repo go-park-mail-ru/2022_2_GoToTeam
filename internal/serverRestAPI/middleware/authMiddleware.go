@@ -4,7 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/sessionComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
-	domain2 "2022_2_GoTo_team/pkg/domain"
+	domainPkg "2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"github.com/labstack/echo/v4"
@@ -23,6 +23,12 @@ var (
 
 		"/api/v1/commentary/create": {},
 	}
+
+	needPutEmailToContextUrls = map[string]struct{}{
+		"/api/v1/category/info": {},
+		"/api/v1/user/info":     {},
+	}
+
 	noNeedSessionUrls = map[string]struct{}{
 		"/": struct{}{},
 	}
@@ -55,17 +61,23 @@ func AuthMiddleware(sessionUsecase sessionComponentInterfaces.SessionUsecaseInte
 		return func(ctx echo.Context) error {
 			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Auth middleware. Request URL.Path: ", ctx.Request().URL.Path)
 
-			if _, ok := needAuthUrls[ctx.Request().URL.Path]; !ok {
+			_, needAuth := needAuthUrls[ctx.Request().URL.Path]
+			_, needPutEmailToContext := needPutEmailToContextUrls[ctx.Request().URL.Path]
+			if !needAuth && !needPutEmailToContext {
 				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Dont need auth for the URL.Path: ", ctx.Request().URL.Path)
 
-				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain2.USER_EMAIL_KEY_FOR_CONTEXT, "dont need auth")))
+				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domainPkg.USER_EMAIL_KEY_FOR_CONTEXT, "dont need auth")))
 
 				return next(ctx)
 			}
 
-			if !isAuthorized(ctx, sessionUsecase, logger) {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Unauthorized!")
-				return ctx.NoContent(http.StatusUnauthorized)
+			if needAuth {
+				if !isAuthorized(ctx, sessionUsecase, logger) {
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Unauthorized!")
+					return ctx.NoContent(http.StatusUnauthorized)
+				}
+
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Authorized!")
 			}
 
 			cookie := getCookieValue(ctx)
@@ -73,12 +85,10 @@ func AuthMiddleware(sessionUsecase sessionComponentInterfaces.SessionUsecaseInte
 				email, err := sessionUsecase.GetUserEmailBySession(ctx.Request().Context(), &models.Session{SessionId: cookie.Value})
 				if err != nil {
 					logger.LogrusLoggerWithContext(ctx.Request().Context()).Error(err)
+				} else {
+					ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domainPkg.USER_EMAIL_KEY_FOR_CONTEXT, email)))
 				}
-
-				ctx.SetRequest(ctx.Request().Clone(context.WithValue(ctx.Request().Context(), domain2.USER_EMAIL_KEY_FOR_CONTEXT, email)))
 			}
-
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Authorized!")
 
 			return next(ctx)
 		}
