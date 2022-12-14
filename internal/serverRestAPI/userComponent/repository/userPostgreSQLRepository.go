@@ -167,6 +167,31 @@ INSERT INTO subscriptions (user_id, subscribed_to_id) VALUES
 	return nil
 }
 
+func (upsr *userPostgreSQLRepository) UnsubscribeFromUser(ctx context.Context, email string, unsubscribeFromLogin string) (int64, error) {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeFromUser function.")
+
+	result, err := upsr.database.Exec(`
+DELETE FROM subscriptions WHERE 
+                              user_id IN (SELECT user_id FROM users WHERE email = $1) AND 
+                              subscribed_to_id IN (SELECT user_id FROM users WHERE login = $2)
+							RETURNING *;
+`, email, unsubscribeFromLogin)
+
+	if err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.UserRepositoryError
+	}
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed subscriptions count: ", removedRowsCount)
+
+	return removedRowsCount, nil
+}
+
 func (upsr *userPostgreSQLRepository) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByEmail function.")
 

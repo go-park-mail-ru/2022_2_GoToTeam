@@ -109,7 +109,7 @@ func (uu *userUsecase) AddNewUser(ctx context.Context, email string, login strin
 func (uu *userUsecase) SubscribeOnUser(ctx context.Context, subscribeToLogin string) error {
 	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeOnUser function.")
 
-	wrappingErrorMessage := "error while adding the user"
+	wrappingErrorMessage := "error while subscribing on user"
 
 	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
 	uu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
@@ -120,6 +120,27 @@ func (uu *userUsecase) SubscribeOnUser(ctx context.Context, subscribeToLogin str
 	}
 
 	if err := uu.userRepository.SubscribeOnUser(ctx, email.(string), subscribeToLogin); err != nil {
+		uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return nil
+}
+
+func (uu *userUsecase) UnsubscribeFromUser(ctx context.Context, unsubscribeFromLogin string) error {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeFromUser function.")
+
+	wrappingErrorMessage := "error while unsubscribing the user"
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+
+	if email == nil || email.(string) == "" {
+		uu.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
+
+	if _, err := uu.userRepository.UnsubscribeFromUser(ctx, email.(string), unsubscribeFromLogin); err != nil {
 		uu.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
 	}

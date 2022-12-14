@@ -10,6 +10,7 @@ type UserUsecaseInterface interface {
 	GetUserInfo(ctx context.Context, login string) (*models.User, error)
 	IsUserSubscribedOnUser(ctx context.Context, login string) (bool, error)
 	SubscribeOnUser(ctx context.Context, subscribeToLogin string) error
+	UnsubscribeFromUser(ctx context.Context, unsubscribeFromLogin string) error
 }
 
 type UserRepositoryInterface interface {
@@ -18,6 +19,7 @@ type UserRepositoryInterface interface {
 	GetUserInfo(ctx context.Context, login string) (*models.User, error)
 	IsUserSubscribedOnUser(ctx context.Context, sessionEmail string, login string) (bool, error)
 	SubscribeOnUser(ctx context.Context, email string, subscribeToLogin string) error
+	UnsubscribeFromUser(ctx context.Context, email string, unsubscribeFromLogin string) (int64, error)
 	UserExistsByEmail(ctx context.Context, email string) (bool, error)
 	UserExistsByLogin(ctx context.Context, login string) (bool, error)
 }

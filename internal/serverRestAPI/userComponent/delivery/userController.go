@@ -139,6 +139,7 @@ func (uc *UserController) SubscribeHandler(c echo.Context) error {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
 			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.NoContent(http.StatusInternalServerError)
 		default:
 			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -146,6 +147,35 @@ func (uc *UserController) SubscribeHandler(c echo.Context) error {
 	}
 
 	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("User subscribed successfully!")
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (uc *UserController) UnsubscribeHandler(c echo.Context) error {
+	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UnsubscribeHandler function.")
+
+	defer c.Request().Body.Close()
+
+	parsedInput := new(modelsRestApi.Subscribe)
+	if err := c.Bind(parsedInput); err != nil {
+		uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed input json data: %#v", parsedInput)
+
+	if err := uc.userUsecase.UnsubscribeFromUser(c.Request().Context(), parsedInput.Login); err != nil {
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
+			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.NoContent(http.StatusInternalServerError)
+		default:
+			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
+	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("User unsubscribed successfully!")
 
 	return c.NoContent(http.StatusOK)
 }

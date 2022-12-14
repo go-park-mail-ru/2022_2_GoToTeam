@@ -179,6 +179,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.POST("/api/v1/user/signup", userController.SignupUserHandler)
 	e.GET("/api/v1/user/info", userController.UserInfoHandler)
 	e.POST("/api/v1/user/subscribe", userController.SubscribeHandler)
+	e.POST("/api/v1/user/unsubscribe", userController.UnsubscribeHandler)
 
 	e.GET("/api/v1/category/info", categoryController.CategoryInfoHandler)
 	e.GET("/api/v1/category/list", categoryController.CategoryListHandler)
