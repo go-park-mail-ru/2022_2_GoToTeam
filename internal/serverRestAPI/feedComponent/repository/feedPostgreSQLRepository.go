@@ -59,7 +59,7 @@ FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
-ORDER BY A.article_id;
+ORDER BY A.article_id DESC;
 `)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
@@ -140,7 +140,7 @@ FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
-ORDER BY A.article_id;
+ORDER BY A.article_id DESC;
 `)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
@@ -190,7 +190,7 @@ FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
-ORDER BY A.article_id;;
+ORDER BY A.article_id DESC;
 `)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
@@ -241,7 +241,7 @@ FROM articles A
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
 WHERE UP.login = $1
-ORDER BY A.article_id;
+ORDER BY A.article_id DESC;
 `, login)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
@@ -292,7 +292,7 @@ FROM articles A
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
 WHERE C.category_name = $1
-ORDER BY A.article_id;
+ORDER BY A.article_id DESC;
 `, category)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)

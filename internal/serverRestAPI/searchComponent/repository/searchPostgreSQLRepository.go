@@ -135,7 +135,7 @@ SELECT A.article_id,
                  LEFT JOIN tags_articles TA ON TA.article_id = A.article_id
                  LEFT JOIN tags T ON T.tag_id = TA.tag_id
         WHERE (COALESCE(T.tag_name, '') LIKE $4)) != 0)
-ORDER BY A.article_id;
+ORDER BY A.article_id DESC;
 `, substringToSearch, login, categoryName, tagName)
 
 	if err != nil {
