@@ -127,3 +127,48 @@ FROM categories;
 
 	return categories, nil
 }
+
+func (cpsr *categoryPostgreSQLRepository) SubscribeOnCategory(ctx context.Context, email string, categoryName string) error {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeOnCategory function.")
+
+	row := cpsr.database.QueryRow(`
+INSERT INTO users_categories_subscriptions (user_id, category_id) VALUES 
+       ((SELECT user_id FROM users WHERE email = $1), (SELECT category_id FROM categories WHERE category_name = $2)) RETURNING user_id, category_id;
+`, email, categoryName)
+
+	var lastInsertedUserId int
+	var lastInsertedSubscribedToId int
+	if err := row.Scan(&lastInsertedUserId, &lastInsertedSubscribedToId); err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.CategoryRepositoryError
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got lastInsertedUserId: ", lastInsertedUserId, " lastInsertedSubscribedToId:", lastInsertedSubscribedToId)
+
+	return nil
+}
+
+func (cpsr *categoryPostgreSQLRepository) UnsubscribeFromCategory(ctx context.Context, email string, categoryName string) (int64, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeFromCategory function.")
+
+	result, err := cpsr.database.Exec(`
+DELETE FROM users_categories_subscriptions WHERE 
+                              user_id IN (SELECT user_id FROM users WHERE email = $1) AND 
+                              category_id IN (SELECT category_id FROM categories WHERE category_name = $2)
+							RETURNING *;
+`, email, categoryName)
+
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.CategoryRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.CategoryRepositoryError
+	}
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed subscriptions count: ", removedRowsCount)
+
+	return removedRowsCount, nil
+}

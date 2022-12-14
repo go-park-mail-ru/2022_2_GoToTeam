@@ -22,6 +22,9 @@ var (
 		"/api/v1/user/subscribe":   {},
 		"/api/v1/user/unsubscribe": {},
 
+		"/api/v1/category/subscribe":   {},
+		"/api/v1/category/unsubscribe": {},
+
 		"/api/v1/profile":        {},
 		"/api/v1/profile/update": {},
 

@@ -91,3 +91,45 @@ func (cu *categoryUsecase) GetCategoryList(ctx context.Context) ([]*models.Categ
 
 	return categories, nil
 }
+
+func (cu *categoryUsecase) SubscribeOnCategory(ctx context.Context, categoryName string) error {
+	cu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeOnCategory function.")
+
+	wrappingErrorMessage := "error while subscribing on category"
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	cu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+
+	if email == nil || email.(string) == "" {
+		cu.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
+
+	if err := cu.categoryRepository.SubscribeOnCategory(ctx, email.(string), categoryName); err != nil {
+		cu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return nil
+}
+
+func (cu *categoryUsecase) UnsubscribeFromCategory(ctx context.Context, categoryName string) error {
+	cu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeFromCategory function.")
+
+	wrappingErrorMessage := "error while unsubscribing from the category"
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	cu.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+
+	if email == nil || email.(string) == "" {
+		cu.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
+
+	if _, err := cu.categoryRepository.UnsubscribeFromCategory(ctx, email.(string), categoryName); err != nil {
+		cu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return nil
+}

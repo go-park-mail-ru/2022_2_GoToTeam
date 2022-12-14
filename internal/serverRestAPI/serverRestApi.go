@@ -183,6 +183,8 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	e.GET("/api/v1/category/info", categoryController.CategoryInfoHandler)
 	e.GET("/api/v1/category/list", categoryController.CategoryListHandler)
+	e.POST("/api/v1/category/subscribe", categoryController.SubscribeHandler)
+	e.POST("/api/v1/category/unsubscribe", categoryController.UnsubscribeHandler)
 
 	e.GET("/api/v1/feed", feedController.FeedHandler)
 	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)
