@@ -147,6 +147,26 @@ WHERE U2.email = $1 AND U1.login = $2;
 	return result, nil
 }
 
+func (upsr *userPostgreSQLRepository) SubscribeOnUser(ctx context.Context, email string, subscribeToLogin string) error {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeOnUser function.")
+
+	row := upsr.database.QueryRow(`
+INSERT INTO subscriptions (user_id, subscribed_to_id) VALUES 
+       ((SELECT user_id FROM users WHERE email = $1), (SELECT user_id FROM users WHERE login = $2)) RETURNING user_id, subscribed_to_id;
+`, email, subscribeToLogin)
+
+	var lastInsertedUserId int
+	var lastInsertedSubscribedToId int
+	if err := row.Scan(&lastInsertedUserId, &lastInsertedSubscribedToId); err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got lastInsertedUserId: ", lastInsertedUserId, " lastInsertedSubscribedToId:", lastInsertedSubscribedToId)
+
+	return nil
+}
+
 func (upsr *userPostgreSQLRepository) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByEmail function.")
 

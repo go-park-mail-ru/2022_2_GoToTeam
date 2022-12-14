@@ -19,6 +19,8 @@ var (
 		"/api/v1/article/update": {},
 		"/api/v1/article/remove": {},
 
+		"/api/v1/user/subscribe": {},
+
 		"/api/v1/profile":        {},
 		"/api/v1/profile/update": {},
 

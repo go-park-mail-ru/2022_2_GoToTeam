@@ -121,3 +121,31 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, userInfo)
 }
+
+func (uc *UserController) SubscribeHandler(c echo.Context) error {
+	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the SubscribeHandler function.")
+
+	defer c.Request().Body.Close()
+
+	parsedInput := new(modelsRestApi.Subscribe)
+	if err := c.Bind(parsedInput); err != nil {
+		uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed input json data: %#v", parsedInput)
+
+	if err := uc.userUsecase.SubscribeOnUser(c.Request().Context(), parsedInput.Login); err != nil {
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
+			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		default:
+			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
+	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("User subscribed successfully!")
+
+	return c.NoContent(http.StatusOK)
+}
