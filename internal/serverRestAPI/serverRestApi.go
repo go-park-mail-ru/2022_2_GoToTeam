@@ -189,6 +189,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.GET("/api/v1/article", articleController.ArticleHandler)
 	e.POST("/api/v1/article/create", articleController.CreateArticleHandler)
 	e.POST("/api/v1/article/remove", articleController.RemoveArticleHandler)
+	e.POST("/api/v1/article/update", articleController.UpdateArticleHandler)
 
 	e.GET("/api/v1/profile", profileController.GetProfileHandler)
 	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)

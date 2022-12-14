@@ -91,3 +91,36 @@ func (au *articleUsecase) AddArticleBySession(ctx context.Context, article *mode
 
 	return nil
 }
+
+func (au *articleUsecase) UpdateArticle(ctx context.Context, article *models.Article) error {
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateArticle function.")
+
+	wrappingErrorMessage := "error while updating new article by session"
+
+	email := ctx.Value(domain.USER_EMAIL_KEY_FOR_CONTEXT)
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
+
+	if email == nil || email.(string) == "" {
+		au.logger.LogrusLoggerWithContext(ctx).Error("Email from context is empty.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: errors.New("email from context is empty")})
+	}
+
+	authorEmail, err := au.articleRepository.GetAuthorEmailForArticle(ctx, article.ArticleId)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
+
+	if email != authorEmail {
+		au.logger.LogrusLoggerWithContext(ctx).Error("Email is not author fot the article.")
+		return errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailIsNotAuthorError{Err: errors.New("email is not author fot the article")})
+	}
+
+	err = au.articleRepository.UpdateArticle(ctx, article)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return errorsUtils.WrapError(wrappingErrorMessage, err)
+	}
+
+	return nil
+}

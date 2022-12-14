@@ -151,6 +151,58 @@ INSERT INTO tags_articles (article_id, tag_id)  VALUES ($1,
 	return articleLastInsertId, nil
 }
 
+func (apsr *articlePostgreSQLRepository) UpdateArticle(ctx context.Context, article *models.Article) error {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateArticle function.")
+
+	_, err := apsr.database.Exec(`
+UPDATE articles SET title = $1, description = $2, content = $3, category_id = 
+        (SELECT categories.category_id FROM categories WHERE category_name = $4)
+WHERE article_id = $5;
+`, article.Title, article.Description, article.Content, article.CategoryName, article.ArticleId)
+
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to delete old tags for the article: %#v", article.Tags)
+
+	result, err := apsr.database.Exec(
+		"DELETE FROM tags_articles WHERE article_id = $1 RETURNING *",
+		article.ArticleId,
+	)
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed tags for the article count: ", removedRowsCount)
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debugf("Trying to add new tags for the article: %#v", article.Tags)
+
+	for _, tagName := range article.Tags {
+		row2 := apsr.database.QueryRow(`
+INSERT INTO tags_articles (article_id, tag_id)  VALUES ($1, 
+        (SELECT tag_id FROM tags WHERE tag_name = $2)) RETURNING article_id;
+`, article.ArticleId, tagName)
+
+		var tagLastInsertArticleId int
+		if err := row2.Scan(&tagLastInsertArticleId); err != nil {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+
+		apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got tagLastInsertArticleId: ", tagLastInsertArticleId)
+	}
+
+	return nil
+}
+
 func (apsr *articlePostgreSQLRepository) DeleteArticleById(ctx context.Context, articleId int) (int64, error) {
 	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the DeleteArticleById function.")
 
@@ -171,4 +223,39 @@ func (apsr *articlePostgreSQLRepository) DeleteArticleById(ctx context.Context, 
 	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed articles count: ", removedRowsCount)
 
 	return removedRowsCount, nil
+}
+
+func (apsr *articlePostgreSQLRepository) GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAuthorEmailForArticle function.")
+
+	rows, err := apsr.database.Query(`
+SELECT U.email
+FROM users U
+JOIN articles A on U.user_id = A.publisher_id
+WHERE A.article_id = $1;
+`, articleId)
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return "", repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+	defer rows.Close()
+
+	var email string
+	isMultipleReturnedRows := false
+	for rows.Next() {
+		if isMultipleReturnedRows {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error("Multiple returning rows.")
+			return "", repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+		isMultipleReturnedRows = true
+
+		if err := rows.Scan(&email); err != nil {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return "", repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+	}
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got email: ", email)
+
+	return email, nil
 }

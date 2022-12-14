@@ -16,6 +16,7 @@ var (
 		"/api/v1/session/info":   {},
 		"/api/v1/session/remove": {},
 		"/api/v1/article/create": {},
+		"/api/v1/article/update": {},
 		"/api/v1/article/remove": {},
 
 		"/api/v1/profile":        {},
