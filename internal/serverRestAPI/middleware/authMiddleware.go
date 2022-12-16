@@ -28,6 +28,8 @@ var (
 		"/api/v1/profile":        {},
 		"/api/v1/profile/update": {},
 
+		"/api/v1/file/upload/profile/photo": {},
+
 		"/api/v1/commentary/create": {},
 	}
 

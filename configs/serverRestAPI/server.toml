@@ -3,6 +3,9 @@ originsAddressesCORS = ["http://127.0.0.1:8081"]
 logLevel = "debug"
 logFilePath = "logs/serverRestApi/logs.log"
 
+staticDirAbsolutePath = "" # Should end by '/'. If starts from '/', then search from root of the file system. If value is "", then absolute dir is backend project root dir
+profilePhotosDirPath = "static/profilePhotos" # Should not start from '/'. Should not end by '/'.
+
 databaseUser = "postgres"
 databaseName = "ve_ru"
 databasePassword = "admin"

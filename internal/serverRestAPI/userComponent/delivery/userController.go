@@ -34,7 +34,6 @@ func NewUserController(userUsecase userComponentInterfaces.UserUsecaseInterface,
 
 func (uc *UserController) SignupUserHandler(c echo.Context) error {
 	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the SignupUserHandler function.")
-
 	defer c.Request().Body.Close()
 
 	parsedInput := new(modelsRestApi.User)
