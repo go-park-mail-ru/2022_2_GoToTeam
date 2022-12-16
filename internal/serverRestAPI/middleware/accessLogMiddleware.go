@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"time"
 )
 
@@ -22,7 +23,6 @@ func AccessLogMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
 
 				RecordHits(requestMethod, urlPath, responseCode)
 				RecordLatency(requestMethod, urlPath, elapsedTime)
-
 				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("Request process finished. Elapsed time: ", elapsedTime, " seconds.")
 			}()
 			//c.Request().Header.Set(echo.HeaderXRequestID, uuid.New().String())
@@ -31,20 +31,27 @@ func AccessLogMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
 			r := ctx.Request()
 			logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("Request method: ", r.Method, ", remote address: ", r.RemoteAddr, ", request URL: ", r.URL.Path, ", request process start time: ", requestProcessStartTime)
 
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("A")
-			csrf := r.Header.Get("X-XSRF-Token")
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("B")
-			k, _ := r.Cookie("_csrf")
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("C")
+			csrf_value := ctx.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
+			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("BEFORE__csrf_value = ", csrf_value)
 
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("X-XSRF-Token header = ", csrf, " _csrf cookie = ", k)
-			//assert.Equal(k, csrf)
-			if csrf == "" || k == nil {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrf == '' or k == nil")
-			} else if csrf != k.Value {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed.")
+			if r.Method == "POST" || r.Method == "PUT" {
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("CSRF token validation begin. Method: ", r.Method)
+				csrfHeader := r.Header.Get("X-XSRF-Token")
+				csrfCookie, _ := r.Cookie("_csrf")
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("X-XSRF-Token csrfHeader = ", csrfHeader, " csrfCookie = ", csrfCookie)
+
+				//assert.Equal(k, csrf)
+				if csrfHeader == "" || csrfCookie == nil {
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrfHeader is empty or csrfCookie == nil.")
+					//return ctx.NoContent(http.StatusForbidden)
+				} else if csrfHeader != csrfCookie.Value {
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrfHeader != csrfCookie.Value")
+					//return ctx.NoContent(http.StatusForbidden)
+				}
+
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF security successfully validated.")
 			} else {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security ok")
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Dont need CSRF token validation. Method: ", r.Method)
 			}
 
 			return next(ctx)
