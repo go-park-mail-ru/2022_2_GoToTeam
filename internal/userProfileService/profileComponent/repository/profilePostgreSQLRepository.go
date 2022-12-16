@@ -77,7 +77,7 @@ func (ppsr *profilePostgreSQLRepository) UpdateProfileByEmail(ctx context.Contex
 
 	_, err = ppsr.database.Exec(`
 UPDATE users SET email = $1, login = $2, username = (CASE WHEN $3 = '' THEN NULL ELSE $3 END), password = 
-    (CASE WHEN $4 = '' THEN (SELECT password FROM users WHERE email = $6) ELSE $4 END)
+    (CASE WHEN $4 = '' THEN (SELECT password FROM users WHERE email = $5) ELSE $4 END)
 WHERE email = $5;
 `, newProfile.Email, newProfile.Login, newProfile.Username, newProfile.Password, email)
 
