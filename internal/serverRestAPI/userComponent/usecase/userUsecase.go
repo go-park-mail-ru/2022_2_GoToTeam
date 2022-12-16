@@ -60,6 +60,35 @@ func (uu *userUsecase) GetUserInfo(ctx context.Context, login string) (*models.U
 	return user, nil
 }
 
+func (uu *userUsecase) GetUserAvatar(ctx context.Context, login string) (*models.User, error) {
+	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserAvatar function.")
+
+	wrappingErrorMessage := "error while getting user avatar"
+
+	if !validators.LoginIsValidByRegExp(login) {
+		uu.logger.LogrusLoggerWithContext(ctx).Debugf("Login %s is not valid.", login)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginIsNotValidError{Err: errors.New("login is not valid")})
+	}
+
+	user, err := uu.userRepository.GetUserAvatar(ctx, login)
+	if err != nil {
+		switch err {
+		case repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError:
+			uu.logger.LogrusLoggerWithContext(ctx).Warn(err)
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDoesntExistError{
+				Err: err,
+			})
+		default:
+			uu.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{
+				Err: err,
+			})
+		}
+	}
+
+	return user, nil
+}
+
 func (uu *userUsecase) IsUserSubscribedOnUser(ctx context.Context, login string) (bool, error) {
 	uu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the IsUserSubscribedOnUser function.")
 

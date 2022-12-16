@@ -118,6 +118,29 @@ FROM users U WHERE U.login = $1;
 	return user, nil
 }
 
+func (upsr *userPostgreSQLRepository) GetUserAvatar(ctx context.Context, login string) (*models.User, error) {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserAvatar function.")
+
+	row := upsr.database.QueryRow(`
+SELECT COALESCE(U.avatar_img_path, '')
+FROM users U WHERE U.login = $1;
+`, login)
+
+	user := &models.User{}
+	if err := row.Scan(&user.AvatarImgPath); err != nil {
+		if err == sql.ErrNoRows {
+			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
+			return nil, repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError
+		}
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got user info: %#v", user)
+
+	return user, nil
+}
+
 func (upsr *userPostgreSQLRepository) IsUserSubscribedOnUser(ctx context.Context, sessionEmail string, login string) (bool, error) {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the IsUserSubscribedOnUser function.")
 
