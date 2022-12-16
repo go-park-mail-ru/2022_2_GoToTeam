@@ -66,6 +66,7 @@ func Run(configFilePath string) {
 	middlewareLogger = globalLogger.ConfigureLogger("middlewareComponent", domain.LAYER_MIDDLEWARE_STRING_FOR_LOGGER)
 
 	e := echo.New()
+
 	e.Use(echoMiddleware.CORSWithConfig(
 		echoMiddleware.CORSConfig{
 			AllowOrigins:     config.AllowOriginsAddressesCORS,
@@ -73,6 +74,19 @@ func Run(configFilePath string) {
 			AllowCredentials: true,
 		},
 	))
+
+	e.Use(echoMiddleware.CSRFWithConfig(echoMiddleware.CSRFConfig{
+		Skipper:        echoMiddleware.DefaultSkipper,
+		TokenLength:    32,
+		TokenLookup:    "header:X-XSRF-Token",
+		ContextKey:     "csrf",
+		CookieName:     "_csrf",
+		CookieMaxAge:   82800,
+		CookieSameSite: http.SameSiteNoneMode,
+		CookiePath:     "/",
+		CookieHTTPOnly: false,
+		CookieSecure:   false,
+	}))
 
 	//e.Use(echoMiddleware.Recover())
 	e.Use(middleware.PanicRestoreMiddleware(middlewareLogger))
