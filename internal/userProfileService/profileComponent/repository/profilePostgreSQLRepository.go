@@ -93,7 +93,6 @@ WHERE email = $5;
 
 func (ppsr *profilePostgreSQLRepository) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
 	ppsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByEmail function.")
-
 	row := ppsr.database.QueryRow(`
 SELECT U.email
 FROM users U WHERE U.email = $1;
