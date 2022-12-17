@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+//go:generate mockgen -destination=./mock/tagRepositoryMock.go -package=mock 2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/tagComponentInterfaces TagRepositoryInterface
+
 type TagUsecaseInterface interface {
 	GetTagsList(ctx context.Context) ([]*models.Tag, error)
 }

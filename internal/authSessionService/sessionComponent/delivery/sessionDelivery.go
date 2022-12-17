@@ -118,6 +118,7 @@ func (sd *SessionDelivery) GetUserInfoBySession(ctx context.Context, session *au
 
 	userInfoBySession := authSessionServiceGrpcProtos.UserInfoBySession{
 		Username:      user.Username,
+		Login:         user.Login,
 		AvatarImgPath: user.AvatarImgPath,
 	}
 	sd.logger.LogrusLoggerWithContext(ctx).Debug("Formed userInfoBySession = ", userInfoBySession.Username, userInfoBySession.AvatarImgPath)

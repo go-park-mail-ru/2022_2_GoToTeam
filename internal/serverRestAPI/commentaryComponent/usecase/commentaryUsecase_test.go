@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	domainPkg "2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"context"
 	"errors"
@@ -54,8 +55,9 @@ func (crm *commentaryRepositoryMock2) GetAllCommentsForArticle(ctx context.Conte
 
 func TestAddCommentaryBySessionNegative(t *testing.T) {
 	cu := NewCommentaryUsecase(&commentaryRepositoryMock2{}, loggerMock)
-
-	err := cu.AddCommentaryBySession(context.Background(), &models.Commentary{})
+	email := "asd@asd.asd"
+	ctx := context.WithValue(context.Background(), domainPkg.USER_EMAIL_KEY_FOR_CONTEXT, email)
+	err := cu.AddCommentaryBySession(ctx, &models.Commentary{Publisher: models.Publisher{Email: email}})
 	assert.NotEqual(t, nil, err)
 }
 
@@ -64,4 +66,23 @@ func TestGetAllCommentariesForArticleNegative(t *testing.T) {
 
 	_, err := cu.GetAllCommentariesForArticle(context.Background(), 2)
 	assert.NotEqual(t, nil, err)
+}
+
+type commentaryRepositoryMock3 struct {
+}
+
+func (crm *commentaryRepositoryMock3) AddCommentaryByEmail(ctx context.Context, commentary *models.Commentary) (int, error) {
+	return 0, nil
+}
+
+func (crm *commentaryRepositoryMock3) GetAllCommentsForArticle(ctx context.Context, articleId int) ([]*models.Commentary, error) {
+	return []*models.Commentary{}, errors.New("err")
+}
+
+func TestAddCommentaryBySessionOk(t *testing.T) {
+	cu := NewCommentaryUsecase(&commentaryRepositoryMock3{}, loggerMock)
+	email := "asd@asd.asd"
+	ctx := context.WithValue(context.Background(), domainPkg.USER_EMAIL_KEY_FOR_CONTEXT, email)
+	err := cu.AddCommentaryBySession(ctx, &models.Commentary{Publisher: models.Publisher{Email: email}})
+	assert.Equal(t, nil, err)
 }

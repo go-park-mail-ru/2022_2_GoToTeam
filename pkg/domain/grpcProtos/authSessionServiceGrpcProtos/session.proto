@@ -16,7 +16,8 @@ message UserAccountData {
 
 message UserInfoBySession {
   string username = 1;
-  string avatarImgPath = 2;
+  string login = 2;
+  string avatarImgPath = 3;
 }
 
 message Exists {

@@ -10,6 +10,12 @@ type Config struct {
 	LogLevel                  string   `toml:"logLevel"`
 	LogFilePath               string   `toml:"logFilePath"`
 
+	StaticDirAbsolutePath string `toml:"staticDirAbsolutePath"`
+	ProfilePhotosDirPath  string `toml:"profilePhotosDirPath"`
+
+	EnableEchoCsrfToken bool `toml:"enableEchoCsrfToken"`
+	EnableEchoSecurity  bool `toml:"enableEchoSecurity"`
+
 	DatabaseUser               string `toml:"databaseUser"`
 	DatabaseName               string `toml:"databaseName"`
 	DatabasePassword           string `toml:"databasePassword"`

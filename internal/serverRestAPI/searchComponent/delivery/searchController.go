@@ -81,9 +81,6 @@ func (sc *SearchController) SearchHandler(c echo.Context) error {
 
 	substringToSearch := c.QueryParam("substringToSearch")
 	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed substringToSearch: %#v", substringToSearch)
-	if substringToSearch == "" {
-		return c.NoContent(http.StatusBadRequest)
-	}
 	authorLogin := c.QueryParam("author")
 	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed authorLogin: %#v", authorLogin)
 	categoryName := c.QueryParam("category")

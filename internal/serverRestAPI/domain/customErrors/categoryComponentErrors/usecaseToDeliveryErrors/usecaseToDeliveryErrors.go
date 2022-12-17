@@ -15,3 +15,11 @@ type CategoryNotFoundError struct {
 func (cnfe *CategoryNotFoundError) Error() string {
 	return cnfe.Err.Error()
 }
+
+type EmailForSessionDoesntExistError struct {
+	Err error
+}
+
+func (efsdee *EmailForSessionDoesntExistError) Error() string {
+	return efsdee.Err.Error()
+}

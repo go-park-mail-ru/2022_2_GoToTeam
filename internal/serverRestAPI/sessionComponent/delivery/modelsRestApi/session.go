@@ -2,6 +2,7 @@ package modelsRestApi
 
 type UserInfoBySession struct {
 	Username      string `json:"username"`
+	Login         string `json:"login"`
 	AvatarImgPath string `json:"avatar_img_path"`
 }
 
