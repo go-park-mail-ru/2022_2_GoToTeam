@@ -104,7 +104,10 @@ func TestUserExistsByEmail(t *testing.T) {
 	}
 	defer db.Close()
 
-	repo := NewProfilePostgreSQLRepository(db, loggerMock)
+	repo := &profilePostgreSQLRepository{
+		database: db,
+		logger:   loggerMock,
+	}
 
 	email := "asd@asd.asd"
 
@@ -122,7 +125,7 @@ func TestUserExistsByEmail(t *testing.T) {
 		WithArgs(email).
 		WillReturnRows(rows)
 
-	res, err := repo.UserExistsByEmail(context.Background(), email)
+	res, err := repo.userExistsByEmail(context.Background(), email)
 	if err != nil {
 		t.Errorf("unexpected err: %s", err)
 		return
@@ -142,7 +145,7 @@ func TestUserExistsByEmail(t *testing.T) {
 		WithArgs(email).
 		WillReturnError(fmt.Errorf("db_error"))
 
-	res, err = repo.UserExistsByEmail(context.Background(), email)
+	res, err = repo.userExistsByEmail(context.Background(), email)
 	if err == nil {
 		t.Errorf("expected error, got nil")
 		return
@@ -158,7 +161,7 @@ func TestUserExistsByEmail(t *testing.T) {
 		WithArgs(email).
 		WillReturnError(sql.ErrNoRows)
 
-	res, err = repo.UserExistsByEmail(context.Background(), email)
+	res, err = repo.userExistsByEmail(context.Background(), email)
 	if err != nil {
 		t.Errorf("expected error, got nil")
 		return
@@ -176,7 +179,10 @@ func TestUserExistsByLoginWithIgnoringRowsWithEmail(t *testing.T) {
 	}
 	defer db.Close()
 
-	repo := NewProfilePostgreSQLRepository(db, loggerMock)
+	repo := &profilePostgreSQLRepository{
+		database: db,
+		logger:   loggerMock,
+	}
 
 	login := "asd"
 	emailToIgnore := "asd@asd.asd"
@@ -195,7 +201,7 @@ func TestUserExistsByLoginWithIgnoringRowsWithEmail(t *testing.T) {
 		WithArgs(login, emailToIgnore).
 		WillReturnRows(rows)
 
-	res, err := repo.UserExistsByLoginWithIgnoringRowsWithEmail(context.Background(), login, emailToIgnore)
+	res, err := repo.userExistsByLoginWithIgnoringRowsWithEmail(context.Background(), login, emailToIgnore)
 	if err != nil {
 		t.Errorf("unexpected err: %s", err)
 		return
@@ -215,7 +221,7 @@ func TestUserExistsByLoginWithIgnoringRowsWithEmail(t *testing.T) {
 		WithArgs(login, emailToIgnore).
 		WillReturnError(fmt.Errorf("db_error"))
 
-	res, err = repo.UserExistsByLoginWithIgnoringRowsWithEmail(context.Background(), login, emailToIgnore)
+	res, err = repo.userExistsByLoginWithIgnoringRowsWithEmail(context.Background(), login, emailToIgnore)
 	if err == nil {
 		t.Errorf("expected error, got nil")
 		return
@@ -231,7 +237,7 @@ func TestUserExistsByLoginWithIgnoringRowsWithEmail(t *testing.T) {
 		WithArgs(login, emailToIgnore).
 		WillReturnError(sql.ErrNoRows)
 
-	res, err = repo.UserExistsByLoginWithIgnoringRowsWithEmail(context.Background(), login, emailToIgnore)
+	res, err = repo.userExistsByLoginWithIgnoringRowsWithEmail(context.Background(), login, emailToIgnore)
 	if err != nil {
 		t.Errorf("expected error, got nil")
 		return
