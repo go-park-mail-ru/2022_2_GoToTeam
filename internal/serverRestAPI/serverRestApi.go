@@ -82,7 +82,7 @@ func Run(configFilePath string) {
 		ContextKey:     "csrf",
 		CookieName:     "_csrf",
 		CookieMaxAge:   82800,
-		CookieSameSite: http.SameSiteNoneMode,
+		CookieSameSite: http.SameSiteDefaultMode,
 		CookiePath:     "/",
 		CookieHTTPOnly: false,
 		CookieSecure:   false,
