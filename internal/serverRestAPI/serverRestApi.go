@@ -75,22 +75,41 @@ func Run(configFilePath string) {
 		},
 	))
 
-	e.Use(echoMiddleware.CSRFWithConfig(echoMiddleware.CSRFConfig{
-		Skipper:        echoMiddleware.DefaultSkipper,
-		TokenLength:    32,
-		TokenLookup:    "header:X-XSRF-Token",
-		ContextKey:     "csrf",
-		CookieName:     "_csrf",
-		CookieMaxAge:   82800,
-		CookieSameSite: http.SameSiteDefaultMode,
-		CookiePath:     "/",
-		CookieHTTPOnly: false,
-		CookieSecure:   false,
-	}))
+	if config.EnableEchoCsrfToken {
+		e.Use(echoMiddleware.CSRFWithConfig(echoMiddleware.CSRFConfig{
+			Skipper:        echoMiddleware.DefaultSkipper,
+			TokenLength:    32,
+			TokenLookup:    "header:X-XSRF-Token",
+			ContextKey:     "csrf",
+			CookieName:     "_csrf",
+			CookieMaxAge:   82800,
+			CookieSameSite: http.SameSiteDefaultMode,
+			CookiePath:     "/",
+			CookieHTTPOnly: false,
+			CookieSecure:   false,
+		}))
+
+		middlewareLogger.LogrusLogger.Info("Echo CSRF Token security enabled.")
+	} else {
+		middlewareLogger.LogrusLogger.Info("Echo CSRF Token security disabled.")
+	}
+
+	if config.EnableEchoSecurity {
+		e.Use(echoMiddleware.SecureWithConfig(echoMiddleware.SecureConfig{
+			Skipper:            echoMiddleware.DefaultSkipper,
+			XSSProtection:      "1; mode=block",
+			ContentTypeNosniff: "nosniff",
+			XFrameOptions:      "SAMEORIGIN",
+		}))
+
+		middlewareLogger.LogrusLogger.Info("Echo security enabled.")
+	} else {
+		middlewareLogger.LogrusLogger.Info("Echo security disabled.")
+	}
 
 	//e.Use(echoMiddleware.Recover())
 	e.Use(middleware.PanicRestoreMiddleware(middlewareLogger))
-	e.Use(middleware.AccessLogMiddleware(middlewareLogger))
+	e.Use(middleware.AccessLogMiddleware(middlewareLogger, config.EnableEchoCsrfToken))
 	middleware.RegisterPrometheusMetrics()
 	e.Any("/metrics", echo.WrapHandler(promhttp.Handler()))
 

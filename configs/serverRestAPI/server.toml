@@ -6,6 +6,9 @@ logFilePath = "logs/serverRestApi/logs.log"
 staticDirAbsolutePath = "" # Should end by '/'. If starts from '/', then search from root of the file system. If value is "", then absolute dir is backend project root dir
 profilePhotosDirPath = "static/profilePhotos" # Should not start from '/'. Should not end by '/'.
 
+enableEchoCsrfToken = false
+enableEchoSecurity = true
+
 databaseUser = "postgres"
 databaseName = "ve_ru"
 databasePassword = "admin"

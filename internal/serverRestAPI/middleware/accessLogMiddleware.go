@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func AccessLogMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
+func AccessLogMiddleware(logger *logger.Logger, enableEchoCsrfToken bool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			requestProcessStartTime := time.Now()
@@ -31,27 +31,29 @@ func AccessLogMiddleware(logger *logger.Logger) echo.MiddlewareFunc {
 			r := ctx.Request()
 			logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("Request method: ", r.Method, ", remote address: ", r.RemoteAddr, ", request URL: ", r.URL.Path, ", request process start time: ", requestProcessStartTime)
 
-			csrf_value := ctx.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
-			logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("BEFORE__csrf_value = ", csrf_value)
+			if enableEchoCsrfToken {
+				csrf_value := ctx.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
+				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("_csrf_value from config context = ", csrf_value)
 
-			if r.Method == "POST" || r.Method == "PUT" {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("CSRF token validation begin. Method: ", r.Method)
-				csrfHeader := r.Header.Get("X-XSRF-Token")
-				csrfCookie, _ := r.Cookie("_csrf")
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("X-XSRF-Token csrfHeader = ", csrfHeader, " csrfCookie = ", csrfCookie)
+				if r.Method == "POST" || r.Method == "PUT" {
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("CSRF token validation begin. Method: ", r.Method)
+					csrfHeader := r.Header.Get("X-XSRF-Token")
+					csrfCookie, _ := r.Cookie("_csrf")
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("X-XSRF-Token csrfHeader = ", csrfHeader, " csrfCookie = ", csrfCookie)
 
-				//assert.Equal(k, csrf)
-				if csrfHeader == "" || csrfCookie == nil {
-					logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrfHeader is empty or csrfCookie == nil.")
-					//return ctx.NoContent(http.StatusForbidden)
-				} else if csrfHeader != csrfCookie.Value {
-					logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrfHeader != csrfCookie.Value")
-					//return ctx.NoContent(http.StatusForbidden)
+					//assert.Equal(k, csrf)
+					if csrfHeader == "" || csrfCookie == nil {
+						logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrfHeader is empty or csrfCookie == nil.")
+						//return ctx.NoContent(http.StatusForbidden)
+					} else if csrfHeader != csrfCookie.Value {
+						logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF Security failed. csrfHeader != csrfCookie.Value")
+						//return ctx.NoContent(http.StatusForbidden)
+					}
+
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF security successfully validated.")
+				} else {
+					logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Dont need CSRF token validation. Method: ", r.Method)
 				}
-
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Info("CSRF security successfully validated.")
-			} else {
-				logger.LogrusLoggerWithContext(ctx.Request().Context()).Debug("Dont need CSRF token validation. Method: ", r.Method)
 			}
 
 			return next(ctx)
