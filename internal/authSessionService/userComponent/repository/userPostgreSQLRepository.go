@@ -103,13 +103,14 @@ func (upsr *userPostgreSQLRepository) GetUserInfoForSessionComponentByEmail(ctx 
 
 	row := upsr.database.QueryRow(`
 SELECT 
-    COALESCE(U.username, U.login), 
+    COALESCE(U.username, ''), 
+    U.login,
     COALESCE(U.avatar_img_path, '')
 FROM users U WHERE U.email = $1;
 `, email)
 
 	user := &models.User{}
-	if err := row.Scan(&user.Username, &user.AvatarImgPath); err != nil {
+	if err := row.Scan(&user.Username, &user.Login, &user.AvatarImgPath); err != nil {
 		if err == sql.ErrNoRows {
 			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
 			return nil, repositoryToUsecaseErrors.UserRepositoryEmailDoesntExistError

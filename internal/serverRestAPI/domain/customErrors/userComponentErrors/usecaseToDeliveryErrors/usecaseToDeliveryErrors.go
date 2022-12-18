@@ -79,3 +79,11 @@ type PasswordIsNotValidError struct {
 func (pinve *PasswordIsNotValidError) Error() string {
 	return pinve.Err.Error()
 }
+
+type EmailForSessionDoesntExistError struct {
+	Err error
+}
+
+func (efsdee *EmailForSessionDoesntExistError) Error() string {
+	return efsdee.Err.Error()
+}

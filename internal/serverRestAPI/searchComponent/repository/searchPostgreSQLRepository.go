@@ -127,14 +127,15 @@ SELECT A.article_id,
           LEFT JOIN users UC ON A.co_author_id = UC.user_id
           JOIN users UP ON A.publisher_id = UP.user_id
           LEFT JOIN categories C ON A.category_id = C.category_id
- WHERE ((LOWER(A.title) LIKE LOWER($1)) OR (LOWER(A.content) LIKE LOWER($1)))
+ WHERE (((LOWER(A.title) LIKE LOWER($1)) OR (LOWER(A.content) LIKE LOWER($1)) OR (LOWER(A.description) LIKE LOWER($1)))
    AND (UP.login LIKE $2)
    AND (COALESCE(C.category_name, '') LIKE $3)
    AND (SELECT COUNT(COALESCE(T.tag_name, ''))
         FROM tags
                  LEFT JOIN tags_articles TA ON TA.article_id = A.article_id
                  LEFT JOIN tags T ON T.tag_id = TA.tag_id
-        WHERE (COALESCE(T.tag_name, '') LIKE $4)) != 0;
+        WHERE (COALESCE(T.tag_name, '') LIKE $4)) != 0)
+ORDER BY A.article_id DESC;
 `, substringToSearch, login, categoryName, tagName)
 
 	if err != nil {

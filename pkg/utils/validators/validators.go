@@ -11,7 +11,8 @@ const (
 
 	LOGIN_REGEXP_STRING = `^[a-zA-Z][a-zA-Z0-9]{3,}$` // Starts from latin letter, after its possible latin letters and number, min length = 4
 
-	PASSWORD_REGEXP_STRING = `^[a-zA-Z0-9]{4,}$` // Only latins and numbers, min length = 4
+	//PASSWORD_REGEXP_STRING = `^[a-zA-Z0-9]{4,}$` // Only latins and numbers, min length = 4
+	PASSWORD_REGEXP_STRING = `^[a-zA-Z0-9!@#$%^&*]{4,}$`
 )
 
 var (

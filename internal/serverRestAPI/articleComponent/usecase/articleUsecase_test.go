@@ -36,6 +36,14 @@ func (arm *articleRepositoryMock) DeleteArticleById(ctx context.Context, article
 	return 1, nil
 }
 
+func (arm *articleRepositoryMock) UpdateArticle(ctx context.Context, article *models.Article) error {
+	return nil
+}
+
+func (arm *articleRepositoryMock) GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error) {
+	return "qwe@qwe.qwe", nil
+}
+
 func TestGetArticleById(t *testing.T) {
 	au := NewArticleUsecase(&articleRepositoryMock{}, loggerMock)
 
@@ -60,6 +68,13 @@ func TestAddArticleBySession(t *testing.T) {
 	assert.NotEqual(t, nil, err)
 }
 
+func TestUpdateArticle(t *testing.T) {
+	au := NewArticleUsecase(&articleRepositoryMock{}, loggerMock)
+
+	err := au.UpdateArticle(context.Background(), &models.Article{})
+	assert.NotEqual(t, nil, err)
+}
+
 type articleRepositoryMock2 struct {
 }
 
@@ -77,6 +92,14 @@ func (arm *articleRepositoryMock2) AddArticle(ctx context.Context, article *mode
 
 func (arm *articleRepositoryMock2) DeleteArticleById(ctx context.Context, articleId int) (int64, error) {
 	return 1, errors.New("unknown err")
+}
+
+func (arm *articleRepositoryMock2) UpdateArticle(ctx context.Context, article *models.Article) error {
+	return errors.New("unknown err")
+}
+
+func (arm *articleRepositoryMock2) GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error) {
+	return "asd@asd.asd", nil
 }
 
 func TestGetArticleByIdNegativeUnknownError(t *testing.T) {
@@ -102,6 +125,13 @@ func TestAddArticleBySessionNegative(t *testing.T) {
 	assert.NotEqual(t, nil, err)
 }
 
+func TestUpdateArticleNegative(t *testing.T) {
+	au := NewArticleUsecase(&articleRepositoryMock2{}, loggerMock)
+
+	err := au.UpdateArticle(context.WithValue(context.Background(), domain.USER_EMAIL_KEY_FOR_CONTEXT, "asd@asd.asd"), &models.Article{})
+	assert.NotEqual(t, nil, err)
+}
+
 type articleRepositoryMock3 struct {
 }
 
@@ -119,6 +149,14 @@ func (arm *articleRepositoryMock3) AddArticle(ctx context.Context, article *mode
 
 func (arm *articleRepositoryMock3) DeleteArticleById(ctx context.Context, articleId int) (int64, error) {
 	return -1, nil
+}
+
+func (arm *articleRepositoryMock3) UpdateArticle(ctx context.Context, article *models.Article) error {
+	return nil
+}
+
+func (arm *articleRepositoryMock3) GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error) {
+	return "qwe@qwe.qwe", nil
 }
 
 func TestGetArticleByIdNegativeUnknownError2(t *testing.T) {
@@ -144,6 +182,13 @@ func TestAddArticleBySessionNegative2(t *testing.T) {
 	assert.NotEqual(t, nil, err)
 }
 
+func TestUpdateArticleNegative2(t *testing.T) {
+	au := NewArticleUsecase(&articleRepositoryMock3{}, loggerMock)
+
+	err := au.UpdateArticle(context.WithValue(context.Background(), domain.USER_EMAIL_KEY_FOR_CONTEXT, "asd@asd.asd"), &models.Article{})
+	assert.NotEqual(t, nil, err)
+}
+
 type articleRepositoryMock4 struct {
 }
 
@@ -163,9 +208,58 @@ func (arm *articleRepositoryMock4) DeleteArticleById(ctx context.Context, articl
 	return -1, nil
 }
 
+func (arm *articleRepositoryMock4) UpdateArticle(ctx context.Context, article *models.Article) error {
+	return nil
+}
+
+func (arm *articleRepositoryMock4) GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error) {
+	return "qwe@qwe.qwe", nil
+}
+
 func TestAddArticleBySession2(t *testing.T) {
 	au := NewArticleUsecase(&articleRepositoryMock4{}, loggerMock)
 
 	err := au.AddArticleBySession(context.WithValue(context.Background(), domain.USER_EMAIL_KEY_FOR_CONTEXT, "asd@asd.asd"), &models.Article{})
 	assert.Equal(t, nil, err)
+}
+
+func TestUpdateArticle2(t *testing.T) {
+	au := NewArticleUsecase(&articleRepositoryMock4{}, loggerMock)
+
+	err := au.UpdateArticle(context.WithValue(context.Background(), domain.USER_EMAIL_KEY_FOR_CONTEXT, "qwe@qwe.qwe"), &models.Article{})
+	assert.Equal(t, nil, err)
+}
+
+type articleRepositoryMock5 struct {
+}
+
+func (arm *articleRepositoryMock5) GetArticleById(ctx context.Context, id int) (*models.Article, error) {
+	return nil, repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError
+}
+
+func (arm *articleRepositoryMock5) GetTagsForArticle(ctx context.Context, articleId int) ([]string, error) {
+	return []string{}, nil
+}
+
+func (arm *articleRepositoryMock5) AddArticle(ctx context.Context, article *models.Article) (int, error) {
+	return 123, nil
+}
+
+func (arm *articleRepositoryMock5) DeleteArticleById(ctx context.Context, articleId int) (int64, error) {
+	return -1, nil
+}
+
+func (arm *articleRepositoryMock5) UpdateArticle(ctx context.Context, article *models.Article) error {
+	return nil
+}
+
+func (arm *articleRepositoryMock5) GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error) {
+	return "", errors.New("err")
+}
+
+func TestUpdateArticleNegative3(t *testing.T) {
+	au := NewArticleUsecase(&articleRepositoryMock5{}, loggerMock)
+
+	err := au.UpdateArticle(context.WithValue(context.Background(), domain.USER_EMAIL_KEY_FOR_CONTEXT, "asd@asd.asd"), &models.Article{})
+	assert.NotEqual(t, nil, err)
 }

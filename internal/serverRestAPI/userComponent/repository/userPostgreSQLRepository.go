@@ -118,6 +118,103 @@ FROM users U WHERE U.login = $1;
 	return user, nil
 }
 
+func (upsr *userPostgreSQLRepository) GetUserAvatar(ctx context.Context, login string) (*models.User, error) {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserAvatar function.")
+
+	row := upsr.database.QueryRow(`
+SELECT COALESCE(U.avatar_img_path, '')
+FROM users U WHERE U.login = $1;
+`, login)
+
+	user := &models.User{}
+	if err := row.Scan(&user.AvatarImgPath); err != nil {
+		if err == sql.ErrNoRows {
+			upsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
+			return nil, repositoryToUsecaseErrors.UserRepositoryLoginDoesntExistError
+		}
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got user info: %#v", user)
+
+	return user, nil
+}
+
+func (upsr *userPostgreSQLRepository) IsUserSubscribedOnUser(ctx context.Context, sessionEmail string, login string) (bool, error) {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the IsUserSubscribedOnUser function.")
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Input sessionEmail = ", sessionEmail, " login = ", login)
+
+	row := upsr.database.QueryRow(`
+SELECT COUNT(*) count
+FROM users U1
+JOIN subscriptions S ON U1.user_id = S.subscribed_to_id
+JOIN users U2 ON U2.user_id = S.user_id 
+WHERE U2.email = $1 AND U1.login = $2;
+`, sessionEmail, login)
+
+	entriesFound := 0
+	if err := row.Scan(&entriesFound); err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return false, repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got entriesFound: ", entriesFound)
+
+	result := false
+	if entriesFound == 1 {
+		result = true
+	}
+
+	return result, nil
+}
+
+func (upsr *userPostgreSQLRepository) SubscribeOnUser(ctx context.Context, email string, subscribeToLogin string) error {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeOnUser function.")
+
+	row := upsr.database.QueryRow(`
+INSERT INTO subscriptions (user_id, subscribed_to_id) VALUES 
+       ((SELECT user_id FROM users WHERE email = $1), (SELECT user_id FROM users WHERE login = $2)) RETURNING user_id, subscribed_to_id;
+`, email, subscribeToLogin)
+
+	var lastInsertedUserId int
+	var lastInsertedSubscribedToId int
+	if err := row.Scan(&lastInsertedUserId, &lastInsertedSubscribedToId); err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Got lastInsertedUserId: ", lastInsertedUserId, " lastInsertedSubscribedToId:", lastInsertedSubscribedToId)
+
+	return nil
+}
+
+func (upsr *userPostgreSQLRepository) UnsubscribeFromUser(ctx context.Context, email string, unsubscribeFromLogin string) (int64, error) {
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeFromUser function.")
+
+	result, err := upsr.database.Exec(`
+DELETE FROM subscriptions WHERE 
+                              user_id IN (SELECT user_id FROM users WHERE email = $1) AND 
+                              subscribed_to_id IN (SELECT user_id FROM users WHERE login = $2)
+							RETURNING *;
+`, email, unsubscribeFromLogin)
+
+	if err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.UserRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		upsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.UserRepositoryError
+	}
+	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed subscriptions count: ", removedRowsCount)
+
+	return removedRowsCount, nil
+}
+
 func (upsr *userPostgreSQLRepository) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
 	upsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByEmail function.")
 

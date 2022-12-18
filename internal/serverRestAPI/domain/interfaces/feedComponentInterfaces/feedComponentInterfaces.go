@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+//go:generate mockgen -destination=./mock/feedRepositoryMock.go -package=mock 2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces FeedRepositoryInterface
+
 type FeedUsecaseInterface interface {
 	GetFeed(ctx context.Context) ([]*models.Article, error)
 	GetFeedForUserByLogin(ctx context.Context, login string) ([]*models.Article, error)

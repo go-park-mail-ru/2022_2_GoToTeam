@@ -99,6 +99,7 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 
 	userInfoBySession := modelsRestApi.UserInfoBySession{
 		Username:      user.Username,
+		Login:         user.Login,
 		AvatarImgPath: user.AvatarImgPath,
 	}
 	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed userInfoBySession = ", userInfoBySession)

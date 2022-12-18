@@ -4,6 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/createArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/getArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/removeArticle"
+	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/updateArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
@@ -104,6 +105,33 @@ func (ac *ArticleController) CreateArticleHandler(c echo.Context) error {
 	if err != nil {
 		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (ac *ArticleController) UpdateArticleHandler(c echo.Context) error {
+	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UpdateArticleHandler function.")
+	defer c.Request().Body.Close()
+
+	parsedInputArticle := new(updateArticle.Article)
+	if err := c.Bind(parsedInputArticle); err != nil {
+		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
+
+	err := ac.articleUsecase.UpdateArticle(c.Request().Context(), &models.Article{ArticleId: parsedInputArticle.Id, Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, Content: parsedInputArticle.Content})
+	if err != nil {
+		switch errors.Unwrap(err).(type) {
+		case *usecaseToDeliveryErrors.EmailIsNotAuthorError:
+			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			return c.NoContent(http.StatusForbidden)
+		default:
+			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
 	}
 
 	return c.NoContent(http.StatusOK)
