@@ -117,9 +117,23 @@ func Run(configFilePath string) {
 	if err := configureServer(e, config); err != nil {
 		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while configuring server", err))
 	}
-	if err := e.Start(config.ServerAddress); err != nil {
-		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while starting server", err))
+
+	serverAddress := config.ServerAddress
+
+	if config.EnableHttpsWithTLS {
+		middlewareLogger.LogrusLogger.Info("Starting https server with TLS on: ", serverAddress)
+
+		if err := e.StartTLS(serverAddress, config.TLSCertificateFilePath, config.TLSCertificateKeyFilePath); err != nil {
+			middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while starting server", err))
+		}
+	} else {
+		middlewareLogger.LogrusLogger.Info("Starting http server on: ", serverAddress)
+
+		if err := e.Start(serverAddress); err != nil {
+			middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while starting server", err))
+		}
 	}
+
 }
 
 func configureServer(e *echo.Echo, config *configReader.Config) error {

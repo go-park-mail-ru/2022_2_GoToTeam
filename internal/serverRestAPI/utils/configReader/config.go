@@ -16,6 +16,10 @@ type Config struct {
 	EnableEchoCsrfToken bool `toml:"enableEchoCsrfToken"`
 	EnableEchoSecurity  bool `toml:"enableEchoSecurity"`
 
+	EnableHttpsWithTLS        bool   `toml:"enableHttpsWithTLS"`
+	TLSCertificateFilePath    string `toml:"TLSCertificateFilePath"`
+	TLSCertificateKeyFilePath string `toml:"TLSCertificateKeyFilePath"`
+
 	DatabaseUser               string `toml:"databaseUser"`
 	DatabaseName               string `toml:"databaseName"`
 	DatabasePassword           string `toml:"databasePassword"`
