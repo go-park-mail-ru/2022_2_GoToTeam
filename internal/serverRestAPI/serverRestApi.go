@@ -100,6 +100,7 @@ func Run(configFilePath string) {
 			XSSProtection:      "1; mode=block",
 			ContentTypeNosniff: "nosniff",
 			XFrameOptions:      "SAMEORIGIN",
+			//ContentSecurityPolicy: "default-src 'self'",
 		}))
 
 		middlewareLogger.LogrusLogger.Info("Echo security enabled.")
