@@ -249,7 +249,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.GET("/api/v1/feed", feedController.FeedHandler)
 	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)
 	e.GET("/api/v1/feed/category", feedController.FeedCategoryHandler)
-	e.GET("/api/v1/feed/feed/subscriptions/has-new-articles-from", feedController.GetNewArticlesFromIdForSubscriber)
+	e.GET("/api/v1/feed/subscriptions/has-new-articles-from", feedController.GetNewArticlesFromIdForSubscriber)
 
 	e.GET("/api/v1/article", articleController.ArticleHandler)
 	e.POST("/api/v1/article/create", articleController.CreateArticleHandler)
