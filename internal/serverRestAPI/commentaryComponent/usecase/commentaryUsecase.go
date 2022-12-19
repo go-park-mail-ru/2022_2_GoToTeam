@@ -4,6 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/commentaryComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/commentaryComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils"
 	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
@@ -64,4 +65,37 @@ func (acbs *commentaryUsecase) GetAllCommentariesForArticle(ctx context.Context,
 	}
 
 	return articles, nil
+}
+
+func (acbs *commentaryUsecase) ProcessLike(ctx context.Context, likeData *models.LikeData) (int, error) {
+	acbs.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the ProcessLike function.")
+
+	wrappingErrorMessage := "error while liking the commentary by session"
+
+	email, err := sessionUtils.GetEmailFromContext(ctx, acbs.logger)
+	if err != nil {
+		acbs.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
+	}
+
+	sign := likeData.Sign
+	if sign == 1 { // Like
+		_, err = acbs.commentaryRepository.AddLike(ctx, true, likeData.Id, email)
+	} else if sign == -1 { // Dislike
+		_, err = acbs.commentaryRepository.AddLike(ctx, false, likeData.Id, email)
+	} else if sign == 0 { // Remove like if exist
+		_, err = acbs.commentaryRepository.RemoveLike(ctx, likeData.Id, email)
+	}
+	if err != nil {
+		acbs.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	updatedRating, err := acbs.commentaryRepository.GetCommentaryRating(ctx, likeData.Id)
+	if err != nil {
+		acbs.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return updatedRating, err
 }

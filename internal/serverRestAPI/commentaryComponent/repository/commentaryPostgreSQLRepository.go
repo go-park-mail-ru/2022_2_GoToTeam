@@ -100,3 +100,82 @@ WHERE C.article_id = $1;
 
 	return commentaries, nil
 }
+
+func (cpsr *commentaryPostgreSQLRepository) AddLike(ctx context.Context, isLike bool, commentId int, email string) (int, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddLike function.")
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Input isLike = ", isLike, " commentId = ", commentId, " email = ", email)
+
+	row := cpsr.database.QueryRow(`
+INSERT INTO comments_likes (is_like, comment_id, user_id)  VALUES ($1, $2,
+        (SELECT user_id FROM users WHERE email = $3)) RETURNING comment_id;
+`, isLike, commentId, email)
+
+	var commentLastInsertId int
+	if err := row.Scan(&commentLastInsertId); err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.CommentaryRepositoryError
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got commentLastInsertId: ", commentLastInsertId)
+
+	return commentLastInsertId, nil
+}
+
+func (cpsr *commentaryPostgreSQLRepository) RemoveLike(ctx context.Context, commentId int, email string) (int64, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveLike function.")
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Input commentId = ", commentId, " email = ", email)
+
+	result, err := cpsr.database.Exec(
+		"DELETE FROM comments_likes WHERE comment_id = $1 AND user_id = (SELECT user_id FROM users WHERE email = $2) RETURNING *;",
+		commentId, email,
+	)
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.CommentaryRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.CommentaryRepositoryError
+	}
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed likes count: ", removedRowsCount)
+
+	return removedRowsCount, nil
+}
+
+func (cpsr *commentaryPostgreSQLRepository) GetCommentaryRating(ctx context.Context, commentaryId int) (int, error) {
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetCommentaryRating function.")
+
+	rows, err := cpsr.database.Query(`
+SELECT rating
+FROM comments
+WHERE comment_id = $1;
+`, commentaryId)
+	if err != nil {
+		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.CommentaryRepositoryError
+	}
+	defer rows.Close()
+
+	var rating int
+	isMultipleReturnedRows := false
+	for rows.Next() {
+		if isMultipleReturnedRows {
+			cpsr.logger.LogrusLoggerWithContext(ctx).Error("Multiple returning rows.")
+			return 0, repositoryToUsecaseErrors.CommentaryRepositoryError
+		}
+		isMultipleReturnedRows = true
+
+		if err := rows.Scan(&rating); err != nil {
+			cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return 0, repositoryToUsecaseErrors.CommentaryRepositoryError
+		}
+	}
+
+	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got rating: ", rating)
+
+	return rating, nil
+}

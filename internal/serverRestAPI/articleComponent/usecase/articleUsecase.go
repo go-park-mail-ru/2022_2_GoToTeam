@@ -142,7 +142,7 @@ func (au *articleUsecase) ProcessLike(ctx context.Context, likeData *models.Like
 		_, err = au.articleRepository.AddLike(ctx, true, likeData.Id, email)
 	} else if sign == -1 { // Dislike
 		_, err = au.articleRepository.AddLike(ctx, false, likeData.Id, email)
-	} else if sign == 0 {
+	} else if sign == 0 { // Remove like if exist
 		_, err = au.articleRepository.RemoveLike(ctx, likeData.Id, email)
 	}
 	if err != nil {

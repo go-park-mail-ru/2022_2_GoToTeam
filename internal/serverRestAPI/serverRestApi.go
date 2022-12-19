@@ -268,6 +268,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	e.POST("/api/v1/commentary/create", commentaryController.CreateCommentaryHandler)
 	e.GET("/api/v1/commentary/feed", commentaryController.GetAllCommentariesForArticle)
+	e.POST("/api/v1/commentary/like", commentaryController.LikeHandler)
 
 	return nil
 }

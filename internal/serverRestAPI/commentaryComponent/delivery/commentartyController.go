@@ -3,6 +3,7 @@ package delivery
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/commentaryComponent/delivery/modelsRestApi/createCommentary"
 	"2022_2_GoTo_team/internal/serverRestAPI/commentaryComponent/delivery/modelsRestApi/getAllCommentariesForArticle"
+	"2022_2_GoTo_team/internal/serverRestAPI/commentaryComponent/delivery/modelsRestApi/likeData"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/commentaryComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
 	"2022_2_GoTo_team/pkg/utils/logger"
@@ -103,4 +104,35 @@ func (cc *CommentaryController) GetAllCommentariesForArticle(c echo.Context) err
 	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed allCommentariesForArticle: ", allCommentariesForArticle)
 
 	return c.JSON(http.StatusOK, allCommentariesForArticle)
+}
+
+func (cc *CommentaryController) LikeHandler(c echo.Context) error {
+	cc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the LikeHandler function.")
+	ctx := c.Request().Context()
+	defer c.Request().Body.Close()
+
+	parsedInputLikeData := new(likeData.LikeData)
+	if err := c.Bind(parsedInputLikeData); err != nil {
+		cc.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+	sign := parsedInputLikeData.Sign
+	if sign != -1 && sign != 0 && sign != 1 {
+		cc.logger.LogrusLoggerWithContext(ctx).Warnf("Incorrect sign value = %#v, should be -1 or 0 or 1", sign)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	cc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed parsedInputLikeData: %#v", parsedInputLikeData)
+
+	updatedRating, err := cc.commentaryUsecase.ProcessLike(ctx, &models.LikeData{Id: parsedInputLikeData.Id, Sign: parsedInputLikeData.Sign})
+	if err != nil {
+		cc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	likeResponse := likeData.LikeResponse{
+		Rating: updatedRating,
+	}
+
+	return c.JSON(http.StatusOK, likeResponse)
 }

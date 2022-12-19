@@ -32,6 +32,7 @@ var (
 		"/api/v1/file/upload/profile/photo": {},
 
 		"/api/v1/commentary/create": {},
+		"/api/v1/commentary/like":   {},
 	}
 
 	needPutEmailToContextUrls = map[string]struct{}{
