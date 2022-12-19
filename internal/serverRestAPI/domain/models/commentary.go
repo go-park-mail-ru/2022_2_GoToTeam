@@ -7,4 +7,5 @@ type Commentary struct {
 	Publisher           Publisher
 	ArticleId           int
 	CommentForCommentId string
+	Liked               int
 }

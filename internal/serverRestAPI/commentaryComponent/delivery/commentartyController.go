@@ -98,6 +98,7 @@ func (cc *CommentaryController) GetAllCommentariesForArticle(c echo.Context) err
 				Username: v.Publisher.Username,
 				Login:    v.Publisher.Login,
 			},
+			Liked: v.Liked,
 		}
 		allCommentariesForArticle.Commentaries = append(allCommentariesForArticle.Commentaries, commentary)
 	}

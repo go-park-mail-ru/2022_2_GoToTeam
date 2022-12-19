@@ -61,7 +61,7 @@ RETURNING article_id;
 	return commentaryLastInsertId, nil
 }
 
-func (cpsr *commentaryPostgreSQLRepository) GetAllCommentsForArticle(ctx context.Context, articleId int) ([]*models.Commentary, error) {
+func (cpsr *commentaryPostgreSQLRepository) GetAllCommentsForArticle(ctx context.Context, articleId int, email string) ([]*models.Commentary, error) {
 	cpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllCommentsForArticle function.")
 
 	cpsr.logger.LogrusLoggerWithContext(ctx).Debugf("Input articleId: %#v", articleId)
@@ -75,11 +75,13 @@ SELECT C.comment_id,
        C.article_id,
        COALESCE(C.comment_for_comment_id::text, ''),
        COALESCE(UP.username, ''),
-       UP.login
+       UP.login,
+       (CASE WHEN CL.is_like = true THEN 1 ELSE (CASE WHEN CL.is_like = false THEN -1 ELSE 0 END) END) liked
 FROM comments C
          JOIN users UP ON C.publisher_id = UP.user_id
+         LEFT JOIN comments_likes CL ON CL.user_id = (SELECT user_id FROM users WHERE email = $2) AND CL.comment_id = C.comment_id
 WHERE C.article_id = $1;
-`, articleId)
+`, articleId, email)
 	if err != nil {
 		cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.CommentaryRepositoryError
@@ -88,7 +90,7 @@ WHERE C.article_id = $1;
 
 	for rows.Next() {
 		commentary := &models.Commentary{}
-		if err := rows.Scan(&commentary.CommentId, &commentary.Content, &commentary.Rating, &commentary.ArticleId, &commentary.CommentForCommentId, &commentary.Publisher.Username, &commentary.Publisher.Login); err != nil {
+		if err := rows.Scan(&commentary.CommentId, &commentary.Content, &commentary.Rating, &commentary.ArticleId, &commentary.CommentForCommentId, &commentary.Publisher.Username, &commentary.Publisher.Login, &commentary.Liked); err != nil {
 			cpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, repositoryToUsecaseErrors.CommentaryRepositoryError
 		}

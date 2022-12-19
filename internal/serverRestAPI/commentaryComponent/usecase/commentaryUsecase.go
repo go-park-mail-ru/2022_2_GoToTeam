@@ -58,7 +58,13 @@ func (acbs *commentaryUsecase) GetAllCommentariesForArticle(ctx context.Context,
 
 	wrappingErrorMessage := "error while getting commentaries for articleId"
 
-	articles, err := acbs.commentaryRepository.GetAllCommentsForArticle(ctx, articleId)
+	email, err := sessionUtils.GetEmailFromContext(ctx, acbs.logger)
+	if err != nil {
+		acbs.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
+	articles, err := acbs.commentaryRepository.GetAllCommentsForArticle(ctx, articleId, email)
 	if err != nil {
 		acbs.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})

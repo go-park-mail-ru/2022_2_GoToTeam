@@ -11,6 +11,7 @@ type Commentary struct {
 	ArticleId           int       `json:"article_id"`
 	CommentForCommentId string    `json:"comment_for_comment_id"`
 	Publisher           Publisher `json:"publisher"`
+	Liked               int       `json:"liked"`
 }
 
 type Publisher struct {

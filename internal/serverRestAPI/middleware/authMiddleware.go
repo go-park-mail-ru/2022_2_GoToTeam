@@ -36,8 +36,9 @@ var (
 	}
 
 	needPutEmailToContextUrls = map[string]struct{}{
-		"/api/v1/category/info": {},
-		"/api/v1/user/info":     {},
+		"/api/v1/category/info":   {},
+		"/api/v1/user/info":       {},
+		"/api/v1/commentary/feed": {},
 	}
 
 	noNeedSessionUrls = map[string]struct{}{
