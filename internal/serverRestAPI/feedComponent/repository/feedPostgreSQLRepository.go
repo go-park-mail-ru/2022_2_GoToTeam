@@ -120,7 +120,7 @@ ORDER BY A.article_id DESC;
 }
 
 // GetFeedForUserByLogin TODO OFFSET LIMIT
-func (fpsr *feedPostgreSQLRepository) GetFeedForUserByLogin(ctx context.Context, login string) ([]*models.Article, error) {
+func (fpsr *feedPostgreSQLRepository) GetFeedForUserByLogin(ctx context.Context, login string, email string) ([]*models.Article, error) {
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForUserByLogin function.")
 
 	articles := make([]*models.Article, 0, 10)
@@ -136,14 +136,16 @@ SELECT A.article_id,
        COALESCE(UC.login, ''),
        COALESCE(UP.username, ''),
        UP.login,
-       COALESCE(C.category_name, '')
+       COALESCE(C.category_name, ''),
+       (CASE WHEN AL.is_like = true THEN 1 ELSE (CASE WHEN AL.is_like = false THEN -1 ELSE 0 END) END) liked
 FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
+         LEFT JOIN articles_likes AL ON AL.user_id = (SELECT user_id FROM users WHERE email = $2) AND AL.article_id = A.article_id
 WHERE UP.login = $1
 ORDER BY A.article_id DESC;
-`, login)
+`, login, email)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.FeedRepositoryError
@@ -152,7 +154,7 @@ ORDER BY A.article_id DESC;
 
 	for rows.Next() {
 		article := &models.Article{}
-		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
+		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName, &article.Liked); err != nil {
 			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, repositoryToUsecaseErrors.FeedRepositoryError
 		}
@@ -171,7 +173,7 @@ ORDER BY A.article_id DESC;
 }
 
 // GetFeedForCategory TODO OFFSET LIMIT
-func (fpsr *feedPostgreSQLRepository) GetFeedForCategory(ctx context.Context, category string) ([]*models.Article, error) {
+func (fpsr *feedPostgreSQLRepository) GetFeedForCategory(ctx context.Context, category string, email string) ([]*models.Article, error) {
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForCategory function.")
 
 	articles := make([]*models.Article, 0, 10)
@@ -187,14 +189,16 @@ SELECT A.article_id,
        COALESCE(UC.login, ''),
        COALESCE(UP.username, ''),
        UP.login,
-       COALESCE(C.category_name, '')
+       COALESCE(C.category_name, ''),
+       (CASE WHEN AL.is_like = true THEN 1 ELSE (CASE WHEN AL.is_like = false THEN -1 ELSE 0 END) END) liked
 FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
+         LEFT JOIN articles_likes AL ON AL.user_id = (SELECT user_id FROM users WHERE email = $2) AND AL.article_id = A.article_id
 WHERE C.category_name = $1
 ORDER BY A.article_id DESC;
-`, category)
+`, category, email)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.FeedRepositoryError
@@ -203,7 +207,7 @@ ORDER BY A.article_id DESC;
 
 	for rows.Next() {
 		article := &models.Article{}
-		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
+		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName, &article.Liked); err != nil {
 			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, repositoryToUsecaseErrors.FeedRepositoryError
 		}

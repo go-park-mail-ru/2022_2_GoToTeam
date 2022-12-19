@@ -169,6 +169,7 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
@@ -245,6 +246,7 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}

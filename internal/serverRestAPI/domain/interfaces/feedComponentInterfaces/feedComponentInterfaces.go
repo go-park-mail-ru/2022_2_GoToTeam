@@ -15,8 +15,8 @@ type FeedUsecaseInterface interface {
 
 type FeedRepositoryInterface interface {
 	GetFeed(ctx context.Context, email string) ([]*models.Article, error)
-	GetFeedForUserByLogin(ctx context.Context, login string) ([]*models.Article, error)
-	GetFeedForCategory(ctx context.Context, category string) ([]*models.Article, error)
+	GetFeedForUserByLogin(ctx context.Context, login string, email string) ([]*models.Article, error)
+	GetFeedForCategory(ctx context.Context, category string, email string) ([]*models.Article, error)
 	UserExistsByLogin(ctx context.Context, login string) (bool, error)
 	CategoryExists(ctx context.Context, category string) (bool, error)
 }

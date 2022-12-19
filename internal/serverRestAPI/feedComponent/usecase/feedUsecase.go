@@ -55,6 +55,12 @@ func (fu *feedUsecase) GetFeedForUserByLogin(ctx context.Context, login string) 
 
 	wrappingErrorMessage := "error while getting articles for user by login"
 
+	email, err := sessionUtils.GetEmailFromContext(ctx, fu.logger)
+	if err != nil {
+		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
 	if !validators.LoginIsValidByRegExp(login) {
 		fu.logger.LogrusLoggerWithContext(ctx).Infof("Login %s is not valid.", login)
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginIsNotValidError{Err: fmt.Errorf("login is not valid %#v", login)})
@@ -70,7 +76,7 @@ func (fu *feedUsecase) GetFeedForUserByLogin(ctx context.Context, login string) 
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.LoginDoesntExistError{Err: fmt.Errorf("login %#v doesnt exist", login)})
 	}
 
-	articles, err := fu.feedRepository.GetFeedForUserByLogin(ctx, login)
+	articles, err := fu.feedRepository.GetFeedForUserByLogin(ctx, login, email)
 	if err != nil {
 		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
@@ -84,6 +90,12 @@ func (fu *feedUsecase) GetFeedForCategory(ctx context.Context, category string) 
 
 	wrappingErrorMessage := "error while getting articles for category"
 
+	email, err := sessionUtils.GetEmailFromContext(ctx, fu.logger)
+	if err != nil {
+		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
 	exists, err := fu.feedRepository.CategoryExists(ctx, category)
 	if err != nil {
 		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
@@ -94,7 +106,7 @@ func (fu *feedUsecase) GetFeedForCategory(ctx context.Context, category string) 
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.CategoryDoesntExistError{Err: fmt.Errorf("category %#v doesnt exist", category)})
 	}
 
-	articles, err := fu.feedRepository.GetFeedForCategory(ctx, category)
+	articles, err := fu.feedRepository.GetFeedForCategory(ctx, category, email)
 	if err != nil {
 		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
