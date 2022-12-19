@@ -207,7 +207,7 @@ func (apsr *articlePostgreSQLRepository) DeleteArticleById(ctx context.Context, 
 	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the DeleteArticleById function.")
 
 	result, err := apsr.database.Exec(
-		"DELETE FROM articles WHERE article_id = $1 RETURNING *",
+		"DELETE FROM articles WHERE article_id = $1 RETURNING *;",
 		articleId,
 	)
 	if err != nil {
@@ -258,4 +258,83 @@ WHERE A.article_id = $1;
 	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got email: ", email)
 
 	return email, nil
+}
+
+func (apsr *articlePostgreSQLRepository) AddLike(ctx context.Context, isLike bool, articleId int, email string) (int, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the AddLike function.")
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Input isLike = ", isLike, " articleId = ", articleId, " email = ", email)
+
+	row := apsr.database.QueryRow(`
+INSERT INTO articles_likes (is_like, article_id, user_id)  VALUES ($1, $2,
+        (SELECT user_id FROM users WHERE email = $3)) RETURNING article_id;
+`, isLike, articleId, email)
+
+	var likeLastInsertId int
+	if err := row.Scan(&likeLastInsertId); err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got likeLastInsertId: ", likeLastInsertId)
+
+	return likeLastInsertId, nil
+}
+
+func (apsr *articlePostgreSQLRepository) RemoveLike(ctx context.Context, articleId int, email string) (int64, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveLike function.")
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Input articleId = ", articleId, " email = ", email)
+
+	result, err := apsr.database.Exec(
+		"DELETE FROM articles_likes WHERE article_id = $1 AND user_id = (SELECT user_id FROM users WHERE email = $2) RETURNING *;",
+		articleId, email,
+	)
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+
+	removedRowsCount, err := result.RowsAffected()
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Removed likes count: ", removedRowsCount)
+
+	return removedRowsCount, nil
+}
+
+func (apsr *articlePostgreSQLRepository) GetArticleRating(ctx context.Context, articleId int) (int, error) {
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetArticleRating function.")
+
+	rows, err := apsr.database.Query(`
+SELECT rating
+FROM articles
+WHERE article_id = $1;
+`, articleId)
+	if err != nil {
+		apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+	}
+	defer rows.Close()
+
+	var rating int
+	isMultipleReturnedRows := false
+	for rows.Next() {
+		if isMultipleReturnedRows {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error("Multiple returning rows.")
+			return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+		isMultipleReturnedRows = true
+
+		if err := rows.Scan(&rating); err != nil {
+			apsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return 0, repositoryToUsecaseErrors.ArticleRepositoryError
+		}
+	}
+
+	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Got rating: ", rating)
+
+	return rating, nil
 }

@@ -18,6 +18,7 @@ var (
 		"/api/v1/article/create": {},
 		"/api/v1/article/update": {},
 		"/api/v1/article/remove": {},
+		"/api/v1/article/like":   {},
 
 		"/api/v1/user/subscribe":   {},
 		"/api/v1/user/unsubscribe": {},

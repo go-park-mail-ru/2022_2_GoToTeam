@@ -254,6 +254,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.POST("/api/v1/article/create", articleController.CreateArticleHandler)
 	e.POST("/api/v1/article/remove", articleController.RemoveArticleHandler)
 	e.POST("/api/v1/article/update", articleController.UpdateArticleHandler)
+	e.POST("/api/v1/article/like", articleController.LikeHandler)
 
 	e.GET("/api/v1/profile", profileController.GetProfileHandler)
 	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)

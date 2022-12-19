@@ -10,6 +10,7 @@ type ArticleUsecaseInterface interface {
 	AddArticleBySession(ctx context.Context, article *models.Article) error
 	UpdateArticle(ctx context.Context, article *models.Article) error
 	RemoveArticleById(ctx context.Context, articleId int) error
+	ProcessLike(ctx context.Context, likeData *models.LikeData) (int, error)
 }
 
 type ArticleRepositoryInterface interface {
@@ -19,4 +20,7 @@ type ArticleRepositoryInterface interface {
 	UpdateArticle(ctx context.Context, article *models.Article) error
 	DeleteArticleById(ctx context.Context, articleId int) (int64, error)
 	GetAuthorEmailForArticle(ctx context.Context, articleId int) (string, error)
+	AddLike(ctx context.Context, isLike bool, articleId int, email string) (int, error)
+	RemoveLike(ctx context.Context, articleId int, email string) (int64, error)
+	GetArticleRating(ctx context.Context, articleId int) (int, error)
 }
