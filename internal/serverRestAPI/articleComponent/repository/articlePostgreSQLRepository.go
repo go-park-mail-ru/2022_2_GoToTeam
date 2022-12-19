@@ -27,7 +27,7 @@ func NewArticlePostgreSQLRepository(database *sql.DB, logger *logger.Logger) art
 	return articleRepository
 }
 
-func (apsr *articlePostgreSQLRepository) GetArticleById(ctx context.Context, id int) (*models.Article, error) {
+func (apsr *articlePostgreSQLRepository) GetArticleById(ctx context.Context, id int, email string) (*models.Article, error) {
 	apsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetArticleById function.")
 
 	row := apsr.database.QueryRow(`
@@ -42,13 +42,15 @@ SELECT A.article_id,
        COALESCE(UC.login, ''),
        COALESCE(UP.username, ''),
        UP.login,
-       COALESCE(C.category_name, '')
+       COALESCE(C.category_name, ''),
+       (CASE WHEN AL.is_like = true THEN 1 ELSE (CASE WHEN AL.is_like = false THEN -1 ELSE 0 END) END) liked       
 FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
+         LEFT JOIN articles_likes AL ON AL.user_id = (SELECT user_id FROM users WHERE email = $2) AND AL.article_id = A.article_id
 WHERE A.article_id = $1;
-`, id)
+`, id, email)
 
 	article := &models.Article{}
 	if err := row.Scan(
@@ -63,7 +65,9 @@ WHERE A.article_id = $1;
 		&article.CoAuthor.Login,
 		&article.Publisher.Username,
 		&article.Publisher.Login,
-		&article.CategoryName); err != nil {
+		&article.CategoryName,
+		&article.Liked,
+	); err != nil {
 		if err == sql.ErrNoRows {
 			apsr.logger.LogrusLoggerWithContext(ctx).Debug(err)
 			return nil, repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError

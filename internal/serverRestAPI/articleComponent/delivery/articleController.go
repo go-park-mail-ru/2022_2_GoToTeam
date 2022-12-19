@@ -84,6 +84,7 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 			Username: article.CoAuthor.Username,
 			Login:    article.CoAuthor.Login,
 		},
+		Liked: article.Liked,
 	}
 	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed articleOutput: ", articleOutput)
 

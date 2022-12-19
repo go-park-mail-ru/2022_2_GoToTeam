@@ -36,7 +36,13 @@ func (au *articleUsecase) GetArticleById(ctx context.Context, id int) (*models.A
 
 	wrappingErrorMessage := "error while getting article by id"
 
-	article, err := au.articleRepository.GetArticleById(ctx, id)
+	email, err := sessionUtils.GetEmailFromContext(ctx, au.logger)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
+	article, err := au.articleRepository.GetArticleById(ctx, id, email)
 	if err != nil {
 		switch err {
 		case repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError:

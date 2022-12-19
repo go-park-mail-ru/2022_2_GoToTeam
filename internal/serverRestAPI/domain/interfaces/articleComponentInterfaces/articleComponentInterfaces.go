@@ -14,7 +14,7 @@ type ArticleUsecaseInterface interface {
 }
 
 type ArticleRepositoryInterface interface {
-	GetArticleById(ctx context.Context, id int) (*models.Article, error)
+	GetArticleById(ctx context.Context, id int, email string) (*models.Article, error)
 	GetTagsForArticle(ctx context.Context, articleId int) ([]string, error)
 	AddArticle(ctx context.Context, article *models.Article) (int, error)
 	UpdateArticle(ctx context.Context, article *models.Article) error
