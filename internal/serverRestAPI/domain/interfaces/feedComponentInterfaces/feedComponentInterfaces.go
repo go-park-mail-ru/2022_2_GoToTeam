@@ -14,9 +14,7 @@ type FeedUsecaseInterface interface {
 }
 
 type FeedRepositoryInterface interface {
-	GetAllArticles(ctx context.Context) ([]*models.Article, error)
-	GetArticles(ctx context.Context) ([]*models.Article, error)
-	GetFeed(ctx context.Context) ([]*models.Article, error)
+	GetFeed(ctx context.Context, email string) ([]*models.Article, error)
 	GetFeedForUserByLogin(ctx context.Context, login string) ([]*models.Article, error)
 	GetFeedForCategory(ctx context.Context, category string) ([]*models.Article, error)
 	UserExistsByLogin(ctx context.Context, login string) (bool, error)

@@ -37,56 +37,6 @@ func (fpsr *feedPostgreSQLRepository) getArticlesString(articles []*models.Artic
 	return articlesString
 }
 
-func (fpsr *feedPostgreSQLRepository) GetAllArticles(ctx context.Context) ([]*models.Article, error) {
-	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetAllArticles function.")
-
-	articles := make([]*models.Article, 0, 10)
-
-	rows, err := fpsr.database.Query(`
-SELECT A.article_id,
-       A.title,
-       COALESCE(A.description, ''),
-       A.rating,
-       A.comments_count,
-       A.content,
-       COALESCE(A.cover_img_path, ''),
-       COALESCE(COALESCE(UC.username, ''), ''),
-       COALESCE(UC.login, ''),
-       COALESCE(UP.username, ''),
-       UP.login,
-       COALESCE(C.category_name, '')
-FROM articles A
-         LEFT JOIN users UC ON A.co_author_id = UC.user_id
-         JOIN users UP ON A.publisher_id = UP.user_id
-         LEFT JOIN categories C ON A.category_id = C.category_id
-ORDER BY A.article_id DESC;
-`)
-	if err != nil {
-		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-		return nil, repositoryToUsecaseErrors.FeedRepositoryError
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		article := &models.Article{}
-		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.Content, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
-			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, repositoryToUsecaseErrors.FeedRepositoryError
-		}
-		article.Tags, err = fpsr.GetTagsForArticle(ctx, article.ArticleId)
-		if err != nil {
-			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, repositoryToUsecaseErrors.FeedRepositoryError
-		}
-
-		articles = append(articles, article)
-	}
-
-	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got articles: \n" + fpsr.getArticlesString(articles))
-
-	return articles, nil
-}
-
 func (fpsr *feedPostgreSQLRepository) GetTagsForArticle(ctx context.Context, articleId int) ([]string, error) {
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetTagsForArticle function.")
 
@@ -117,59 +67,8 @@ WHERE A.article_id = $1;
 	return tags, nil
 }
 
-// GetArticles TODO OFFSET LIMIT
-func (fpsr *feedPostgreSQLRepository) GetArticles(ctx context.Context) ([]*models.Article, error) {
-	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetArticles function.")
-
-	articles := make([]*models.Article, 0, 10)
-
-	rows, err := fpsr.database.Query(`
-SELECT A.article_id,
-       A.title,
-       COALESCE(A.description, ''),
-       A.rating,
-       A.comments_count,
-       A.content,
-       COALESCE(A.cover_img_path, ''),
-       COALESCE(COALESCE(UC.username, ''), ''),
-       COALESCE(UC.login, ''),
-       COALESCE(UP.username, ''),
-       UP.login,
-       COALESCE(C.category_name, '')
-FROM articles A
-         LEFT JOIN users UC ON A.co_author_id = UC.user_id
-         JOIN users UP ON A.publisher_id = UP.user_id
-         LEFT JOIN categories C ON A.category_id = C.category_id
-ORDER BY A.article_id DESC;
-`)
-	if err != nil {
-		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-		return nil, repositoryToUsecaseErrors.FeedRepositoryError
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		article := &models.Article{}
-		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.Content, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
-			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, repositoryToUsecaseErrors.FeedRepositoryError
-		}
-		article.Tags, err = fpsr.GetTagsForArticle(ctx, article.ArticleId)
-		if err != nil {
-			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
-			return nil, repositoryToUsecaseErrors.FeedRepositoryError
-		}
-
-		articles = append(articles, article)
-	}
-
-	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got articles: \n" + fpsr.getArticlesString(articles))
-
-	return articles, nil
-}
-
 // GetFeed TODO OFFSET LIMIT
-func (fpsr *feedPostgreSQLRepository) GetFeed(ctx context.Context) ([]*models.Article, error) {
+func (fpsr *feedPostgreSQLRepository) GetFeed(ctx context.Context, email string) ([]*models.Article, error) {
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeed function.")
 
 	articles := make([]*models.Article, 0, 10)
@@ -185,13 +84,15 @@ SELECT A.article_id,
        COALESCE(UC.login, ''),
        COALESCE(UP.username, ''),
        UP.login,
-       COALESCE(C.category_name, '')
+       COALESCE(C.category_name, ''),
+       (CASE WHEN AL.is_like = true THEN 1 ELSE (CASE WHEN AL.is_like = false THEN -1 ELSE 0 END) END) liked
 FROM articles A
          LEFT JOIN users UC ON A.co_author_id = UC.user_id
          JOIN users UP ON A.publisher_id = UP.user_id
          LEFT JOIN categories C ON A.category_id = C.category_id
+         LEFT JOIN articles_likes AL ON AL.user_id = (SELECT user_id FROM users WHERE email = $1) AND AL.article_id = A.article_id
 ORDER BY A.article_id DESC;
-`)
+`, email)
 	if err != nil {
 		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, repositoryToUsecaseErrors.FeedRepositoryError
@@ -200,7 +101,7 @@ ORDER BY A.article_id DESC;
 
 	for rows.Next() {
 		article := &models.Article{}
-		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName); err != nil {
+		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName, &article.Liked); err != nil {
 			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return nil, repositoryToUsecaseErrors.FeedRepositoryError
 		}

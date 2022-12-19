@@ -4,6 +4,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/feedComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/feedComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"2022_2_GoTo_team/pkg/utils/validators"
@@ -34,7 +35,13 @@ func (fu *feedUsecase) GetFeed(ctx context.Context) ([]*models.Article, error) {
 
 	wrappingErrorMessage := "error while getting articles"
 
-	articles, err := fu.feedRepository.GetFeed(ctx)
+	email, err := sessionUtils.GetEmailFromContext(ctx, fu.logger)
+	if err != nil {
+		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
+	articles, err := fu.feedRepository.GetFeed(ctx, email)
 	if err != nil {
 		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})

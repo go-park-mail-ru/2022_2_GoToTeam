@@ -89,6 +89,7 @@ func (fc *FeedController) FeedHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
