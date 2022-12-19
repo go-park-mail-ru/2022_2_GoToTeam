@@ -36,6 +36,8 @@ var (
 	}
 
 	needPutEmailToContextUrls = map[string]struct{}{
+		"/api/v1/article": {},
+
 		"/api/v1/feed":          {},
 		"/api/v1/feed/user":     {},
 		"/api/v1/feed/category": {},
