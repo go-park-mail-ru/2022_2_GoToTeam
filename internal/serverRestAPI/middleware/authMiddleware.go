@@ -20,6 +20,8 @@ var (
 		"/api/v1/article/remove": {},
 		"/api/v1/article/like":   {},
 
+		"/api/v1/feed/feed/subscriptions/has-new-articles-from": {},
+
 		"/api/v1/user/subscribe":   {},
 		"/api/v1/user/unsubscribe": {},
 

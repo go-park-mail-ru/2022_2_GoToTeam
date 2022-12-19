@@ -270,3 +270,38 @@ FROM categories C WHERE C.category_name = $1;
 
 	return true, nil
 }
+
+func (fpsr *feedPostgreSQLRepository) GetNewArticlesFromIdForSubscriber(ctx context.Context, articleId int, email string) ([]int, error) {
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetNewArticlesFromIdForSubscriber function.")
+
+	newArticlesIds := make([]int, 0, 4)
+
+	rows, err := fpsr.database.Query(`
+SELECT A.article_id
+FROM articles A
+    	 JOIN users U ON U.email = $2
+    	 LEFT JOIN users_categories_subscriptions UCS ON UCS.category_id = A.category_id AND UCS.user_id = U.user_id
+    	 LEFT JOIN subscriptions S ON S.user_id = U.user_id
+WHERE (A.article_id > $1) AND (A.publisher_id = S.subscribed_to_id OR A.category_id = UCS.category_id)
+ORDER BY A.article_id DESC;
+`, articleId, email)
+	if err != nil {
+		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.FeedRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var articleId *int
+		if err := rows.Scan(&articleId); err != nil {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.FeedRepositoryError
+		}
+
+		newArticlesIds = append(newArticlesIds, *articleId)
+	}
+
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debugf("Got newArticles ids: %#v\n", newArticlesIds)
+
+	return newArticlesIds, nil
+}
