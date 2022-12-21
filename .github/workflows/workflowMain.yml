@@ -27,5 +27,18 @@ jobs:
     - name: Run go vet
       run: go vet ./...
       
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3 
+    
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+
+    - name: Build
+      run: go build -v ./...
+      
     - name: Test
-      run: go test -race -coverpkg=./... -coverprofile=c.out ./...;
+      run: go test -race -coverpkg=./... -coverprofile=c.out ./...; go tool cover -func=c.out
