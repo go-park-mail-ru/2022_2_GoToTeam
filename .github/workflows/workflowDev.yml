@@ -42,7 +42,7 @@ jobs:
       
     - name: Test
       #run: go test -race -coverpkg=./... -coverprofile=c.out `go list ./... | grep -v ".pb.go"`; go tool cover -func=c.out
-      run: go test -race -coverpkg=./... -coverprofile cover.out.tmp
+      run: go test -race -coverpkg=./... -coverprofile=cover.out.tmp
           #cat cover.out.tmp | grep -v ".pb.go" > cover.out
           #tool cover -func cover.out
         
