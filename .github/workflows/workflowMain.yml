@@ -28,4 +28,4 @@ jobs:
       run: go vet ./...
       
     - name: Test
-      run: go test -coverprofile cov.out -coverpkg=./... && go tool cover -func=cov.out
+      run: go test -race -coverpkg=./... -coverprofile=c.out ./...; go tool cover -func=c.out
