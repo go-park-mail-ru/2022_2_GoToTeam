@@ -94,14 +94,24 @@ jobs:
           target: "/home/ubuntu/deploy_back"
           rm: true
           strip_components: 1
-       
+      
+      - name: Connect by SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SHH_PRIVATE_KEY }}
+          script: |
+             whoami
+             ls -al      
+      
       - name: Adding known hosts
         run: |
           ls /
           mkdir ~/.ssh/
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
         
-      - name: Connect by SSH
+      - name: Connect by SSH2
         run: |
           ssh -i ${{ secrets.SHH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.HOST }}
           cd deploy_back
