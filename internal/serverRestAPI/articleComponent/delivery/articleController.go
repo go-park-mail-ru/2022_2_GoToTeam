@@ -92,6 +92,7 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 	jsonBytes, err := articleOutput.MarshalJSON()
 	if err != nil {
 		ac.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)

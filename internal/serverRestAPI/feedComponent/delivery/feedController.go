@@ -69,6 +69,7 @@ func (fc *FeedController) FeedHandler(c echo.Context) error {
 	jsonBytes, err := feed.MarshalJSON()
 	if err != nil {
 		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
@@ -127,6 +128,7 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 	jsonBytes, err := feed.MarshalJSON()
 	if err != nil {
 		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
@@ -182,6 +184,7 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 	jsonBytes, err := feed.MarshalJSON()
 	if err != nil {
 		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
@@ -216,6 +219,7 @@ func (fc *FeedController) GetNewArticlesFromIdForSubscriber(c echo.Context) erro
 	jsonBytes, err := newArticlesIdsResponse.MarshalJSON()
 	if err != nil {
 		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)

@@ -110,6 +110,7 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 	jsonBytes, err := userInfoBySession.MarshalJSON()
 	if err != nil {
 		sc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)

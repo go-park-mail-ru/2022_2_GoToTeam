@@ -109,6 +109,7 @@ func (cc *CommentaryController) GetAllCommentariesForArticle(c echo.Context) err
 	jsonBytes, err := allCommentariesForArticle.MarshalJSON()
 	if err != nil {
 		cc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
@@ -145,6 +146,7 @@ func (cc *CommentaryController) LikeHandler(c echo.Context) error {
 	jsonBytes, err := likeResponse.MarshalJSON()
 	if err != nil {
 		cc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
