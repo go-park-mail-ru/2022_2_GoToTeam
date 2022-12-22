@@ -43,11 +43,11 @@ jobs:
           " > ./build/runDemons.sh
           touch ./build/killDemons.sh
           echo "
-          sudo kill -9 `sudo lsof -t -i:8080`
-          sudo kill -9 `sudo lsof -t -i:8082`
-          sudo kill -9 `sudo lsof -t -i:8083`
-          sudo kill -9 `sudo lsof -t -i:8084`
-          sudo kill -9 `sudo lsof -t -i:8085`
+          sudo kill -9 \`sudo lsof -t -i:8080\`
+          sudo kill -9 \`sudo lsof -t -i:8082\`
+          sudo kill -9 \`sudo lsof -t -i:8083\`
+          sudo kill -9 \`sudo lsof -t -i:8084\`
+          sudo kill -9 \`sudo lsof -t -i:8085\`
           " > ./build/killDemons.sh
     
     - name: Upload build result
@@ -95,28 +95,16 @@ jobs:
           rm: true
           strip_components: 1
       
-      - name: Connect by SSH
+      - name: Connect and execute commands by SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SHH_PRIVATE_KEY }}
           script: |
-             whoami
-             ls -al      
+             cd deploy_back
+             sudo chmod 775 *
+             ./killDemons.sh
+             ./runDemons.sh
       
-      - name: Adding known hosts
-        run: |
-          ls /
-          mkdir ~/.ssh/
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
         
-      - name: Connect by SSH2
-        run: |
-          ssh -i ${{ secrets.SHH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.HOST }}
-          cd deploy_back
-          ls
-          echo killDemons.sh
-          echo runDemons.sh
-          
-      
