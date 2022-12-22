@@ -96,7 +96,9 @@ jobs:
           strip_components: 1
        
       - name: AddingKnownHosts
-        run: ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
+        run: |
+          ls
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
         
       - name: ConnectBySSH
         run: |
