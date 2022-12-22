@@ -45,6 +45,7 @@ func (tc *TagController) TagsListHandler(c echo.Context) error {
 	jsonBytes, err := tagsList.MarshalJSON()
 	if err != nil {
 		tc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)

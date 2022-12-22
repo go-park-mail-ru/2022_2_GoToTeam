@@ -60,6 +60,7 @@ func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 	jsonBytes, err := profileOutput.MarshalJSON()
 	if err != nil {
 		pc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)

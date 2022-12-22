@@ -73,6 +73,7 @@ func (cc *CategoryController) CategoryInfoHandler(c echo.Context) error {
 	jsonBytes, err := categoryInfo.MarshalJSON()
 	if err != nil {
 		cc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
@@ -97,6 +98,7 @@ func (cc *CategoryController) CategoryListHandler(c echo.Context) error {
 	jsonBytes, err := categoryList.MarshalJSON()
 	if err != nil {
 		cc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)

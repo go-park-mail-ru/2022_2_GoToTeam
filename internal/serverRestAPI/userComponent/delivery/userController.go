@@ -123,6 +123,7 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 	jsonBytes, err := userInfo.MarshalJSON()
 	if err != nil {
 		uc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
@@ -162,6 +163,7 @@ func (uc *UserController) GetUserAvatar(c echo.Context) error {
 	jsonBytes, err := userAvatar.MarshalJSON()
 	if err != nil {
 		uc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(http.StatusOK, jsonBytes)
