@@ -33,7 +33,7 @@ jobs:
     - name: Build
       run: go build -o ./build/ ./...
     
-    - name: GenerateShellScripts
+    - name: Generate shell scripts
       run: |
           touch ./build/runDemons.sh
           echo "
@@ -95,12 +95,12 @@ jobs:
           rm: true
           strip_components: 1
        
-      - name: AddingKnownHosts
+      - name: Adding known hosts
         run: |
           ls
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
+          ssh-keyscan -H ${{ secrets.HOST }} >> /.ssh/known_hosts 
         
-      - name: ConnectBySSH
+      - name: Connect by SSH
         run: |
           ssh -i ${{ secrets.SHH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.HOST }}
           cd deploy_back
