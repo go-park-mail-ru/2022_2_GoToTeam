@@ -34,8 +34,8 @@ func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUseca
 func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	sc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionHandler function.")
-
 	defer c.Request().Body.Close()
+
 	parsedInput := new(modelsRestApi.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
 		sc.logger.LogrusLoggerWithContext(ctx).Warn(err)

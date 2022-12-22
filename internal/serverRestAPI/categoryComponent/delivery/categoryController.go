@@ -105,7 +105,6 @@ func (cc *CategoryController) CategoryListHandler(c echo.Context) error {
 func (cc *CategoryController) SubscribeHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	cc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeHandler function.")
-
 	defer c.Request().Body.Close()
 
 	parsedInput := new(modelsRestApi.Subscribe)
@@ -135,7 +134,6 @@ func (cc *CategoryController) SubscribeHandler(c echo.Context) error {
 func (cc *CategoryController) UnsubscribeHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	cc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeHandler function.")
-
 	defer c.Request().Body.Close()
 
 	parsedInput := new(modelsRestApi.Subscribe)

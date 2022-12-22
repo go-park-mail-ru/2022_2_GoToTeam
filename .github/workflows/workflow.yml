@@ -72,7 +72,7 @@ jobs:
         run: |
           go test -race -coverpkg=./... -coverprofile=cover.out.tmp ./...
           #cat cover.out.tmp | grep -v ./pkg/domain/grpcProtos | grep -v ./internal/authSessionService/domain | grep -v ./internal/serverRestAPI/domain | grep -v ./internal/userProfileService/domain > cover.out
-          cat cover.out.tmp | grep -Ev 'pkg/domain/grpcProtos|internal/authSessionService/domain|internal/serverRestAPI/domain|internal/userProfileService/domain' > cover.out
+          cat cover.out.tmp | grep -Ev 'pkg/domain/grpcProtos|internal/authSessionService/domain|internal/serverRestAPI/domain|internal/userProfileService/domain|_easyjson.go' > cover.out
           go tool cover -func cover.out
 
   deploy:

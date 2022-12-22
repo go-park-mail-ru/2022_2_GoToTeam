@@ -33,18 +33,19 @@ func NewUserController(userUsecase userComponentInterfaces.UserUsecaseInterface,
 }
 
 func (uc *UserController) SignupUserHandler(c echo.Context) error {
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the SignupUserHandler function.")
+	ctx := c.Request().Context()
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SignupUserHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInput := new(modelsRestApi.User)
 	if err := c.Bind(parsedInput); err != nil {
-		uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed input user json data: %#v", parsedInput)
+	uc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed input user json data: %#v", parsedInput)
 
-	if err := uc.userUsecase.AddNewUser(c.Request().Context(), parsedInput.NewUserData.Email, parsedInput.NewUserData.Login, parsedInput.NewUserData.Username, parsedInput.NewUserData.Password); err != nil {
+	if err := uc.userUsecase.AddNewUser(ctx, parsedInput.NewUserData.Email, parsedInput.NewUserData.Login, parsedInput.NewUserData.Username, parsedInput.NewUserData.Password); err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotValidError:
 			return c.JSON(http.StatusBadRequest, "email is not valid")
@@ -61,50 +62,51 @@ func (uc *UserController) SignupUserHandler(c echo.Context) error {
 		}
 	}
 
-	session, err := uc.sessionUsecase.CreateSessionForUser(c.Request().Context(), parsedInput.NewUserData.Email, parsedInput.NewUserData.Password)
+	session, err := uc.sessionUsecase.CreateSessionForUser(ctx, parsedInput.NewUserData.Email, parsedInput.NewUserData.Password)
 	if err != nil {
-		uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		uc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	c.SetCookie(httpCookieUtils.MakeHttpCookie(session.SessionId))
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Infof("User with the email %#v registered successful!", parsedInput.NewUserData.Email)
+	uc.logger.LogrusLoggerWithContext(ctx).Infof("User with the email %#v registered successful!", parsedInput.NewUserData.Email)
 
 	return c.NoContent(http.StatusOK)
 }
 
 func (uc *UserController) UserInfoHandler(c echo.Context) error {
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UserInfoHandler function.")
+	ctx := c.Request().Context()
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserInfoHandler function.")
 
 	login := c.QueryParam("login")
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed login: %#v", login)
+	uc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed login: %#v", login)
 	if login == "" {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	user, err := uc.userUsecase.GetUserInfo(c.Request().Context(), login)
+	user, err := uc.userUsecase.GetUserInfo(ctx, login)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.LoginDoesntExistError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusBadRequest) // TODO
 		default:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
 
-	isSubscribed, err := uc.userUsecase.IsUserSubscribedOnUser(c.Request().Context(), login)
+	isSubscribed, err := uc.userUsecase.IsUserSubscribedOnUser(ctx, login)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		default:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
@@ -116,14 +118,19 @@ func (uc *UserController) UserInfoHandler(c echo.Context) error {
 		Subscribed:       isSubscribed,
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed userInfo: ", userInfo)
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Formed userInfo: ", userInfo)
 
-	return c.JSON(http.StatusOK, userInfo)
+	jsonBytes, err := userInfo.MarshalJSON()
+	if err != nil {
+		uc.logger.LogrusLoggerWithContext(ctx).Error(err)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
 func (uc *UserController) GetUserAvatar(c echo.Context) error {
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the GetUserAvatar function.")
 	ctx := c.Request().Context()
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetUserAvatar function.")
 
 	login := c.QueryParam("login")
 	uc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed login: %#v", login)
@@ -135,13 +142,13 @@ func (uc *UserController) GetUserAvatar(c echo.Context) error {
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.LoginDoesntExistError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusBadRequest) // TODO
 		default:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
@@ -150,65 +157,70 @@ func (uc *UserController) GetUserAvatar(c echo.Context) error {
 		AvatarImgPath: user.AvatarImgPath,
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed userAvatar: ", userAvatar)
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Formed userAvatar: ", userAvatar)
 
-	return c.JSON(http.StatusOK, userAvatar)
+	jsonBytes, err := userAvatar.MarshalJSON()
+	if err != nil {
+		uc.logger.LogrusLoggerWithContext(ctx).Error(err)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
 func (uc *UserController) SubscribeHandler(c echo.Context) error {
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the SubscribeHandler function.")
-
+	ctx := c.Request().Context()
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SubscribeHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInput := new(modelsRestApi.Subscribe)
 	if err := c.Bind(parsedInput); err != nil {
-		uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed input json data: %#v", parsedInput)
+	uc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed input json data: %#v", parsedInput)
 
-	if err := uc.userUsecase.SubscribeOnUser(c.Request().Context(), parsedInput.Login); err != nil {
+	if err := uc.userUsecase.SubscribeOnUser(ctx, parsedInput.Login); err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusInternalServerError)
 		default:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("User subscribed successfully!")
+	uc.logger.LogrusLoggerWithContext(ctx).Info("User subscribed successfully!")
 
 	return c.NoContent(http.StatusOK)
 }
 
 func (uc *UserController) UnsubscribeHandler(c echo.Context) error {
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UnsubscribeHandler function.")
-
+	ctx := c.Request().Context()
+	uc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UnsubscribeHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInput := new(modelsRestApi.Subscribe)
 	if err := c.Bind(parsedInput); err != nil {
-		uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed input json data: %#v", parsedInput)
+	uc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed input json data: %#v", parsedInput)
 
-	if err := uc.userUsecase.UnsubscribeFromUser(c.Request().Context(), parsedInput.Login); err != nil {
+	if err := uc.userUsecase.UnsubscribeFromUser(ctx, parsedInput.Login); err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailForSessionDoesntExistError:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusInternalServerError)
 		default:
-			uc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			uc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
 
-	uc.logger.LogrusLoggerWithContext(c.Request().Context()).Info("User unsubscribed successfully!")
+	uc.logger.LogrusLoggerWithContext(ctx).Info("User unsubscribed successfully!")
 
 	return c.NoContent(http.StatusOK)
 }
