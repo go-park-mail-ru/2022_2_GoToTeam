@@ -43,11 +43,11 @@ jobs:
           " > ./build/runDemons.sh
           touch ./build/killDemons.sh
           echo "
-          sudo kill -9 sudo lsof -t -i:8080
-          sudo kill -9 sudo lsof -t -i:8082
-          sudo kill -9 sudo lsof -t -i:8083
-          sudo kill -9 sudo lsof -t -i:8084
-          sudo kill -9 sudo lsof -t -i:8085
+          sudo kill -9 `sudo lsof -t -i:8080`
+          sudo kill -9 `sudo lsof -t -i:8082`
+          sudo kill -9 `sudo lsof -t -i:8083`
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo kill -9 `sudo lsof -t -i:8085`
           " > ./build/killDemons.sh
     
     - name: Upload build result
@@ -93,5 +93,14 @@ jobs:
           source: "build/*"
           target: "/home/ubuntu/deploy_back"
           rm: true
-          strip_components: 1    
+          strip_components: 1
+        
+      - name: Test
+        run: |
+          ssh -i ${{ secrets.SHH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.HOST }}
+          cd deploy_back
+          ls
+          echo killDemons.sh
+          echo runDemons.sh
+          
       
