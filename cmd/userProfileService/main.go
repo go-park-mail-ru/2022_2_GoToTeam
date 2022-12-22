@@ -10,7 +10,7 @@ const _DEFAULT_CONFIG_FILE_PATH = "configs/userProfileService/server.toml"
 var configFilePath string
 
 func init() {
-	flag.StringVar(&configFilePath, "config_file_path___", _DEFAULT_CONFIG_FILE_PATH, "config file path")
+	flag.StringVar(&configFilePath, "userProfileService_config_file_path", _DEFAULT_CONFIG_FILE_PATH, "config file path")
 }
 
 func main() {
