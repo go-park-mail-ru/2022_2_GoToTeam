@@ -28,8 +28,8 @@ func NewFileController(fileUsecase fileComponentInterfaces.FileUsecaseInterface,
 }
 
 func (fc *FileController) UploadProfilePhotoHandler(c echo.Context) error {
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UploadProfilePhotoHandler function.")
 	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UploadProfilePhotoHandler function.")
 	defer c.Request().Body.Close()
 
 	fileHeader, err := c.FormFile("file")
