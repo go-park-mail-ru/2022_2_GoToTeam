@@ -85,22 +85,6 @@ jobs:
         with:
           name: build
 
-      - name: Connect and execute commands by SSH killDemons
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SHH_PRIVATE_KEY }}
-          script: |
-             cd deploy_back
-             ls
-             #./killDemons.sh
-             sudo kill -9 `sudo lsof -t -i:8080`
-             sudo kill -9 `sudo lsof -t -i:8082`
-             sudo kill -9 `sudo lsof -t -i:8083`
-             sudo kill -9 `sudo lsof -t -i:8084`
-             sudo kill -9 `sudo lsof -t -i:8085`
-
       - name: Transfer build files to server
         uses: appleboy/scp-action@master
         with:
