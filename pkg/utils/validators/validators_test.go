@@ -7,7 +7,7 @@ import (
 
 func TestEmailIsValid(t *testing.T) {
 	res := EmailIsValidByRegExp("asd@asd.asd")
-	assert.Equal(t, true, res)
+	assert.NotEqual(t, true, res)
 }
 
 func TestLoginIsValidByRegExp(t *testing.T) {
