@@ -97,7 +97,7 @@ jobs:
        
       - name: Adding known hosts
         run: |
-          ls
+          ls /
           ssh-keyscan -H ${{ secrets.HOST }} >> /.ssh/known_hosts 
         
       - name: Connect by SSH
