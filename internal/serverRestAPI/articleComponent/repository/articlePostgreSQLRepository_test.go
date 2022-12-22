@@ -55,7 +55,6 @@ func TestGetArticleById(t *testing.T) {
 	}
 
 	for _, item := range items {
-		fmt.Printf("%#v", item)
 		rows = rows.AddRow(item.ArticleId, item.Title, item.Description, item.Rating, item.CommentsCount, item.Content, item.CoverImgPath, item.CoAuthor.Username, item.CoAuthor.Login, item.Publisher.Username, item.Publisher.Login, item.CategoryName, item.Liked)
 	}
 
@@ -463,6 +462,97 @@ func TestGetArticleRating(t *testing.T) {
 	}
 	if res != 0 {
 		t.Errorf("results not match, want %v, have %v", 0, res)
+		return
+	}
+}
+
+func TestGetTagsForArticle(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	repo := &articlePostgreSQLRepository{
+		database: db,
+		logger:   loggerMock,
+	}
+
+	// good query
+	rows := sqlmock.NewRows([]string{"tag_name"})
+	items := []string{
+		"java",
+	}
+	for _, item := range items {
+		rows = rows.AddRow(item)
+	}
+
+	mock.
+		ExpectQuery("SELECT T.tag_name").
+		WithArgs().
+		WillReturnRows(rows)
+
+	res, err := repo.GetTagsForArticle(context.Background(), 1)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, items) {
+		t.Errorf("results not match, want %v, have %#v", items, res)
+		return
+	}
+
+	// query error
+
+	mock.
+		ExpectQuery("SELECT T.tag_name").
+		WithArgs().
+		WillReturnError(fmt.Errorf("db_error"))
+
+	res, err = repo.GetTagsForArticle(context.Background(), 1)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if err == nil {
+		t.Errorf("expected error, got nil")
+		return
+	}
+	if err != repositoryToUsecaseErrors.ArticleRepositoryError {
+		t.Errorf("expected error repositoryToUsecaseErrors.UserRepositoryErro")
+		return
+	}
+	if res != nil {
+		t.Errorf("results not match, want %v, have %v", nil, res)
+		return
+	}
+
+	// row scan error
+	rows = sqlmock.NewRows([]string{}).AddRow()
+	mock.
+		ExpectQuery("SELECT T.tag_name").
+		WithArgs().
+		WillReturnRows(rows)
+
+	res, err = repo.GetTagsForArticle(context.Background(), 1)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if err == nil {
+		t.Errorf("expected error, got nil")
+		return
+	}
+	if err != repositoryToUsecaseErrors.ArticleRepositoryError {
+		t.Errorf("expected error repositoryToUsecaseErrors.UserRepositoryErro")
+		return
+	}
+	if res != nil {
+		t.Errorf("results not match, want %v, have %v", nil, res)
 		return
 	}
 }
