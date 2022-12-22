@@ -85,20 +85,6 @@ jobs:
         with:
           name: build
 
-      - name: Connect and execute commands by SSH killDemons
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SHH_PRIVATE_KEY }}
-          script: |
-             cd deploy_back
-             ls
-             ps -d
-             ./killDemons.sh
-             echo "After ./killDemons.sh, ps -d ="
-             ps -d
-
       - name: Transfer build files to server
         uses: appleboy/scp-action@master
         with:
