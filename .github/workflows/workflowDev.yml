@@ -94,8 +94,11 @@ jobs:
           target: "/home/ubuntu/deploy_back"
           rm: true
           strip_components: 1
+       
+      - name: AddingKnownHosts
+        run: ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
         
-      - name: Test
+      - name: ConnectBySSH
         run: |
           ssh -i ${{ secrets.SHH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.HOST }}
           cd deploy_back
