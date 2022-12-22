@@ -105,6 +105,7 @@ jobs:
           script: |
              cd deploy_back
              ls
+             ps -d
              sudo chmod 775 *
              ./killDemons.sh
              ./runDemons.sh
