@@ -98,7 +98,8 @@ jobs:
       - name: Adding known hosts
         run: |
           ls /
-          ssh-keyscan -H ${{ secrets.HOST }} >> /.ssh/known_hosts 
+          mkdir ~/.ssh/
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts 
         
       - name: Connect by SSH
         run: |
