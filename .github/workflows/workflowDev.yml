@@ -33,7 +33,7 @@ jobs:
     - name: Build
       run: |
           go build -o ./build/ ./...
-          #cp go.mod build/go.mod
+          cp go.mod build/go.mod
     
     - name: Generate shell scripts
       run: |
