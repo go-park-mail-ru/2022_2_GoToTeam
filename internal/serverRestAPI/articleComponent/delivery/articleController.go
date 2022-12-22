@@ -36,32 +36,33 @@ func NewArticleController(articleUsecase articleComponentInterfaces.ArticleUseca
 }
 
 func (ac *ArticleController) ArticleHandler(c echo.Context) error {
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the ArticleHandler function.")
+	ctx := c.Request().Context()
+	ac.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the ArticleHandler function.")
 
 	idStr := c.QueryParam("id")
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed id: %#v", idStr)
+	ac.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed id: %#v", idStr)
 	if idStr == "" {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 	if id < 1 {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(errors.New(fmt.Sprintf("id = %d < 1", id)))
+		ac.logger.LogrusLoggerWithContext(ctx).Warn(errors.New(fmt.Sprintf("id = %d < 1", id)))
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	article, err := ac.articleUsecase.GetArticleById(c.Request().Context(), id)
+	article, err := ac.articleUsecase.GetArticleById(ctx, id)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.ArticleDoesntExistError:
-			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
-			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			ac.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
@@ -86,26 +87,32 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 		},
 		Liked: article.Liked,
 	}
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed articleOutput: ", articleOutput)
+	ac.logger.LogrusLoggerWithContext(ctx).Debug("Formed articleOutput: ", articleOutput)
 
-	return c.JSON(http.StatusOK, articleOutput)
+	jsonBytes, err := articleOutput.MarshalJSON()
+	if err != nil {
+		ac.logger.LogrusLoggerWithContext(ctx).Error(err)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
 func (ac *ArticleController) CreateArticleHandler(c echo.Context) error {
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the CreateArticleHandler function.")
+	ctx := c.Request().Context()
+	ac.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateArticleHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInputArticle := new(createArticle.Article)
 	if err := c.Bind(parsedInputArticle); err != nil {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
+	ac.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
 
-	err := ac.articleUsecase.AddArticleBySession(c.Request().Context(), &models.Article{Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, CoverImgPath: parsedInputArticle.CoverImgPath, Content: parsedInputArticle.Content, CoAuthor: models.CoAuthor{Login: parsedInputArticle.CoAuthorLogin}})
+	err := ac.articleUsecase.AddArticleBySession(ctx, &models.Article{Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, CoverImgPath: parsedInputArticle.CoverImgPath, Content: parsedInputArticle.Content, CoAuthor: models.CoAuthor{Login: parsedInputArticle.CoAuthorLogin}})
 	if err != nil {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		ac.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -113,25 +120,26 @@ func (ac *ArticleController) CreateArticleHandler(c echo.Context) error {
 }
 
 func (ac *ArticleController) UpdateArticleHandler(c echo.Context) error {
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the UpdateArticleHandler function.")
+	ctx := c.Request().Context()
+	ac.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UpdateArticleHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInputArticle := new(updateArticle.Article)
 	if err := c.Bind(parsedInputArticle); err != nil {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
+	ac.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed parsedInputArticle: %#v", parsedInputArticle)
 
-	err := ac.articleUsecase.UpdateArticle(c.Request().Context(), &models.Article{ArticleId: parsedInputArticle.Id, Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, Content: parsedInputArticle.Content})
+	err := ac.articleUsecase.UpdateArticle(ctx, &models.Article{ArticleId: parsedInputArticle.Id, Title: parsedInputArticle.Title, Description: parsedInputArticle.Description, Tags: parsedInputArticle.Tags, CategoryName: parsedInputArticle.Category, Content: parsedInputArticle.Content})
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.EmailIsNotAuthorError:
-			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusForbidden)
 		default:
-			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			ac.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
@@ -140,25 +148,26 @@ func (ac *ArticleController) UpdateArticleHandler(c echo.Context) error {
 }
 
 func (ac *ArticleController) RemoveArticleHandler(c echo.Context) error {
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the RemoveArticleHandler function.")
+	ctx := c.Request().Context()
+	ac.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveArticleHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInputArticleId := new(removeArticle.ArticleId)
 	if err := c.Bind(parsedInputArticleId); err != nil {
-		ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed parsedInputArticleId: %#v", parsedInputArticleId)
+	ac.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed parsedInputArticleId: %#v", parsedInputArticleId)
 
-	err := ac.articleUsecase.RemoveArticleById(c.Request().Context(), parsedInputArticleId.Id)
+	err := ac.articleUsecase.RemoveArticleById(ctx, parsedInputArticleId.Id)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.ArticleDoesntExistError:
-			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
-			ac.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			ac.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
@@ -167,8 +176,8 @@ func (ac *ArticleController) RemoveArticleHandler(c echo.Context) error {
 }
 
 func (ac *ArticleController) LikeHandler(c echo.Context) error {
-	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the LikeHandler function.")
 	ctx := c.Request().Context()
+	ac.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the LikeHandler function.")
 	defer c.Request().Body.Close()
 
 	parsedInputLikeData := new(likeData.LikeData)
