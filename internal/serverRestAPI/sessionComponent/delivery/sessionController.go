@@ -32,67 +32,70 @@ func NewSessionController(sessionUsecase sessionComponentInterfaces.SessionUseca
 }
 
 func (sc *SessionController) CreateSessionHandler(c echo.Context) error {
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the CreateSessionHandler function.")
+	ctx := c.Request().Context()
+	sc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the CreateSessionHandler function.")
 
 	defer c.Request().Body.Close()
 	parsedInput := new(modelsRestApi.SessionCreate)
 	if err := c.Bind(parsedInput); err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+		sc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed input: %#v", parsedInput)
+	sc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed input: %#v", parsedInput)
 
 	email := parsedInput.UserData.Email
 	password := parsedInput.UserData.Password
 
-	session, err := sc.sessionUsecase.CreateSessionForUser(c.Request().Context(), email, password)
+	session, err := sc.sessionUsecase.CreateSessionForUser(ctx, email, password)
 	if err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		sc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		st, _ := status.FromError(err)
 		return c.JSON(errorsUtils.ExtractCodeFromGrpcErrorStatus(st), st.Message())
 	}
 
 	c.SetCookie(httpCookieUtils.MakeHttpCookie(session.SessionId))
 
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Infof("User email %#v auth success!", email)
+	sc.logger.LogrusLoggerWithContext(ctx).Infof("User email %#v auth success!", email)
 
 	return c.NoContent(http.StatusOK)
 }
 
 func (sc *SessionController) RemoveSessionHandler(c echo.Context) error {
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the RemoveSessionHandler function.")
+	ctx := c.Request().Context()
+	sc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the RemoveSessionHandler function.")
 
 	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
+		sc.logger.LogrusLoggerWithContext(ctx).Info(err)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	if err := sc.sessionUsecase.RemoveSession(c.Request().Context(), &models.Session{SessionId: cookie.Value}); err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+	if err := sc.sessionUsecase.RemoveSession(ctx, &models.Session{SessionId: cookie.Value}); err != nil {
+		sc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	httpCookieUtils.ExpireHttpCookie(cookie)
 	c.SetCookie(cookie) // Need to reset new expired cookie
 
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Infof("User session %#v removed successfully.", cookie.Value)
+	sc.logger.LogrusLoggerWithContext(ctx).Infof("User session %#v removed successfully.", cookie.Value)
 
 	return c.NoContent(http.StatusOK)
 }
 
 func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the SessionInfoHandler function.")
+	ctx := c.Request().Context()
+	sc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the SessionInfoHandler function.")
 
 	cookie, err := c.Cookie(domain.SESSION_COOKIE_HEADER_NAME)
 	if err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Info(err)
+		sc.logger.LogrusLoggerWithContext(ctx).Info(err)
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	user, err := sc.sessionUsecase.GetUserInfoBySession(c.Request().Context(), &models.Session{SessionId: cookie.Value})
+	user, err := sc.sessionUsecase.GetUserInfoBySession(ctx, &models.Session{SessionId: cookie.Value})
 	if err != nil {
-		sc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		sc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		st, _ := status.FromError(err)
 		return c.NoContent(errorsUtils.ExtractCodeFromGrpcErrorStatus(st))
 	}
@@ -102,7 +105,12 @@ func (sc *SessionController) SessionInfoHandler(c echo.Context) error {
 		Login:         user.Login,
 		AvatarImgPath: user.AvatarImgPath,
 	}
-	sc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed userInfoBySession = ", userInfoBySession)
+	sc.logger.LogrusLoggerWithContext(ctx).Debug("Formed userInfoBySession = ", userInfoBySession)
 
-	return c.JSON(http.StatusOK, userInfoBySession)
+	jsonBytes, err := userInfoBySession.MarshalJSON()
+	if err != nil {
+		sc.logger.LogrusLoggerWithContext(ctx).Error(err)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
