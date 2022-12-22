@@ -37,6 +37,7 @@ jobs:
       run: |
           touch ./build/runDemons.sh
           echo "
+          go env -w GO111MODULE=off
           sudo nohup go run ./serverRestAPI -serverRestAPI_config_file_path ../back/main.toml > back.log 2>&1 & echo $! > savepid1.txt
           sudo nohup go run ./userProfileService -userProfileService_config_file_path ../back/profile.toml > back2.log 2>&1 & echo $! > savepid2.txt
           sudo nohup go run ./authSessionService -authSessionService_config_file_path ../back/auth.toml > back3.log 2>&1 & echo $! > savepid3.txt
