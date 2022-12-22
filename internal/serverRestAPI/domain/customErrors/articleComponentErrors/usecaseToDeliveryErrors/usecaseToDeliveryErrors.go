@@ -23,3 +23,11 @@ type EmailForSessionDoesntExistError struct {
 func (efsdee *EmailForSessionDoesntExistError) Error() string {
 	return efsdee.Err.Error()
 }
+
+type EmailIsNotAuthorError struct {
+	Err error
+}
+
+func (efsdee *EmailIsNotAuthorError) Error() string {
+	return efsdee.Err.Error()
+}

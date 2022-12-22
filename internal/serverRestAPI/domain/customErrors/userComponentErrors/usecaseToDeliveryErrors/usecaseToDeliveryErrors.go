@@ -1,5 +1,13 @@
 package usecaseToDeliveryErrors
 
+type RepositoryError struct {
+	Err error
+}
+
+func (re *RepositoryError) Error() string {
+	return re.Err.Error()
+}
+
 type AddUserError struct {
 	Err error
 }
@@ -14,14 +22,6 @@ type GetUserInfoError struct {
 
 func (gui *GetUserInfoError) Error() string {
 	return gui.Err.Error()
-}
-
-type RepositoryError struct {
-	Err error
-}
-
-func (re *RepositoryError) Error() string {
-	return re.Err.Error()
 }
 
 type EmailExistsError struct {
@@ -78,4 +78,12 @@ type PasswordIsNotValidError struct {
 
 func (pinve *PasswordIsNotValidError) Error() string {
 	return pinve.Err.Error()
+}
+
+type EmailForSessionDoesntExistError struct {
+	Err error
+}
+
+func (efsdee *EmailForSessionDoesntExistError) Error() string {
+	return efsdee.Err.Error()
 }

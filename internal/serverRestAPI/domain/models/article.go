@@ -14,6 +14,8 @@ type Article struct {
 	CategoryName string
 
 	Tags []string
+
+	Liked int
 }
 
 type CoAuthor struct {

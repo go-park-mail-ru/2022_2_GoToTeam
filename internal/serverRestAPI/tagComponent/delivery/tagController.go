@@ -27,11 +27,12 @@ func NewTagController(tagUsecase tagComponentInterfaces.TagUsecaseInterface, log
 }
 
 func (tc *TagController) TagsListHandler(c echo.Context) error {
-	tc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the TagsListHandler function.")
+	ctx := c.Request().Context()
+	tc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the TagsListHandler function.")
 
-	tags, err := tc.tagUsecase.GetTagsList(c.Request().Context())
+	tags, err := tc.tagUsecase.GetTagsList(ctx)
 	if err != nil {
-		tc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		tc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	tagsList := modelsRestApi.TagsList{}
@@ -39,7 +40,13 @@ func (tc *TagController) TagsListHandler(c echo.Context) error {
 		tagsList.TagsNames = append(tagsList.TagsNames, v.TagName)
 	}
 
-	tc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed tagsList: ", tagsList)
+	tc.logger.LogrusLoggerWithContext(ctx).Debug("Formed tagsList: ", tagsList)
 
-	return c.JSON(http.StatusOK, tagsList)
+	jsonBytes, err := tagsList.MarshalJSON()
+	if err != nil {
+		tc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }

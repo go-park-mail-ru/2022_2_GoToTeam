@@ -32,9 +32,9 @@ func NewProfileController(profileUsecase profileComponentInterfaces.ProfileUseca
 }
 
 func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the GetProfileHandler function.")
-
 	ctx := c.Request().Context()
+	pc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetProfileHandler function.")
+
 	email := ctx.Value(domainPkg.USER_EMAIL_KEY_FOR_CONTEXT).(string)
 	pc.logger.LogrusLoggerWithContext(ctx).Debug("Email from context = ", email)
 	if email == "" {
@@ -42,9 +42,9 @@ func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	profile, err := pc.profileUsecase.GetProfileByEmail(c.Request().Context(), email)
+	profile, err := pc.profileUsecase.GetProfileByEmail(ctx, email)
 	if err != nil {
-		pc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		pc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		st, _ := status.FromError(err)
 		return c.NoContent(errorsUtils.ExtractCodeFromGrpcErrorStatus(st))
 	}
@@ -55,9 +55,15 @@ func (pc *ProfileController) GetProfileHandler(c echo.Context) error {
 		Username:      profile.Username,
 		AvatarImgPath: profile.AvatarImgPath,
 	}
-	pc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Formed profileInfo: %#v", profileOutput)
+	pc.logger.LogrusLoggerWithContext(ctx).Debugf("Formed profileInfo: %#v", profileOutput)
 
-	return c.JSON(http.StatusOK, profileOutput)
+	jsonBytes, err := profileOutput.MarshalJSON()
+	if err != nil {
+		pc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
 func (pc *ProfileController) UpdateProfileHandler(c echo.Context) error {

@@ -6,7 +6,6 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/feedComponent/delivery/modelsRestApi"
 	"2022_2_GoTo_team/pkg/utils/logger"
 	"errors"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -33,43 +32,15 @@ func NewFeedController(feedUsecase feedComponentInterfaces.FeedUsecaseInterface,
 }
 
 func (fc *FeedController) FeedHandler(c echo.Context) error {
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the FeedHandler function.")
+	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the FeedHandler function.")
 
-	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed startFromArticleOfNumberStr: %#v", startFromArticleOfNumberStr)
-
-	if startFromArticleOfNumberStr == "" {
-		startFromArticleOfNumberStr = "0"
-	}
-
-	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
+	articles, err := fc.feedUsecase.GetFeed(ctx)
 	if err != nil {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-		return c.NoContent(http.StatusBadRequest)
-	}
-	if startFromArticleOfNumber < 0 {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(errors.New(fmt.Sprintf("startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)))
-		return c.NoContent(http.StatusBadRequest)
-	}
-
-	articles, err := fc.feedUsecase.GetFeed(c.Request().Context())
-	if err != nil {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED <= len(articles) {
-		articles = articles[startFromArticleOfNumber : startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED]
-	} else if startFromArticleOfNumber < len(articles) {
-		articles = articles[startFromArticleOfNumber:]
-	} else {
-		var startTmp = len(articles) - ARTICLE_NUMBER_IN_FEED
-		if startTmp < 0 {
-			startTmp = 0
-		}
-		articles = articles[startTmp:]
-	}
-
 	feed := modelsRestApi.Feed{}
 	for _, v := range articles {
 		article := modelsRestApi.Article{
@@ -89,64 +60,44 @@ func (fc *FeedController) FeedHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed feed: ", feed)
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Formed feed: ", feed)
 
-	return c.JSON(http.StatusOK, feed)
+	jsonBytes, err := feed.MarshalJSON()
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
 func (fc *FeedController) FeedUserHandler(c echo.Context) error {
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the FeedUserHandler function.")
+	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the FeedUserHandler function.")
 
 	login := c.QueryParam("login")
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed login: %#v", login)
+	fc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed login: %#v", login)
 	if login == "" {
 		return c.NoContent(http.StatusBadRequest)
 	}
-	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed startFromArticleOfNumberStr: %#v", startFromArticleOfNumberStr)
 
-	if startFromArticleOfNumberStr == "" {
-		startFromArticleOfNumberStr = "0"
-	}
-
-	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
-	if err != nil {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-		return c.NoContent(http.StatusBadRequest)
-	}
-	if startFromArticleOfNumber < 0 {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(errors.New(fmt.Sprintf("startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)))
-		return c.NoContent(http.StatusBadRequest)
-	}
-
-	articles, err := fc.feedUsecase.GetFeedForUserByLogin(c.Request().Context(), login)
+	articles, err := fc.feedUsecase.GetFeedForUserByLogin(ctx, login)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.LoginIsNotValidError:
-			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			fc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusBadRequest)
 		case *usecaseToDeliveryErrors.LoginDoesntExistError:
-			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			fc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
-			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			fc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
-	}
-
-	if startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED <= len(articles) {
-		articles = articles[startFromArticleOfNumber : startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED]
-	} else if startFromArticleOfNumber < len(articles) {
-		articles = articles[startFromArticleOfNumber:]
-	} else {
-		var startTmp = len(articles) - ARTICLE_NUMBER_IN_FEED
-		if startTmp < 0 {
-			startTmp = 0
-		}
-		articles = articles[startTmp:]
 	}
 
 	feed := modelsRestApi.Feed{}
@@ -168,61 +119,41 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed feed: ", feed)
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Formed feed: ", feed)
 
-	return c.JSON(http.StatusOK, feed)
+	jsonBytes, err := feed.MarshalJSON()
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
 func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the FeedCategoryHandler function.")
+	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the FeedCategoryHandler function.")
 
 	category := c.QueryParam("category")
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed category: %#v", category)
+	fc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed category: %#v", category)
 	if category == "" {
 		return c.NoContent(http.StatusBadRequest)
 	}
-	startFromArticleOfNumberStr := c.QueryParam("startFromArticleOfNumber")
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debugf("Parsed startFromArticleOfNumberStr: %#v", startFromArticleOfNumberStr)
 
-	if startFromArticleOfNumberStr == "" {
-		startFromArticleOfNumberStr = "0"
-	}
-
-	startFromArticleOfNumber, err := strconv.Atoi(startFromArticleOfNumberStr)
-	if err != nil {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
-		return c.NoContent(http.StatusBadRequest)
-	}
-	if startFromArticleOfNumber < 0 {
-		fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(errors.New(fmt.Sprintf("startFromArticleOfNumber = %d < 0", startFromArticleOfNumber)))
-		return c.NoContent(http.StatusBadRequest)
-	}
-
-	articles, err := fc.feedUsecase.GetFeedForCategory(c.Request().Context(), category)
+	articles, err := fc.feedUsecase.GetFeedForCategory(ctx, category)
 	if err != nil {
 		switch errors.Unwrap(err).(type) {
 		case *usecaseToDeliveryErrors.CategoryDoesntExistError:
-			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Warn(err)
+			fc.logger.LogrusLoggerWithContext(ctx).Warn(err)
 			return c.NoContent(http.StatusNotFound)
 		default:
-			fc.logger.LogrusLoggerWithContext(c.Request().Context()).Error(err)
+			fc.logger.LogrusLoggerWithContext(ctx).Error(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
-	}
-
-	if startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED <= len(articles) {
-		articles = articles[startFromArticleOfNumber : startFromArticleOfNumber+ARTICLE_NUMBER_IN_FEED]
-	} else if startFromArticleOfNumber < len(articles) {
-		articles = articles[startFromArticleOfNumber:]
-	} else {
-		var startTmp = len(articles) - ARTICLE_NUMBER_IN_FEED
-		if startTmp < 0 {
-			startTmp = 0
-		}
-		articles = articles[startTmp:]
 	}
 
 	feed := modelsRestApi.Feed{}
@@ -244,10 +175,52 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
-	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed feed: ", feed)
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Formed feed: ", feed)
 
-	return c.JSON(http.StatusOK, feed)
+	jsonBytes, err := feed.MarshalJSON()
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
+}
+
+func (fc *FeedController) GetNewArticlesFromIdForSubscriber(c echo.Context) error {
+	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetNewArticlesFromIdForSubscriber function.")
+	defer c.Request().Body.Close()
+
+	articleIdStr := c.QueryParam("articleId")
+	fc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed articleIdStr: %#v", articleIdStr)
+	if articleIdStr == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
+	articleId, err := strconv.Atoi(articleIdStr)
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	newArticlesIds, err := fc.feedUsecase.GetNewArticlesFromIdForSubscriber(ctx, articleId)
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	newArticlesIdsResponse := modelsRestApi.NewArticlesIds{
+		Ids: newArticlesIds,
+	}
+
+	jsonBytes, err := newArticlesIdsResponse.MarshalJSON()
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
