@@ -5,6 +5,7 @@ import (
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/interfaces/articleComponentInterfaces"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/models"
+	"2022_2_GoTo_team/internal/serverRestAPI/utils/sessionUtils"
 	"2022_2_GoTo_team/pkg/domain"
 	"2022_2_GoTo_team/pkg/utils/errorsUtils"
 	"2022_2_GoTo_team/pkg/utils/logger"
@@ -35,7 +36,13 @@ func (au *articleUsecase) GetArticleById(ctx context.Context, id int) (*models.A
 
 	wrappingErrorMessage := "error while getting article by id"
 
-	article, err := au.articleRepository.GetArticleById(ctx, id)
+	email, err := sessionUtils.GetEmailFromContext(ctx, au.logger)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
+	article, err := au.articleRepository.GetArticleById(ctx, id, email)
 	if err != nil {
 		switch err {
 		case repositoryToUsecaseErrors.ArticleRepositoryArticleDoesntExistError:
@@ -123,4 +130,37 @@ func (au *articleUsecase) UpdateArticle(ctx context.Context, article *models.Art
 	}
 
 	return nil
+}
+
+func (au *articleUsecase) ProcessLike(ctx context.Context, likeData *models.LikeData) (int, error) {
+	au.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the ProcessLike function.")
+
+	wrappingErrorMessage := "error while liking the article by session"
+
+	email, err := sessionUtils.GetEmailFromContext(ctx, au.logger)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.EmailForSessionDoesntExistError{Err: err})
+	}
+
+	sign := likeData.Sign
+	if sign == 1 { // Like
+		_, err = au.articleRepository.AddLike(ctx, true, likeData.Id, email)
+	} else if sign == -1 { // Dislike
+		_, err = au.articleRepository.AddLike(ctx, false, likeData.Id, email)
+	} else if sign == 0 { // Remove like if exist
+		_, err = au.articleRepository.RemoveLike(ctx, likeData.Id, email)
+	}
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	updatedRating, err := au.articleRepository.GetArticleRating(ctx, likeData.Id)
+	if err != nil {
+		au.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return 0, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return updatedRating, err
 }

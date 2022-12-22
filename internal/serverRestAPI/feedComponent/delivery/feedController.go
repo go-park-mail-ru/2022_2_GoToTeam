@@ -89,6 +89,7 @@ func (fc *FeedController) FeedHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
@@ -168,6 +169,7 @@ func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
@@ -244,10 +246,40 @@ func (fc *FeedController) FeedCategoryHandler(c echo.Context) error {
 				Username: v.CoAuthor.Username,
 				Login:    v.CoAuthor.Login,
 			},
+			Liked: v.Liked,
 		}
 		feed.Articles = append(feed.Articles, article)
 	}
 	fc.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed feed: ", feed)
 
 	return c.JSON(http.StatusOK, feed)
+}
+
+func (fc *FeedController) GetNewArticlesFromIdForSubscriber(c echo.Context) error {
+	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetNewArticlesFromIdForSubscriber function.")
+	defer c.Request().Body.Close()
+
+	articleIdStr := c.QueryParam("articleId")
+	fc.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed articleIdStr: %#v", articleIdStr)
+	if articleIdStr == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
+	articleId, err := strconv.Atoi(articleIdStr)
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	newArticlesIds, err := fc.feedUsecase.GetNewArticlesFromIdForSubscriber(ctx, articleId)
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	newArticlesIdsResponse := modelsRestApi.NewArticlesIds{
+		Ids: newArticlesIds,
+	}
+
+	return c.JSON(http.StatusOK, newArticlesIdsResponse)
 }

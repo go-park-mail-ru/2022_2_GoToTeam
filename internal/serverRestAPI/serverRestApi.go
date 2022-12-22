@@ -117,9 +117,23 @@ func Run(configFilePath string) {
 	if err := configureServer(e, config); err != nil {
 		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while configuring server", err))
 	}
-	if err := e.Start(config.ServerAddress); err != nil {
-		middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while starting server", err))
+
+	serverAddress := config.ServerAddress
+
+	if config.EnableHttpsWithTLS {
+		middlewareLogger.LogrusLogger.Info("Starting https server with TLS on: ", serverAddress)
+
+		if err := e.StartTLS(serverAddress, config.TLSCertificateFilePath, config.TLSCertificateKeyFilePath); err != nil {
+			middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while starting server", err))
+		}
+	} else {
+		middlewareLogger.LogrusLogger.Info("Starting http server on: ", serverAddress)
+
+		if err := e.Start(serverAddress); err != nil {
+			middlewareLogger.LogrusLogger.Fatal(errorsUtils.WrapError("error while starting server", err))
+		}
 	}
+
 }
 
 func configureServer(e *echo.Echo, config *configReader.Config) error {
@@ -235,11 +249,13 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 	e.GET("/api/v1/feed", feedController.FeedHandler)
 	e.GET("/api/v1/feed/user", feedController.FeedUserHandler)
 	e.GET("/api/v1/feed/category", feedController.FeedCategoryHandler)
+	e.GET("/api/v1/feed/subscriptions/has-new-articles-from", feedController.GetNewArticlesFromIdForSubscriber)
 
 	e.GET("/api/v1/article", articleController.ArticleHandler)
 	e.POST("/api/v1/article/create", articleController.CreateArticleHandler)
 	e.POST("/api/v1/article/remove", articleController.RemoveArticleHandler)
 	e.POST("/api/v1/article/update", articleController.UpdateArticleHandler)
+	e.POST("/api/v1/article/like", articleController.LikeHandler)
 
 	e.GET("/api/v1/profile", profileController.GetProfileHandler)
 	e.POST("/api/v1/profile/update", profileController.UpdateProfileHandler)
@@ -253,6 +269,7 @@ func configureServer(e *echo.Echo, config *configReader.Config) error {
 
 	e.POST("/api/v1/commentary/create", commentaryController.CreateCommentaryHandler)
 	e.GET("/api/v1/commentary/feed", commentaryController.GetAllCommentariesForArticle)
+	e.POST("/api/v1/commentary/like", commentaryController.LikeHandler)
 
 	return nil
 }

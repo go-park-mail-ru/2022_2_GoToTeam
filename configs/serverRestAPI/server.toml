@@ -9,6 +9,10 @@ profilePhotosDirPath = "static/profilePhotos" # Should not start from '/'. Shoul
 enableEchoCsrfToken = false
 enableEchoSecurity = true
 
+enableHttpsWithTLS = false
+TLSCertificateFilePath = "" # Dont need if enableHttpsWithTLS = false
+TLSCertificateKeyFilePath = "" # Dont need if enableHttpsWithTLS = false
+
 databaseUser = "postgres"
 databaseName = "ve_ru"
 databasePassword = "admin"

@@ -18,6 +18,9 @@ var (
 		"/api/v1/article/create": {},
 		"/api/v1/article/update": {},
 		"/api/v1/article/remove": {},
+		"/api/v1/article/like":   {},
+
+		"/api/v1/feed/subscriptions/has-new-articles-from": {},
 
 		"/api/v1/user/subscribe":   {},
 		"/api/v1/user/unsubscribe": {},
@@ -31,11 +34,21 @@ var (
 		"/api/v1/file/upload/profile/photo": {},
 
 		"/api/v1/commentary/create": {},
+		"/api/v1/commentary/like":   {},
 	}
 
 	needPutEmailToContextUrls = map[string]struct{}{
+		"/api/v1/article": {},
+
+		"/api/v1/feed":          {},
+		"/api/v1/feed/user":     {},
+		"/api/v1/feed/category": {},
+
 		"/api/v1/category/info": {},
-		"/api/v1/user/info":     {},
+
+		"/api/v1/user/info": {},
+
+		"/api/v1/commentary/feed": {},
 	}
 
 	noNeedSessionUrls = map[string]struct{}{

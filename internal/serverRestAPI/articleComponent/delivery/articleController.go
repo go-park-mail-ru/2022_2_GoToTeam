@@ -3,6 +3,7 @@ package delivery
 import (
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/createArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/getArticle"
+	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/likeData"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/removeArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/articleComponent/delivery/modelsRestApi/updateArticle"
 	"2022_2_GoTo_team/internal/serverRestAPI/domain/customErrors/articleComponentErrors/usecaseToDeliveryErrors"
@@ -83,6 +84,7 @@ func (ac *ArticleController) ArticleHandler(c echo.Context) error {
 			Username: article.CoAuthor.Username,
 			Login:    article.CoAuthor.Login,
 		},
+		Liked: article.Liked,
 	}
 	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Formed articleOutput: ", articleOutput)
 
@@ -162,4 +164,35 @@ func (ac *ArticleController) RemoveArticleHandler(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (ac *ArticleController) LikeHandler(c echo.Context) error {
+	ac.logger.LogrusLoggerWithContext(c.Request().Context()).Debug("Enter to the LikeHandler function.")
+	ctx := c.Request().Context()
+	defer c.Request().Body.Close()
+
+	parsedInputLikeData := new(likeData.LikeData)
+	if err := c.Bind(parsedInputLikeData); err != nil {
+		ac.logger.LogrusLoggerWithContext(ctx).Warn(err)
+		return c.NoContent(http.StatusBadRequest)
+	}
+	sign := parsedInputLikeData.Sign
+	if sign != -1 && sign != 0 && sign != 1 {
+		ac.logger.LogrusLoggerWithContext(ctx).Warnf("Incorrect sign value = %#v, should be -1 or 0 or 1", sign)
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	ac.logger.LogrusLoggerWithContext(ctx).Debugf("Parsed parsedInputLikeData: %#v", parsedInputLikeData)
+
+	updatedRating, err := ac.articleUsecase.ProcessLike(ctx, &models.LikeData{Id: parsedInputLikeData.Id, Sign: parsedInputLikeData.Sign})
+	if err != nil {
+		ac.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	likeResponse := likeData.LikeResponse{
+		Rating: updatedRating,
+	}
+
+	return c.JSON(http.StatusOK, likeResponse)
 }

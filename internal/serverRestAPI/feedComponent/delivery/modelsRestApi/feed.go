@@ -15,6 +15,7 @@ type Article struct {
 	CoverImgPath string    `json:"cover_img_path"`
 	CoAuthor     CoAuthor  `json:"co_author"`
 	Publisher    Publisher `json:"publisher"`
+	Liked        int       `json:"liked"`
 }
 
 type CoAuthor struct {
