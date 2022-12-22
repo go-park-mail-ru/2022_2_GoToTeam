@@ -94,7 +94,12 @@ jobs:
           script: |
              cd deploy_back
              ls
-             ./killDemons.sh
+             #./killDemons.sh
+             sudo kill -9 `sudo lsof -t -i:8080`
+             sudo kill -9 `sudo lsof -t -i:8082`
+             sudo kill -9 `sudo lsof -t -i:8083`
+             sudo kill -9 `sudo lsof -t -i:8084`
+             sudo kill -9 `sudo lsof -t -i:8085`
 
       - name: Transfer build files to server
         uses: appleboy/scp-action@master
