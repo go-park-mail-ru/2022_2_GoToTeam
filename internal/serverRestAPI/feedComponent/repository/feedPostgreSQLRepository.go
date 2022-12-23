@@ -225,6 +225,60 @@ ORDER BY A.article_id DESC;
 	return articles, nil
 }
 
+// GetFeedForUserByLogin TODO OFFSET LIMIT
+func (fpsr *feedPostgreSQLRepository) GetFeedForSubscriptions(ctx context.Context, email string) ([]*models.Article, error) {
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForSubscriptions function.")
+
+	articles := make([]*models.Article, 0, 10)
+
+	rows, err := fpsr.database.Query(`
+SELECT A.article_id,
+       A.title,
+       COALESCE(A.description, ''),
+       A.rating,
+       A.comments_count,
+       COALESCE(A.cover_img_path, ''),
+       COALESCE(COALESCE(UC.username, ''), ''),
+       COALESCE(UC.login, ''),
+       COALESCE(UP.username, ''),
+       UP.login,
+       COALESCE(C.category_name, ''),
+       (CASE WHEN AL.is_like = true THEN 1 ELSE (CASE WHEN AL.is_like = false THEN -1 ELSE 0 END) END) liked
+FROM articles A
+         LEFT JOIN users UC ON A.co_author_id = UC.user_id
+         JOIN users UP ON A.publisher_id = UP.user_id
+         LEFT JOIN categories C ON A.category_id = C.category_id
+         LEFT JOIN articles_likes AL ON AL.user_id = (SELECT user_id FROM users WHERE email = $1) AND AL.article_id = A.article_id
+         LEFT JOIN subscriptions S ON S.user_id = (SELECT user_id FROM users WHERE email = $1) AND S.subscribed_to_id = UP.user_id
+         LEFT JOIN users_categories_subscriptions UCS ON UCS.user_id = (SELECT user_id FROM users WHERE email = $1) AND UCS.category_id = A.category_id
+ORDER BY A.article_id DESC;
+`, email)
+	if err != nil {
+		fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, repositoryToUsecaseErrors.FeedRepositoryError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		article := &models.Article{}
+		if err := rows.Scan(&article.ArticleId, &article.Title, &article.Description, &article.Rating, &article.CommentsCount, &article.CoverImgPath, &article.CoAuthor.Username, &article.CoAuthor.Login, &article.Publisher.Username, &article.Publisher.Login, &article.CategoryName, &article.Liked); err != nil {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.FeedRepositoryError
+		}
+		article.Tags, err = fpsr.GetTagsForArticle(ctx, article.ArticleId)
+		if err != nil {
+			fpsr.logger.LogrusLoggerWithContext(ctx).Error(err)
+			return nil, repositoryToUsecaseErrors.FeedRepositoryError
+		}
+
+		articles = append(articles, article)
+	}
+
+	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Got articles: \n" + fpsr.getArticlesString(articles))
+
+	return articles, nil
+}
+
 func (fpsr *feedPostgreSQLRepository) UserExistsByLogin(ctx context.Context, login string) (bool, error) {
 	fpsr.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the UserExistsByLogin function.")
 
