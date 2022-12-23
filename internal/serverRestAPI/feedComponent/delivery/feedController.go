@@ -75,6 +75,50 @@ func (fc *FeedController) FeedHandler(c echo.Context) error {
 	return c.JSONBlob(http.StatusOK, jsonBytes)
 }
 
+func (fc *FeedController) GetFeedForSubscriptionsHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForSubscriptionsHandler function.")
+
+	articles, err := fc.feedUsecase.GetFeedForSubscriptions(ctx)
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	feed := modelsRestApi.Feed{}
+	for _, v := range articles {
+		article := modelsRestApi.Article{
+			Id:           v.ArticleId,
+			Title:        v.Title,
+			Description:  v.Description,
+			Tags:         v.Tags,
+			Category:     v.CategoryName,
+			Rating:       v.Rating,
+			Comments:     v.CommentsCount,
+			CoverImgPath: v.CoverImgPath,
+			Publisher: modelsRestApi.Publisher{
+				Username: v.Publisher.Username,
+				Login:    v.Publisher.Login,
+			},
+			CoAuthor: modelsRestApi.CoAuthor{
+				Username: v.CoAuthor.Username,
+				Login:    v.CoAuthor.Login,
+			},
+			Liked: v.Liked,
+		}
+		feed.Articles = append(feed.Articles, article)
+	}
+	fc.logger.LogrusLoggerWithContext(ctx).Debug("Formed feed: ", feed)
+
+	jsonBytes, err := feed.MarshalJSON()
+	if err != nil {
+		fc.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(http.StatusOK, jsonBytes)
+}
+
 func (fc *FeedController) FeedUserHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	fc.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the FeedUserHandler function.")

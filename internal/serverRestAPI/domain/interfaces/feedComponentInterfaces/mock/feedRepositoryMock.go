@@ -80,6 +80,21 @@ func (mr *MockFeedRepositoryInterfaceMockRecorder) GetFeedForCategory(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeedForCategory", reflect.TypeOf((*MockFeedRepositoryInterface)(nil).GetFeedForCategory), arg0, arg1, arg2)
 }
 
+// GetFeedForSubscriptions mocks base method.
+func (m *MockFeedRepositoryInterface) GetFeedForSubscriptions(arg0 context.Context, arg1 string) ([]*models.Article, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFeedForSubscriptions", arg0, arg1)
+	ret0, _ := ret[0].([]*models.Article)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFeedForSubscriptions indicates an expected call of GetFeedForSubscriptions.
+func (mr *MockFeedRepositoryInterfaceMockRecorder) GetFeedForSubscriptions(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeedForSubscriptions", reflect.TypeOf((*MockFeedRepositoryInterface)(nil).GetFeedForSubscriptions), arg0, arg1)
+}
+
 // GetFeedForUserByLogin mocks base method.
 func (m *MockFeedRepositoryInterface) GetFeedForUserByLogin(arg0 context.Context, arg1, arg2 string) ([]*models.Article, error) {
 	m.ctrl.T.Helper()

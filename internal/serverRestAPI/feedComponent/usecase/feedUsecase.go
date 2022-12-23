@@ -115,6 +115,26 @@ func (fu *feedUsecase) GetFeedForCategory(ctx context.Context, category string) 
 	return articles, nil
 }
 
+func (fu *feedUsecase) GetFeedForSubscriptions(ctx context.Context) ([]*models.Article, error) {
+	fu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetFeedForSubscriptions function.")
+
+	wrappingErrorMessage := "error while getting articles"
+
+	email, err := sessionUtils.GetEmailFromContext(ctx, fu.logger)
+	if err != nil {
+		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		email = ""
+	}
+
+	articles, err := fu.feedRepository.GetFeedForSubscriptions(ctx, email)
+	if err != nil {
+		fu.logger.LogrusLoggerWithContext(ctx).Error(err)
+		return nil, errorsUtils.WrapError(wrappingErrorMessage, &usecaseToDeliveryErrors.RepositoryError{Err: err})
+	}
+
+	return articles, nil
+}
+
 func (fu *feedUsecase) GetNewArticlesFromIdForSubscriber(ctx context.Context, articleId int) ([]int, error) {
 	fu.logger.LogrusLoggerWithContext(ctx).Debug("Enter to the GetNewArticlesFromIdForSubscriber function.")
 
