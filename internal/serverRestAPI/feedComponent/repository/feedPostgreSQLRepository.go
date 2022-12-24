@@ -251,6 +251,7 @@ FROM articles A
          LEFT JOIN articles_likes AL ON AL.user_id = (SELECT user_id FROM users WHERE email = $1) AND AL.article_id = A.article_id
          LEFT JOIN subscriptions S ON S.user_id = (SELECT user_id FROM users WHERE email = $1) AND S.subscribed_to_id = UP.user_id
          LEFT JOIN users_categories_subscriptions UCS ON UCS.user_id = (SELECT user_id FROM users WHERE email = $1) AND UCS.category_id = A.category_id
+WHERE S.user_id IS NOT NULL OR UCS.user_id IS NOT NULL
 ORDER BY A.article_id DESC;
 `, email)
 	if err != nil {

@@ -21,6 +21,7 @@ var (
 		"/api/v1/article/like":   {},
 
 		"/api/v1/feed/subscriptions/has-new-articles-from": {},
+		"/api/v1/feed/subscriptions":                       {},
 
 		"/api/v1/user/subscribe":   {},
 		"/api/v1/user/unsubscribe": {},
@@ -40,10 +41,9 @@ var (
 	needPutEmailToContextUrls = map[string]struct{}{
 		"/api/v1/article": {},
 
-		"/api/v1/feed":               {},
-		"/api/v1/feed/user":          {},
-		"/api/v1/feed/category":      {},
-		"/api/v1/feed/subscriptions": {},
+		"/api/v1/feed":          {},
+		"/api/v1/feed/user":     {},
+		"/api/v1/feed/category": {},
 
 		"/api/v1/category/info": {},
 
