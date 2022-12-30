@@ -12,6 +12,6 @@ psql -U postgres -d  $DB_NAME -f ./sql/PostreSQLCreateMainUser.sql -v user_name=
 echo "Postgres User '$DB_USER' created."
 psql -U postgres -d  $DB_NAME -f ./sql/PostreSQLCreateAuthUser.sql -v user_name='$DB_AUTH_USER' -v user_password='$DB_USER_PASS'
 echo "Postgres User '$DB_AUTH_USER' created."
-psql -U postgres -d  $DB_NAME -f ./sql/PostreSQLCreateAuthUser.sql -v user_name='$DB_PROFILE_USER' -v user_password='$DB_USER_PASS'
+psql -U postgres -d  $DB_NAME -f ./sql/PostreSQLCreateProfileUser.sql -v user_name='$DB_PROFILE_USER' -v user_password='$DB_USER_PASS'
 echo "Postgres User '$DB_PROFILE_USER' created."
 EOF
