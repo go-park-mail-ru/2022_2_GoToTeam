@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v3
 
       - name: Set up Go
@@ -45,7 +44,6 @@ jobs:
           sudo kill -9 \`sudo lsof -t -i:8081\`
           sudo kill -9 \`sudo lsof -t -i:8083\`
           " > ./build/killDemons.sh
-            - name: Generate shell scripts
 
       - name: MakeConfigs
         run: |
