@@ -12,6 +12,7 @@ psql -U postgres -d  $DB_NAME -c "GRANT SELECT ON users, subscriptions, categori
 psql -U postgres -d  $DB_NAME -c "GRANT INSERT ON users, subscriptions, articles, articles_likes, users_categories_subscriptions, comments, comments_likes, tags_articles to $DB_USER;"
 psql -U postgres -d  $DB_NAME -c "GRANT UPDATE ON subscriptions, articles, articles_likes, users_categories_subscriptions, comments, comments_likes, tags_articles to $DB_USER;"
 psql -U postgres -d  $DB_NAME -c "GRANT DELETE ON subscriptions, articles, articles_likes, users_categories_subscriptions, comments, comments_likes, tags_articles to $DB_USER;"
+psql -U postgres -d  $DB_NAME -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public to $DB_USER;"
 echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
 psql -c "CREATE USER $DB_AUTH_USER WITH PASSWORD '$DB_USER_PASS';"
 psql -U postgres -d  $DB_NAME -c "GRANT SELECT ON users to $DB_AUTH_USER;"
