@@ -52,11 +52,8 @@ jobs:
         run: |
           cd ./build
           ../scripts/makeMainConfig.sh https://gototeam.ru home/fackoff/code/5_sem_tech/project/frontend/front/public/ static/img/profilePhotos "$pathToCert" "$pathToKey" ve_ru_user ve_ru ve_ru_password
-          cat main.toml
           ../scripts/makeAuthConfig.sh ve_ru_user ve_ru ve_ru_password
-          cat auth.toml
           ../scripts/makeProfileConfig.sh ve_ru_user ve_ru ve_ru_password
-          cat profile.toml
 
       - name: Upload build result
         uses: actions/upload-artifact@v1
@@ -83,7 +80,7 @@ jobs:
           go tool cover -func cover.out
 
   deploy:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    #if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [ "build", "tests" ]
     steps:
