@@ -11,7 +11,7 @@ touch main.toml
 echo "serverAddress = \":8080\"
 originsAddressesCORS = [\"$1\"]
 logLevel = \"debug\"
-logFilePath = \"logs/serverRestApi/logs.log\"
+logFilePath = \"../backend/logs/authSessionService/logs.log\"
 
 staticDirAbsolutePath = \"$2\"
 profilePhotosDirPath = \"$3\"

@@ -4,9 +4,9 @@
 # third argument: postgres user password for main microservice
 touch profile.toml
 echo "serverAddress = \":8083\"
-prometheusServerAddress = \":8085\"
+prometheusServerAddress = \":8084\"
 logLevel = \"debug\"
-logFilePath = \"logs/userProfileService/logs.log\"
+logFilePath = \"../backend/logs/userProfileService/logs.log\"
 
 databaseUser = \"$1\"
 databaseName = \"$2\"

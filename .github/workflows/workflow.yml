@@ -51,7 +51,7 @@ jobs:
           pathToKey: ${{ secrets.PATH_TO_KEY }}
         run: |
           cd ./build
-          ../scripts/makeMainConfig.sh https://gototeam.ru home/fackoff/code/5_sem_tech/project/frontend/front/public/ static/img/profilePhotos "$pathToCert" "$pathToKey" ve_ru_user ve_ru ve_ru_password
+          ../scripts/makeMainConfig.sh https://gototeam.ru /home/ubuntu/front/front/public/ static/img/profilePhotos "$pathToCert" "$pathToKey" ve_ru_user ve_ru ve_ru_password
           ../scripts/makeAuthConfig.sh ve_ru_user ve_ru ve_ru_password
           ../scripts/makeProfileConfig.sh ve_ru_user ve_ru ve_ru_password
 
