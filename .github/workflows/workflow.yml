@@ -54,7 +54,7 @@ jobs:
         run: |
           cd ./build
           ../scripts/makeMainConfig.sh https://gototeam.ru /home/ubuntu/front/front/public/ static/img/profilePhotos "$pathToCert" "$pathToKey" ve_ru_user ve_ru ve_ru_password
-          ../scripts/makeAuthConfig.sh ve_ru_user ve_ru ve_ru_password
+          ../scripts/makeAuthConfig.sh ve_ru_auth_user ve_ru ve_ru_password
           ../scripts/makeProfileConfig.sh ve_ru_user ve_ru ve_ru_password
 
       - name: Upload build result
