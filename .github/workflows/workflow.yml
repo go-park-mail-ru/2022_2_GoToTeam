@@ -46,9 +46,12 @@ jobs:
           " > ./build/killDemons.sh
 
       - name: MakeConfigs
+        env:
+          pathToCert: ${{ secrets.PATH_TO_CERT }}
+          pathToKey: ${{ secrets.PATH_TO_KEY }}
         run: |
           cd ./build
-          ../scripts/makeMainConfig.sh https://gototeam.ru home/fackoff/code/5_sem_tech/project/frontend/front/public/ static/img/profilePhotos ${{ secrets.PATH_TO_CERT }} ${{ secrets.PATH_TO_KEY }} ve_ru_user ve_ru ve_ru_password
+          ../scripts/makeMainConfig.sh https://gototeam.ru home/fackoff/code/5_sem_tech/project/frontend/front/public/ static/img/profilePhotos $pathToCert $pathToKey ve_ru_user ve_ru ve_ru_password
           cat main.toml
           ../scripts/makeAuthConfig.sh ve_ru_user ve_ru ve_ru_password
           cat auth.toml
