@@ -11,6 +11,6 @@ psql -U postgres -d  $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA p
 psql -U postgres -d  $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public to $DB_USER;"
 echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
 psql -c "CREATE USER $DB_AUTH_USER WITH PASSWORD '$DB_USER_PASS';"
-psql -U postgres -d  $DB_NAME -c "GRANT SELECT ON users IN SCHEMA public to $DB_AUTH_USER;"
+psql -U postgres -d  $DB_NAME -c "GRANT SELECT ON users to $DB_AUTH_USER;"
 echo "Postgres User '$DB_AUTH_USER' created."
 EOF
