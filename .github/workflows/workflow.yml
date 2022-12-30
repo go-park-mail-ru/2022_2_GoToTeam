@@ -48,7 +48,7 @@ jobs:
       - name: MakeConfigs
         run: |
           cd ./build
-          ../scripts/makeMainConfig.sh https://127.0.0.1 home/fackoff/code/5_sem_tech/project/frontend/front/public/ static/img/profilePhotos /home/fackoff/code/5_sem_tech/project/frontend/front/server/cert/cert.pem /home/fackoff/code/5_sem_tech/project/frontend/front/server/cert/key.pem ve_ru_user ve_ru ve_ru_password
+          ../scripts/makeMainConfig.sh https://gototeam.ru home/fackoff/code/5_sem_tech/project/frontend/front/public/ static/img/profilePhotos ${{ secrets.PATH_TO_CERT }} ${{ secrets.PATH_TO_KEY }} ve_ru_user ve_ru ve_ru_password
           cat main.toml
           ../scripts/makeAuthConfig.sh ve_ru_user ve_ru ve_ru_password
           cat auth.toml
