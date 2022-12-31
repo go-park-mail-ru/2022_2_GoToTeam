@@ -28,7 +28,7 @@ databaseName = \"$7\"
 databasePassword = \"$8\"
 databaseHost = \"127.0.0.1\"
 databasePort = \"5432\"
-databaseMaxOpenConnections = \"10\"
+databaseMaxOpenConnections = \"50\"
 
 authSessionServiceAddress = \":8081\"
 userProfileServiceAddress = \":8083\"" > main.toml

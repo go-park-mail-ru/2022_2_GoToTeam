@@ -13,4 +13,4 @@ databaseName = \"$2\"
 databasePassword = \"$3\"
 databaseHost = \"127.0.0.1\"
 databasePort = \"5432\"
-databaseMaxOpenConnections = \"10\"" > auth.toml
+databaseMaxOpenConnections = \"30\"" > auth.toml
