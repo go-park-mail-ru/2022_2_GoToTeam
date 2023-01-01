@@ -57,6 +57,9 @@ jobs:
           ../scripts/makeAuthConfig.sh ve_ru_auth_user ve_ru ve_ru_password
           ../scripts/makeProfileConfig.sh ve_ru_profile_user ve_ru ve_ru_password
 
+      - name: copy Postgres config
+        run: cp ./database/config/postgresql.conf ./build/postgresql.conf
+
       - name: Upload build result
         uses: actions/upload-artifact@v1
         with:
