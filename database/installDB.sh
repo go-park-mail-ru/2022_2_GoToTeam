@@ -1,9 +1,14 @@
 #installs DB. Requires installed and running postgresql
-DB_NAME=ve_ru
-DB_USER=ve_ru_user
-DB_USER_PASS=ve_ru_password
-DB_AUTH_USER=ve_ru_auth_user
-DB_PROFILE_USER=ve_ru_profile_user
+# first argument: database name
+# second argument: database main server user name
+# third argument: database auth server user name
+# fourth argument: database profile server user name
+# fifth argument: database users password
+DB_NAME=$1
+DB_USER=$2
+DB_AUTH_USER=$3
+DB_PROFILE_USER=$4
+DB_USER_PASS=$5
 su postgres <<EOF
 createdb  $DB_NAME;
 psql -U postgres -d $DB_NAME -f ./sql/PostgreSQLdbGenScript.sql
