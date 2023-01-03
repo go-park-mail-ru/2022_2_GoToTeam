@@ -51,11 +51,16 @@ jobs:
         env:
           pathToCert: ${{ secrets.PATH_TO_CERT }}
           pathToKey: ${{ secrets.PATH_TO_KEY }}
+          dbName: ${{ secrets.DB_NAME }}
+          dbMainUser: ${{ secrets.DB_MAIN_USER }}
+          dbAuthUser: ${{ secrets.DB_AUTH_USER }}
+          dbProfileUser: ${{ secrets.DB_PROFILE_USER }}
+          dbUserPassword: ${{ secrets.DB_USER_PASSWORD }}
         run: |
           cd ./build
-          ../scripts/makeMainConfig.sh https://gototeam.ru /home/ubuntu/front/front/public/ static/img/profilePhotos "$pathToCert" "$pathToKey" ve_ru_user ve_ru ve_ru_password
-          ../scripts/makeAuthConfig.sh ve_ru_auth_user ve_ru ve_ru_password
-          ../scripts/makeProfileConfig.sh ve_ru_profile_user ve_ru ve_ru_password
+          ../scripts/makeMainConfig.sh https://gototeam.ru /home/ubuntu/front/front/public/ static/img/profilePhotos "$pathToCert" "$pathToKey" "$dbMainUser" "$dbName" "$dbUserPassword"
+          ../scripts/makeAuthConfig.sh "$dbAuthUser" "$dbName" "$dbUserPassword"
+          ../scripts/makeProfileConfig.sh "$dbProfileUser" "$dbName" "$dbUserPassword"
 
       - name: copy Postgres config
         run: cp ./database/config/postgresql.conf ./build/postgresql.conf
